@@ -198,24 +198,18 @@ void CimulationApp::update() {
 	switch (s.SimRunning) {
 	case simulation::NAVIGATION:
 		v.r.NavigationUpdate();
-		v.r.motorPower = v.r.truSpeed(3, v.j.analogY) / 127;
-		v.r.forwards(v.r.motorPower);
-		if (abs(v.j.analogX) > 10) {//checking to see if rotation should occur.
-			v.r.rotating = true;
-			v.r.rotateBase(v.j.analogX);
-		}
-		else {
-			v.r.rotating = false;
-		}
+		v.r.moveAround(v.j.analogX, v.j.analogY);
 			break;
 	case simulation::PIDCTRL:
 		v.r.PIDControlUpdate();
 		break;
 	case simulation::TRUSPEED:
 		v.r.TruSpeedUpdate();
+		v.r.moveAround(v.j.analogX, v.j.analogY);
 		break;
 	case simulation::FIELD:
-		v.f.FieldUpdate();
+		v.f.FieldUpdate(&v.r);
+		v.r.moveAround(v.j.analogX, v.j.analogY);
 		break;
 	}
 
@@ -254,12 +248,6 @@ void CimulationApp::draw() {
 	gl::enableAlphaBlending();//good for transparent images
 	// clear out the window with black
 	gl::clear(Color(0, 0, 0));
-	buttons();
-	glPushMatrix();
-	gl::translate(Vec3f(v.r.position.X*ppi, v.r.position.Y*ppi, 0.0));//origin of rotation
-	gl::rotate(Vec3f(0, 0, -v.r.mRot));//something for like 3D rotation.... ugh
-	gl::draw(v.r.TankBase, Area((-(v.r.size / 2))*ppi, (-(v.r.size / 2))*ppi, ((v.r.size / 2))*ppi, ((v.r.size / 2))*ppi));
-	glPopMatrix();
 	//joystick analog drawing
 	if (s.SimRunning == s.NAVIGATION || s.SimRunning == s.TRUSPEED || s.SimRunning == s.FIELD) {//only for navigation and truspeed sim
 		if (s.SimRunning == s.FIELD) {
@@ -312,8 +300,14 @@ void CimulationApp::draw() {
 			gl::draw(v.f.coneTexture, Area((fieldEnd) - (v.f.c[i].pos.X*ppi) - (3*ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) - (3 * ppi), (fieldEnd) - (v.f.c[i].pos.X*ppi) + (3 * ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) + (3 * ppi)));
 		}
 	}
-
-
+	/**************************ROBOT***********************************/
+	buttons();
+	glPushMatrix();
+	gl::translate(Vec3f(v.r.position.X*ppi, v.r.position.Y*ppi, 0.0));//origin of rotation
+	gl::rotate(Vec3f(0, 0, -v.r.mRot));//something for like 3D rotation.... ugh
+	gl::draw(v.r.TankBase, Area((-(v.r.size / 2))*ppi, (-(v.r.size / 2))*ppi, ((v.r.size / 2))*ppi, ((v.r.size / 2))*ppi));
+	glPopMatrix();
+	/*****************************MISC**********************************/
 	stringstream actualY;
 	string actualY2;
 	actualY << v.r.current.Xpos;

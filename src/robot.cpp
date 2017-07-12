@@ -93,6 +93,17 @@ void robot::update() {
 	position = position + speed;
 }
 
+void robot::moveAround(float jAnalogX, float jAnalogY) {
+	motorPower = truSpeed(3, jAnalogY) / 127;
+	forwards(motorPower);
+	if (abs(jAnalogX) > 10) {//checking to see if rotation should occur.
+		rotating = true;
+		rotateBase(jAnalogX);
+	}
+	else {
+		rotating = false;
+	}
+}
 void robot::PIDControlUpdate() {
 	forwards(PID_controller());
 	mRot = 90;

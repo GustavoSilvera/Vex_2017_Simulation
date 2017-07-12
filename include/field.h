@@ -1,6 +1,8 @@
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "vec3.h"
+#include "robot.cpp"
+#include "robot.h"
 #include <vector>
 //declares the class for the robot and all the data that goes with it.
 //LOOKIE HERE: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
@@ -8,7 +10,7 @@ class field {
 public:
 	field();
 
-	void FieldUpdate();
+	void FieldUpdate(robot *r );
 	void initializeField();
 	//static  int NUMBER_OF_CONES = 50;
 	struct cone {

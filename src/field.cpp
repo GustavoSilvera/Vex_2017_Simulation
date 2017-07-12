@@ -1,7 +1,8 @@
 #include "vec3.h"
 #include "field.h"
 #include "randomstuff.h"
-
+#include "robot.cpp"
+#include "robot.h"
 //declares and defines the field class and functions
 
 field::cone initialConfiguration[54] = {//array for each configuration of the cone (in field.h)
@@ -63,12 +64,15 @@ field::cone initialConfiguration[54] = {//array for each configuration of the co
 
 void field::initializeField() {
 	c.assign(&initialConfiguration[0], &initialConfiguration[54]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
+	
 }
-void field::FieldUpdate() {
+void field::FieldUpdate(robot *robit) {
 	if (!initialized) {
 		initializeField();
+		robit->position.X = 100;
+		robit->position.Y = 35;
+		robit->mRot = 45;
 	}
-
 }
 
 

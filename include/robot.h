@@ -13,6 +13,7 @@ public:
 	void calculatePos();
 	float PID_controller();
 	void update();
+	void moveAround(float jAnalogX, float jAnalogY);
 	void NavigationUpdate();
 	void PIDControlUpdate();
 	void TruSpeedUpdate();
