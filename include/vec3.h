@@ -5,8 +5,7 @@
 //definition for a 3d vector used throughout the entire project file
 class vec3 {
 public:
-	vec3() : X(0.0), Y(0.0), Z(0.0) {}
-	vec3(double x, double y, double z) : X(x), Y(y), Z(z) {}
+	vec3(double x =0.0, double y =0.0, double z = 0.0) : X(x), Y(y), Z(z) {}
 	double X, Y, Z;
 
 	vec3 times(double f) {

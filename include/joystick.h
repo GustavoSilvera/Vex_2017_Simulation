@@ -7,7 +7,7 @@ public:
 	bool withinAnalogRange(vec3 mousePos);
 	int analogY;
 	int analogX;
-	int drawX = 600;
+	int drawX = 600;//distance from where to draw the top left vertice of the drawing in PIXELS
 	int drawY = 500;
 	int drawSize = 127;
 	//makes image with top left cornet at (700, 300), with a size of 127

@@ -7,6 +7,7 @@
 #include "cinder/Font.h"
 //my own headers
 #include "joystick.h"
+#include "field.h"
 #include "robot.h"
 #include "vec3.h"
 #include "randomstuff.h"
@@ -24,6 +25,7 @@ vec3 mousePos;
 class vex {
 public:
 	robot r;
+	field f;
 	joystick j;
 
 	vex() : r(vec3(69.6,69.6,0), vec3()) {}
@@ -36,7 +38,8 @@ struct simulation {
 	enum SimulationType {
 		PIDCTRL,
 		NAVIGATION,
-		TRUSPEED
+		TRUSPEED,
+		FIELD
 	};
 	SimulationType SimRunning = NAVIGATION;//in accordance to which simulation is running, 1 is PID, 2 is NAV, 3 is truspeed... etc
 
@@ -130,6 +133,7 @@ public:
 	void keyUp(KeyEvent event);
 	void update();
 	void draw();
+
 	vex v;
 
 };
@@ -138,6 +142,9 @@ void CimulationApp::setup() {
 	srand(time(NULL));
 	gl::enableVerticalSync();
 	v.r.TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
+	v.f.fieldBare = gl::Texture(loadImage(loadAsset("InTheZoneFieldBare.jpg")));
+	v.f.fieldFull = gl::Texture(loadImage(loadAsset("InTheZoneFieldFull.jpg")));
+	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	setWindowSize(WindowWidth, WindowHeight);
 	v.r.current.Xpos = 0;
 	v.r.current.Ypos = 0;
@@ -146,6 +153,8 @@ void CimulationApp::setup() {
 	v.r.encoderLast = 0;
 	v.r.PID.isRunning = false;
 	v.r.PID.requestedValue = v.r.position.X*ppi;
+	v.r.position.X = 69.6;
+	v.r.position.Y = 69.6;
 	//for graph
 	for (int i = 0; i < 30; i++) {
 		s.gr.RYpos[i] = s.gr.midpoint;
@@ -184,21 +193,11 @@ void CimulationApp::keyUp(KeyEvent event) {
 
 }
 void CimulationApp::update() {
+	v.j.getAnalog(mousePos);
 	v.r.update();//calls robot update function
 	switch (s.SimRunning) {
 	case simulation::NAVIGATION:
 		v.r.NavigationUpdate();
-			break;
-	case simulation::PIDCTRL:
-		v.r.PIDControlUpdate();
-		break;
-	case simulation::TRUSPEED:
-		v.r.TruSpeedUpdate();
-		break;
-	}
-
-	v.j.getAnalog(mousePos);
-	if (s.SimRunning == s.NAVIGATION) {
 		v.r.motorPower = v.r.truSpeed(3, v.j.analogY) / 127;
 		v.r.forwards(v.r.motorPower);
 		if (abs(v.j.analogX) > 10) {//checking to see if rotation should occur.
@@ -208,7 +207,18 @@ void CimulationApp::update() {
 		else {
 			v.r.rotating = false;
 		}
+			break;
+	case simulation::PIDCTRL:
+		v.r.PIDControlUpdate();
+		break;
+	case simulation::TRUSPEED:
+		v.r.TruSpeedUpdate();
+		break;
+	case simulation::FIELD:
+		v.f.FieldUpdate();
+		break;
 	}
+
 }
 //for buttons
 void clicky(int AMOUNT_BUTTON) {//function for clicking the buttons
@@ -235,11 +245,13 @@ void buttons() {//function for drawing the buttons
 		if (i == 0)gl::drawString("PID", Vec2f(bX[i] - 20, bY - 12.5), Color(1, 1, 1), Font("Arial", 25));
 		else if (i == 1)gl::drawString("NAV", Vec2f(bX[i] - 18 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 25));
 		else if (i == 2)gl::drawString("TRUSpeed", Vec2f(bX[i] - 49 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 25));
-		clicky(BUTTON_AMOUNT);
+		else if (i == 3)gl::drawString("Auton", Vec2f(bX[i] - 35 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 29));
+		clicky(BUTTON_AMOUNT);//function for if a button is being hovered of pressed
 	}
 }
 
 void CimulationApp::draw() {
+	gl::enableAlphaBlending();//good for transparent images
 	// clear out the window with black
 	gl::clear(Color(0, 0, 0));
 	buttons();
@@ -249,7 +261,15 @@ void CimulationApp::draw() {
 	gl::draw(v.r.TankBase, Area((-(v.r.size / 2))*ppi, (-(v.r.size / 2))*ppi, ((v.r.size / 2))*ppi, ((v.r.size / 2))*ppi));
 	glPopMatrix();
 	//joystick analog drawing
-	if (s.SimRunning == s.NAVIGATION || s.SimRunning == s.TRUSPEED) {//only for navigation and truspeed sim
+	if (s.SimRunning == s.NAVIGATION || s.SimRunning == s.TRUSPEED || s.SimRunning == s.FIELD) {//only for navigation and truspeed sim
+		if (s.SimRunning == s.FIELD) {
+			v.j.drawX = v.f.fieldSize*ppi + v.f.dFromEdge+20;
+			v.j.drawY = getWindowHeight()/2;
+		}
+		else {
+			v.j.drawX = 600;
+			v.j.drawY = 500;
+		}
 		gl::drawStrokedCircle(Vec2f(v.j.drawX+v.j.drawSize, v.j.drawY+v.j.drawSize), v.j.drawSize);//circle at (800px, 300px) with radius 127px
 		gl::drawStrokedRect(Area(v.j.drawX, v.j.drawY, v.j.drawX + 2*v.j.drawSize, v.j.drawY + 2*v.j.drawSize));
 
@@ -270,13 +290,27 @@ void CimulationApp::draw() {
 	if (s.SimRunning == s.PIDCTRL) {
 		stringstream pidthing;
 		string pidthing2;
-		pidthing << setprecision(3) << v.r.PID_controller();
+		pidthing << setprecision(3) << v.r.PID_controller();//amount of power the PID is providing
 		pidthing >> pidthing2;
 		gl::drawString(pidthing2, Vec2f(v.r.position.X*ppi, v.r.position.Y*ppi - 100), Color(1, 1, 1), Font("Arial", 30));
 	}
 	if (s.SimRunning == s.TRUSPEED) {
-		s.gr.graphPlot();
-		s.gr.textOutput(&v);
+		s.gr.graphPlot();//draws the graph
+		s.gr.textOutput(&v);//draws the text for the graph
+	}
+	if (s.SimRunning == s.FIELD) {//when field button is pressed
+		gl::pushModelView();//for drawing the field, had to be rotated based off source
+			gl::translate(Vec3f(v.f.dFromEdge + v.f.fieldSize*ppi/2, v.f.dFromEdge + v.f.fieldSize*ppi/2, 0.0));//origin of rotation
+			gl::rotate(-90);//easy rotation technique
+			gl::draw(v.f.fieldBare, Area(-v.f.fieldSize*ppi/2, -v.f.fieldSize*ppi/2, v.f.fieldSize*ppi/2, v.f.fieldSize*ppi/2));
+		gl::popModelView();//finish drawing the field
+		//drawing each individual cone. oh my
+		float fieldEnd = v.f.dFromEdge + v.f.fieldSize*ppi;//the value for the very end of the field drawing, used to properly display cones because in the reference sheet their values were based off the bottom right vertice
+		for (int i = 0; i < v.f.c.size(); i++) {
+			//fieldend for where the end of the field is, to subtract values because: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
+			//+-(3*ppi) for sayin that the point pos.X and pos.Y are the center, and the 3*ppi is 3 inches RADIUS away from the center point
+			gl::draw(v.f.coneTexture, Area((fieldEnd) - (v.f.c[i].pos.X*ppi) - (3*ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) - (3 * ppi), (fieldEnd) - (v.f.c[i].pos.X*ppi) + (3 * ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) + (3 * ppi)));
+		}
 	}
 
 
