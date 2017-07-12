@@ -1,7 +1,6 @@
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "vec3.h"
-#include "robot.cpp"
 #include "robot.h"
 #include <vector>
 //declares the class for the robot and all the data that goes with it.

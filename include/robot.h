@@ -1,3 +1,5 @@
+#if !defined(ROBOT_H)
+#define ROBOT_H
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "vec3.h"
@@ -43,3 +45,4 @@ public:
 
 	struct position current;
 };
+#endif  // ROBOT_H

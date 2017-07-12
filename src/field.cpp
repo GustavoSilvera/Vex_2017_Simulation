@@ -1,7 +1,6 @@
 #include "vec3.h"
 #include "field.h"
 #include "randomstuff.h"
-#include "robot.cpp"
 #include "robot.h"
 //declares and defines the field class and functions
 
