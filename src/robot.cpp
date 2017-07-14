@@ -7,8 +7,8 @@
 robot::robot(vec3 p, vec3 s) : position(p), speed(s) {}
 
 void robot::forwards(float  power) {
-	speed.X = power*cos((mRot + 90)*(PI / 180));
-	speed.Y = -power*sin((mRot + 90)*(PI / 180));
+	speed.X = power*cos((ActualHeading)*(PI / 180));
+	speed.Y = -power*sin((ActualHeading)*(PI / 180));
 	if (abs(power) > 0.01)
 		encoder1 += power;//increments the encoder while going forwards or backwards
 }
@@ -40,7 +40,7 @@ float robot::truSpeed(int degree, float value) {//see here for reference https:/
 void robot::calculatePos() {
 	if (!rotating && motorPower != 0) {
 		//float Magnitude = ((changeInDist) * 4 * PI) / (360);//function for adding the change in inches to current posiiton
-		current.deg = mRot + 90;
+		current.deg = ActualHeading;
 		current.Xpos += cos(current.deg*(PI / 180))*(encoder1 - encoderLast);//cosine of angle times magnitude RADIANS(vector trig)//NOT WORKING
 		current.Ypos -= sin(current.deg*(PI / 180))*(encoder1 - encoderLast);//sine of angle times magnitude RADIANS(vector trig)//NOT WORKING
 		encoderLast = encoder1;
@@ -91,6 +91,7 @@ float robot::PID_controller() {//accelerates and decelerates robot based on loca
 
 void robot::update() {
 	position = position + speed;
+	ActualHeading = mRot + 90;
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {
@@ -105,10 +106,10 @@ void robot::moveAround(float jAnalogX, float jAnalogY) {
 	}
 }
 void robot::PIDControlUpdate() {
+	PID.isRunning = true;
 	forwards(PID_controller());
 	mRot = 90;
 	position.Y = 69.6;
-	PID.isRunning = true;
 }
 
 void robot::NavigationUpdate() {
@@ -118,8 +119,4 @@ void robot::NavigationUpdate() {
 
 void robot::TruSpeedUpdate() {
 	PID.isRunning = false;
-	position.Y = 69.6;
-	position.X = 69.6;
-	mRot = 0;
-
 }

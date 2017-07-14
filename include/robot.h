@@ -1,5 +1,6 @@
 #if !defined(ROBOT_H)
 #define ROBOT_H
+
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "vec3.h"
@@ -39,10 +40,14 @@ public:
 	int size = 18;
 	vec3 position;//X, Y, and Z
 	float mRot = 0;
+	float ActualHeading = mRot;//weird drawing issues where 0° is where 90° should be irl
 	float motorPower = 0;
 	vec3 speed;//diff x, diff y, diff z
 	volatile struct maintainPosition PID;
-
+	int forwardPower = 0;//used for arrow keys 
+	int rotationPower = 0;//used for arrow keys
+	volatile bool KeyFwds = false;//if the arrow keys are triggering a forwards/backwards motion
+	volatile bool KeyRot = false;//used for whether the keys are supposed to be triggering a rotation
 	struct position current;
 };
 #endif  // ROBOT_H

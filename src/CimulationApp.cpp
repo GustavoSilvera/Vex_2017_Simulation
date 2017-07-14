@@ -153,8 +153,7 @@ void CimulationApp::setup() {
 	v.r.encoderLast = 0;
 	v.r.PID.isRunning = false;
 	v.r.PID.requestedValue = v.r.position.X*ppi;
-	v.r.position.X = 69.6;
-	v.r.position.Y = 69.6;
+
 	//for graph
 	for (int i = 0; i < 30; i++) {
 		s.gr.RYpos[i] = s.gr.midpoint;
@@ -186,26 +185,59 @@ void CimulationApp::mouseMove(MouseEvent event) {
 	}
 }
 void CimulationApp::keyDown(KeyEvent event) {
-
-
+	if (event.getCode() == KeyEvent::KEY_UP) {
+		v.r.KeyFwds = true;
+		v.r.forwardPower = 127;
+	}
+	if (event.getCode() == KeyEvent::KEY_DOWN) {
+		v.r.KeyFwds = true;
+		v.r.forwardPower = -127;
+	}
+	if (event.getCode() == KeyEvent::KEY_LEFT) {
+		v.r.KeyRot = true;
+		v.r.rotationPower = -127;
+	}
+	if (event.getCode() == KeyEvent::KEY_RIGHT) {
+		v.r.KeyRot = true;
+		v.r.rotationPower = 127;
+	}
 }
 void CimulationApp::keyUp(KeyEvent event) {
+	v.r.KeyFwds = false;
+	v.r.KeyRot = false;
 
+	if (event.getCode() == KeyEvent::KEY_UP) {
+		v.r.forwardPower = 0;
+	}
+	if (event.getCode() == KeyEvent::KEY_DOWN) {
+		v.r.forwardPower = 0;
+	}
+	if (event.getCode() == KeyEvent::KEY_LEFT) {
+		v.r.rotationPower = 0;
+	}
+	if (event.getCode() == KeyEvent::KEY_RIGHT) {
+		v.r.rotationPower = 0;
+	}
 }
 void CimulationApp::update() {
+	if (v.r.KeyFwds) { v.r.forwards(v.r.forwardPower / 127); }
+	if (v.r.KeyRot) { v.r.rotateBase(v.r.rotationPower); }
 	v.j.getAnalog(mousePos);
 	v.r.update();//calls robot update function
 	switch (s.SimRunning) {
 	case simulation::NAVIGATION:
 		v.r.NavigationUpdate();
 		v.r.moveAround(v.j.analogX, v.j.analogY);
+		v.f.initialized = false;//only initialize the field elements when running FIELD
 			break;
 	case simulation::PIDCTRL:
 		v.r.PIDControlUpdate();
+		v.f.initialized = false;//only initialize the field elements when running FIELD
 		break;
 	case simulation::TRUSPEED:
 		v.r.TruSpeedUpdate();
 		v.r.moveAround(v.j.analogX, v.j.analogY);
+		v.f.initialized = false;//only initialize the field elements when running FIELD
 		break;
 	case simulation::FIELD:
 		v.f.FieldUpdate(&v.r);
@@ -245,6 +277,7 @@ void buttons() {//function for drawing the buttons
 }
 
 void CimulationApp::draw() {
+	float fieldEnd;//end right side of the field
 	gl::enableAlphaBlending();//good for transparent images
 	// clear out the window with black
 	gl::clear(Color(0, 0, 0));
@@ -293,19 +326,25 @@ void CimulationApp::draw() {
 			gl::draw(v.f.fieldBare, Area(-v.f.fieldSize*ppi/2, -v.f.fieldSize*ppi/2, v.f.fieldSize*ppi/2, v.f.fieldSize*ppi/2));
 		gl::popModelView();//finish drawing the field
 		//drawing each individual cone. oh my
-		float fieldEnd = v.f.dFromEdge + v.f.fieldSize*ppi;//the value for the very end of the field drawing, used to properly display cones because in the reference sheet their values were based off the bottom right vertice
+		 fieldEnd = v.f.dFromEdge + v.f.fieldSize*ppi;//the value for the very end of the field drawing, used to properly display cones because in the reference sheet their values were based off the bottom right vertice
 		for (int i = 0; i < v.f.c.size(); i++) {
 			//fieldend for where the end of the field is, to subtract values because: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
 			//+-(3*ppi) for sayin that the point pos.X and pos.Y are the center, and the 3*ppi is 3 inches RADIUS away from the center point
-			gl::draw(v.f.coneTexture, Area((fieldEnd) - (v.f.c[i].pos.X*ppi) - (3*ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) - (3 * ppi), (fieldEnd) - (v.f.c[i].pos.X*ppi) + (3 * ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) + (3 * ppi)));
+			gl::draw(v.f.coneTexture, Area((fieldEnd) - (v.f.c[i].pos.X*ppi) - (v.f.coneRad*ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) - (v.f.coneRad * ppi), (fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.coneRad * ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.coneRad * ppi)));
 		}
 	}
-	/**************************ROBOT***********************************/
-	buttons();
+	/*****************************ROBOT***********************************/
 	glPushMatrix();
-	gl::translate(Vec3f(v.r.position.X*ppi, v.r.position.Y*ppi, 0.0));//origin of rotation
-	gl::rotate(Vec3f(0, 0, -v.r.mRot));//something for like 3D rotation.... ugh
+	if (s.SimRunning == s.FIELD) {
+		gl::translate(Vec3f(fieldEnd - v.r.position.X*ppi, fieldEnd - v.r.position.Y*ppi, 0.0));//origin of rotation
+	}
+	else {
+		gl::translate(Vec3f(v.r.position.X*ppi, v.r.position.Y*ppi, 0.0));//origin of rotation
+	}
+	gl::rotate(Vec3f(0, 0, -v.r.ActualHeading-90));//something for like 3D rotation.... ugh
+	
 	gl::draw(v.r.TankBase, Area((-(v.r.size / 2))*ppi, (-(v.r.size / 2))*ppi, ((v.r.size / 2))*ppi, ((v.r.size / 2))*ppi));
+	
 	glPopMatrix();
 	/*****************************MISC**********************************/
 	stringstream actualY;
@@ -331,6 +370,9 @@ void CimulationApp::draw() {
 	thingi << v.r.position.Y;
 	thingi >> thingi2;
 	gl::drawString(thingi2, Vec2f(650, 140), Color(1, 1, 1), Font("Arial", 30));
+	
+	//USER INTERFACE
+	buttons();
 }
 
 CINDER_APP_NATIVE(CimulationApp, RendererGl)

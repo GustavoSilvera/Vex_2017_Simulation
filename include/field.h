@@ -26,5 +26,6 @@ public:
 	float fieldSize = 141.05;// 140.5 + 2 * (1.27);wall thickness accounted for
 	int dFromEdge = 100;//draw distance from the start of the field verticie to the edge of the window
 	bool initialized;//if the field bare texture is visible or not. 
+	int coneRad = 3;
 };
 

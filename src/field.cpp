@@ -68,9 +68,21 @@ void field::initializeField() {
 void field::FieldUpdate(robot *robit) {
 	if (!initialized) {
 		initializeField();
-		robit->position.X = 100;
+		robit->position.X = 100 ;
 		robit->position.Y = 35;
-		robit->mRot = 45;
+		robit->mRot = 135;
+		initialized = true;//so that this only gets called ONCE when the field tab is running
+	}
+	for (int i = 0; i < c.size(); i++) {
+		if ((robit->position.X + robit->size / 2) - (c[i].pos.X - coneRad) < 0.01 || 
+			(robit->position.X - robit->size / 2) - (c[i].pos.X + coneRad) < 0.01 ||
+			(robit->position.Y + robit->size / 2) - (c[i].pos.Y - coneRad) < 0.01 ||
+			(robit->position.Y - robit->size / 2) - (c[i].pos.Y + coneRad) < 0.01) {
+			//robot is touching a cone
+			c[i].pos.X += robit->speed.X;
+			c[i].pos.Y += robit->speed.Y;
+
+		}
 	}
 }
 
