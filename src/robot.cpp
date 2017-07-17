@@ -5,19 +5,27 @@
 //declares and defines the robot class and functions
 
 robot::robot(vec3 p, vec3 s) : position(p), speed(s) {}
+float limitSmall(float noLessThan, float value) {//not really working anyways. idk
+	if (abs(value) >= noLessThan)
+		return value;
+	else return getSign(value)* noLessThan;
+}
+void robot::forwards(float power) {
+	float rateOfChange = 45;//constant changing the amount of initial change the acceleration goes through? maibe
+	float amountOfFriction = 3;//constant changing the amount of friction for the robot
 
-void robot::forwards(float  power) {
-	speed.X = power*cos((ActualHeading)*(PI / 180));
-	speed.Y = -power*sin((ActualHeading)*(PI / 180));
-	if (abs(power) > 0.01)
-		encoder1 += power;//increments the encoder while going forwards or backwards
+	acceleration.X = limitSmall(0.01, 2 * power*cos((ActualHeading)*(PI / 180)) / rateOfChange - amountOfFriction*speed.X);
+	acceleration.Y = limitSmall(0.01, -2*power*sin((ActualHeading)*(PI / 180))/ rateOfChange - amountOfFriction*speed.Y);
+	
+	//if (abs(power) > 0.01)
+	//	encoder1 += power;//increments the encoder while going forwards or backwards
 }
 void robot::rotateBase(float rotAmount) {
 	mRot += (truSpeed(3, -rotAmount) / 50);
 }
 void robot::stop() {
-	speed = vec3(0, 0, 0);
-	mRot += 0;
+	//speed = vec3(0, 0, 0);
+	//mRot += 0;
 }
 float robot::truSpeed(int degree, float value) {//see here for reference https://www.desmos.com/calculator/bhwj2xjmef
 	float exponented = value;//finished value after being taken to the degree's exponent
@@ -38,7 +46,7 @@ float robot::truSpeed(int degree, float value) {//see here for reference https:/
 	}
 }
 void robot::calculatePos() {
-	if (!rotating && motorPower != 0) {
+	if (!rotating) {
 		//float Magnitude = ((changeInDist) * 4 * PI) / (360);//function for adding the change in inches to current posiiton
 		current.deg = ActualHeading;
 		current.Xpos += cos(current.deg*(PI / 180))*(encoder1 - encoderLast);//cosine of angle times magnitude RADIANS(vector trig)//NOT WORKING
@@ -56,7 +64,7 @@ float robot::PID_controller() {//accelerates and decelerates robot based on loca
 	PID.integral = 0;
 
 	if (PID.isRunning) {
-		//v.r.PID.currentPos = v.r.current.Ypos;// * sensorScale;idk if i need this, probs not.
+		//PID.currentPos = current.Ypos;// * sensorScale;idk if i need this, probs not.
 		if (abs(position.X*ppi - PID.requestedValue) > 0.001) {
 			PID.error = position.X*ppi - PID.requestedValue;//calculate error
 		}
@@ -75,8 +83,8 @@ float robot::PID_controller() {//accelerates and decelerates robot based on loca
 		// calculate the derivative
 		PID.derivative = PID.error - PID.lastError;
 		PID.lastError = PID.error;
-		// calculate drive (in this case, just for the chain (ripper) )
-		return(((kP * PID.error) + (PID.integral / kI) + (kD * PID.derivative)) / 127);
+		// calculate drive (in this case, just for the robot)
+		return(((kP * PID.error) + (PID.integral / kI) + (kD * PID.derivative)));
 	}
 	else {
 		// clear all
@@ -88,15 +96,37 @@ float robot::PID_controller() {//accelerates and decelerates robot based on loca
 		// Run at 50Hz
 	}
 }
+void robot::setVertices() {
+	//gross i know, but its for calculating each vertice of the robot based off its current angle;
+	//math behind is based off basic trig and 45 45 90° triangle analytic geometry
+	vertices[0].X = (position.X - ( ( size / 2) * (sqrt(2)) * cos((ActualHeading - 135) * PI / 180 ) ) );
+	vertices[0].Y = (position.Y + ( ( size / 2) * (sqrt(2)) * sin((ActualHeading - 135)* PI / 180 ) ) );
+	vertices[1].X = (position.X + (-1 * ( (size / 2) * (sqrt(2)) * cos(180 - (ActualHeading + 7.62) * PI / 180 ) ) ) );
+	vertices[1].Y = (position.Y + (-1 * ( (size / 2) * (sqrt(2)) * sin(180 - (ActualHeading + 7.62)* PI / 180 ) ) ) );
+	vertices[2].X = (position.X + ( ( size / 2) * (sqrt(2)) * cos((ActualHeading - 135) * PI / 180 ) ) );
+	vertices[2].Y = (position.Y - ( ( size / 2) * (sqrt(2)) * sin((ActualHeading - 135)* PI / 180 ) ) );
+	vertices[3].X = (position.X - (-1 * ( (size / 2) * (sqrt(2)) * cos(180 - (ActualHeading + 7.62) * PI / 180 ) ) ) );
+	vertices[3].Y = (position.Y - (-1 * ( (size / 2) * (sqrt(2)) * sin(180 - (ActualHeading + 7.62)* PI / 180 ) ) ) );
 
+}
 void robot::update() {
+	
+	speed = speed + acceleration.times(1.0/60.0);
 	position = position + speed;
 	ActualHeading = mRot + 90;
+	robot::setVertices();
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {
-	motorPower = truSpeed(3, jAnalogY) / 127;
-	forwards(motorPower);
+	if (ArrowKeyUp) forwards(127);
+	else if (ArrowKeyDown) forwards(-127);
+	else if (jAnalogY != 0) forwards(truSpeed(3, jAnalogY));
+	else forwards(0);
+
+	if (RotLeft) rotateBase(-127);
+	if (RotRight) rotateBase(127);
+
+	//forwards(motorPower/127);//used to move the robot forwards or backwards
 	if (abs(jAnalogX) > 10) {//checking to see if rotation should occur.
 		rotating = true;
 		rotateBase(jAnalogX);
@@ -105,10 +135,18 @@ void robot::moveAround(float jAnalogX, float jAnalogY) {
 		rotating = false;
 	}
 }
+void robot::deceleration(int timePassed) {
+	float power = 127;
+	if (abs(power) > 0) {
+		power = 127/timePassed;
+		forwards(power);
+	}
+}
 void robot::PIDControlUpdate() {
 	PID.isRunning = true;
-	forwards(PID_controller());
-	mRot = 90;
+	acceleration.X = 0;
+	speed.X = -PID_controller()/127;
+	ActualHeading = 0;
 	position.Y = 69.6;
 }
 

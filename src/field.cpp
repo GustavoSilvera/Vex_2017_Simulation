@@ -65,6 +65,19 @@ void field::initializeField() {
 	c.assign(&initialConfiguration[0], &initialConfiguration[54]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
 	
 }
+
+void distance2Vertices(robot *robit, struct field::cone *c) {
+	/******vertices:*******
+		1----------2
+		|    r     |
+		|          |
+		4----------3
+	**********************/
+	for (int v = 0; v < 4; v++) {
+		//calculates distance between the cone's centre and each vertice
+		c->d2V[v] = sqrt(sqr(c->pos.X - robit->vertices[v].X) + sqr(c->pos.Y - robit->vertices[v].Y));
+	}
+}
 void field::FieldUpdate(robot *robit) {
 	if (!initialized) {
 		initializeField();
@@ -74,18 +87,60 @@ void field::FieldUpdate(robot *robit) {
 		initialized = true;//so that this only gets called ONCE when the field tab is running
 	}
 	for (int i = 0; i < c.size(); i++) {
-		if ((robit->position.X + robit->size / 2) - (c[i].pos.X - coneRad) < 0.01 || 
-			(robit->position.X - robit->size / 2) - (c[i].pos.X + coneRad) < 0.01 ||
-			(robit->position.Y + robit->size / 2) - (c[i].pos.Y - coneRad) < 0.01 ||
-			(robit->position.Y - robit->size / 2) - (c[i].pos.Y + coneRad) < 0.01) {
+		float dConeToRobot = sqrt(sqr(c[i].pos.X - robit->position.X) + sqr(c[i].pos.Y - robit->position.Y));
+		if (dConeToRobot < robit->size) {//within a radius around the robot of 18 inches around the main body
+			distance2Vertices(robit, &c[i]);//calculate all the distances
+			//shortest distance: (a)
+				float a = SortSmallest(c[i].d2V[0], c[i].d2V[1], c[i].d2V[2], c[i].d2V[3]);//sorts the smallest of the distances
+			//2nd shortest distance: (b)
+				float b = Sort2ndSmallest(c[i].d2V[0], c[i].d2V[1], c[i].d2V[2], c[i].d2V[3]);
+				//EXPLANATION HERE:
+				float C1 = ( ( ( ( sqr ( a ) - sqr ( b ) ) / robit->size ) + robit->size ) / 2 );
+				float d2RobotEdge = sqrt( sqr ( a ) - sqr ( C1 ) );
+				bool touchingFrontRobot = (a == c[i].d2V[0] || a == c[i].d2V[1]) && (b == c[i].d2V[0] || b == c[i].d2V[1]);//if smallest made triangle is with the 1st and 2nd vertices
+				bool touchingFrontVertices = (abs(c[i].d2V[0] - coneRad) < .15 || abs(c[i].d2V[1] - coneRad) < .15);//if shortest distance possible from cone to 1st and 2nd vertices
+				bool touchingBackRobot = (a == c[i].d2V[2] || a == c[i].d2V[3]) && (b == c[i].d2V[2] || b == c[i].d2V[3]);//if smallest made triangle is with the 3rd and 4th vertices
+				bool touchingBackVertices = (abs( c[i].d2V[2] - coneRad) < .15 || abs(c[i].d2V[3] - coneRad) < .15);//if shortest distance possible from cone to 3rd and 4th vertices
+				if (d2RobotEdge <= coneRad) {
+					//then touching :D
+					bool movingForwards = (robit->acceleration.X > 0 || robit->acceleration.Y > 0);
+					bool movingBackwards = ((robit->acceleration.X < 0 || robit->acceleration.Y < 0));
+					if (movingForwards && (touchingFrontRobot || touchingFrontVertices) ) {//if going forwards(positive)
+						c[i].pos.X += robit->speed.X;
+						c[i].pos.Y += robit->speed.Y;
+					}
+					else if (movingBackwards && (touchingBackRobot || touchingBackVertices)) {//if going backwards(negative)
+						c[i].pos.X += robit->speed.X;
+						c[i].pos.Y += robit->speed.Y;
+					}
+					if (d2RobotEdge < coneRad) {//WHAAAA
+						//works for pushing stray cones away from the robot if they get too close
+						c[i].pos.X += getSign(robit->speed.X) * abs(d2RobotEdge - coneRad);
+						c[i].pos.Y += getSign(robit->speed.Y) * abs(d2RobotEdge - coneRad);
+						//current issue, if cone is already too inside, it'll push them MORE inside
+					}
+					
+				}
+		}
+		else {
+			for (int v = 0; v < 4; v++) {
+				c[i].d2V[v] = 1000;//given a garbage number of being 1000 units away, just to not have to be rendered
+			}
+		}
+
+
+		/*
+		float dConeToRobot = sqrt(sqr(c[i].pos.X - robit->position.X) + sqr(c[i].pos.Y - robit->position.Y));
+		if (dConeToRobot < ( robit->size/2 + coneRad) && movingTowardsCone(robit, &c[i])) {
 			//robot is touching a cone
+			//AND MOVING TOWARDS IT
 			c[i].pos.X += robit->speed.X;
 			c[i].pos.Y += robit->speed.Y;
 
-		}
+		}*///technically works, but not very well... i guess... kinda 
 	}
 }
-
+//make functino to compute ONLY the cones closest to the robot(by like 1 metre or something idk)
 
 //constructor
  field::field() : initialized(false) {

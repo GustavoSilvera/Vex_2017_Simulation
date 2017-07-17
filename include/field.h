@@ -16,9 +16,16 @@ public:
 		vec3 pos;//position
 		int heading;//direction of the cone in 360° when tipped
 		bool tipped;//if fallen 
+		float d2V[4];//distance to each vertice on the robot
 	};
 	std::vector<cone> c;//vector of cones
+	struct MoGo {
+		vec3 pos;
+		bool red;
+	};
+	std::vector<MoGo> mg;//vector of mogos
 
+	ci::gl::Texture MobileGoal;
 	ci::gl::Texture coneTexture;
 	ci::gl::Texture fieldBare;
 	ci::gl::Texture fieldFull;

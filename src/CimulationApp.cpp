@@ -135,7 +135,7 @@ public:
 	void draw();
 
 	vex v;
-
+	int TIME = 0;
 };
 
 void CimulationApp::setup() {
@@ -145,6 +145,7 @@ void CimulationApp::setup() {
 	v.f.fieldBare = gl::Texture(loadImage(loadAsset("InTheZoneFieldBare.jpg")));
 	v.f.fieldFull = gl::Texture(loadImage(loadAsset("InTheZoneFieldFull.jpg")));
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
+	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGo.png")));
 	setWindowSize(WindowWidth, WindowHeight);
 	v.r.current.Xpos = 0;
 	v.r.current.Ypos = 0;
@@ -186,48 +187,45 @@ void CimulationApp::mouseMove(MouseEvent event) {
 }
 void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_UP) {
-		v.r.KeyFwds = true;
-		v.r.forwardPower = 127;
+		v.r.ArrowKeyUp = true;
 	}
 	if (event.getCode() == KeyEvent::KEY_DOWN) {
-		v.r.KeyFwds = true;
-		v.r.forwardPower = -127;
+		v.r.ArrowKeyDown = true;
 	}
 	if (event.getCode() == KeyEvent::KEY_LEFT) {
-		v.r.KeyRot = true;
-		v.r.rotationPower = -127;
+		v.r.RotLeft = true;
 	}
 	if (event.getCode() == KeyEvent::KEY_RIGHT) {
-		v.r.KeyRot = true;
-		v.r.rotationPower = 127;
+		v.r.RotRight = true;
 	}
 }
 void CimulationApp::keyUp(KeyEvent event) {
-	v.r.KeyFwds = false;
-	v.r.KeyRot = false;
+	v.r.ArrowKeyDown = false;
+	v.r.ArrowKeyUp = false;
+	v.r.RotRight = false;
+	v.r.RotLeft = false;
 
 	if (event.getCode() == KeyEvent::KEY_UP) {
-		v.r.forwardPower = 0;
 	}
 	if (event.getCode() == KeyEvent::KEY_DOWN) {
-		v.r.forwardPower = 0;
 	}
 	if (event.getCode() == KeyEvent::KEY_LEFT) {
-		v.r.rotationPower = 0;
+		//v.r.rotationPower = 0;
 	}
 	if (event.getCode() == KeyEvent::KEY_RIGHT) {
-		v.r.rotationPower = 0;
+		//v.r.rotationPower = 0;
 	}
 }
 void CimulationApp::update() {
-	if (v.r.KeyFwds) { v.r.forwards(v.r.forwardPower / 127); }
-	if (v.r.KeyRot) { v.r.rotateBase(v.r.rotationPower); }
+	
 	v.j.getAnalog(mousePos);
 	v.r.update();//calls robot update function
+
 	switch (s.SimRunning) {
 	case simulation::NAVIGATION:
 		v.r.NavigationUpdate();
 		v.r.moveAround(v.j.analogX, v.j.analogY);
+
 		v.f.initialized = false;//only initialize the field elements when running FIELD
 			break;
 	case simulation::PIDCTRL:
@@ -290,11 +288,16 @@ void CimulationApp::draw() {
 		else {
 			v.j.drawX = 600;
 			v.j.drawY = 500;
+			for (int i = 0; i < 4; i++) {//simplified version of drawing the vertices
+				gl::color(1, 0, 0);
+				gl::drawSolidCircle(Vec2f(ppi * v.r.vertices[i].X, ppi * v.r.vertices[i].Y), 5);
+				gl::color(1, 1, 1);//resets colour to white
+			}
 		}
 		gl::drawStrokedCircle(Vec2f(v.j.drawX+v.j.drawSize, v.j.drawY+v.j.drawSize), v.j.drawSize);//circle at (800px, 300px) with radius 127px
 		gl::drawStrokedRect(Area(v.j.drawX, v.j.drawY, v.j.drawX + 2*v.j.drawSize, v.j.drawY + 2*v.j.drawSize));
 
-		if (v.j.withinAnalogRange(mousePos)) {//defined in hoystick.h, basically if within the drawing of the boundaries
+		if (v.j.withinAnalogRange(mousePos)) {//defined in joystick.h, basically if within the drawing of the boundaries
 			stringstream Xamount;
 			string Xamount2;
 			Xamount << setprecision(3) << v.r.truSpeed(3, v.j.analogX);
@@ -332,14 +335,21 @@ void CimulationApp::draw() {
 			//+-(3*ppi) for sayin that the point pos.X and pos.Y are the center, and the 3*ppi is 3 inches RADIUS away from the center point
 			gl::draw(v.f.coneTexture, Area((fieldEnd) - (v.f.c[i].pos.X*ppi) - (v.f.coneRad*ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) - (v.f.coneRad * ppi), (fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.coneRad * ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.coneRad * ppi)));
 		}
+		for (int i = 0; i < 4; i++) {//simplified version
+			gl::color(1, 0, 0);
+			gl::drawSolidCircle(Vec2f(fieldEnd - ppi * v.r.vertices[i].X, fieldEnd - ppi * v.r.vertices[i].Y), 5);
+			gl::color(1, 1, 1);
+		}
 	}
 	/*****************************ROBOT***********************************/
 	glPushMatrix();
 	if (s.SimRunning == s.FIELD) {
 		gl::translate(Vec3f(fieldEnd - v.r.position.X*ppi, fieldEnd - v.r.position.Y*ppi, 0.0));//origin of rotation
+
 	}
 	else {
 		gl::translate(Vec3f(v.r.position.X*ppi, v.r.position.Y*ppi, 0.0));//origin of rotation
+
 	}
 	gl::rotate(Vec3f(0, 0, -v.r.ActualHeading-90));//something for like 3D rotation.... ugh
 	
@@ -347,9 +357,28 @@ void CimulationApp::draw() {
 	
 	glPopMatrix();
 	/*****************************MISC**********************************/
+	/*VERTICES OF THE ROBIT*/
+	/*gl::color(1, 0, 0);
+	
+//	#1
+	gl::drawSolidCircle(Vec2f(ppi * (v.r.position.X - (((v.r.size / 2) * (sqrt(2)) * cos(((v.r.ActualHeading -135)) * PI / 180)))),
+		ppi * (v.r.position.Y + ((v.r.size / 2) * (sqrt(2)) * sin((v.r.ActualHeading  -135)* PI / 180)))), 5);
+//	#2
+	gl::drawSolidCircle(Vec2f(ppi * (v.r.position.X + (-1 * ((v.r.size / 2) * (sqrt(2)) * cos(180 - (v.r.ActualHeading + 7.62) * PI / 180)))),
+		ppi * (v.r.position.Y + (-1 * (v.r.size / 2) * (sqrt(2)) * sin(180 - (v.r.ActualHeading + 7.62)* PI / 180)))), 5);
+//  #3
+	gl::drawSolidCircle(Vec2f(ppi * (v.r.position.X + (((v.r.size / 2) * (sqrt(2)) * cos(((v.r.ActualHeading -135)) * PI / 180)))),
+		ppi * (v.r.position.Y - ((v.r.size / 2) * (sqrt(2)) * sin((v.r.ActualHeading -135)* PI / 180)))), 5);
+//	#4
+	gl::drawSolidCircle(Vec2f(ppi * (v.r.position.X - (-1*((v.r.size / 2) * (sqrt(2)) * cos(180 - (v.r.ActualHeading + 7.62) * PI / 180)))),
+		ppi * (v.r.position.Y - (-1 * (v.r.size / 2) * (sqrt(2)) * sin(180 - (v.r.ActualHeading + 7.62)* PI / 180)))), 5);
+	
+	gl::drawSolidCircle(Vec2f((v.r.position.X + 9 )* ppi,(v.r.position.Y - 9) * ppi), 5);//circle at (800px, 300px) with radius 127px
+	*/
+
 	stringstream actualY;
 	string actualY2;
-	actualY << v.r.current.Xpos;
+	actualY << v.r.ActualHeading;
 	actualY >> actualY2;
 	gl::drawString(actualY2, Vec2f(600, 40), Color(1, 1, 1), Font("Arial", 30));
 
@@ -370,7 +399,17 @@ void CimulationApp::draw() {
 	thingi << v.r.position.Y;
 	thingi >> thingi2;
 	gl::drawString(thingi2, Vec2f(650, 140), Color(1, 1, 1), Font("Arial", 30));
-	
+
+	stringstream accel;
+	string accel2;
+	accel << v.r.acceleration.Y;
+	accel >> accel2;
+	gl::drawString(accel2, Vec2f(1000, 340), Color(1, 1, 1), Font("Arial", 30));
+	stringstream accel3;
+	string accel4;
+	accel3 << v.r.acceleration.X;
+	accel3 >> accel4;
+	gl::drawString(accel4, Vec2f(1000, 440), Color(1, 1, 1), Font("Arial", 30));
 	//USER INTERFACE
 	buttons();
 }

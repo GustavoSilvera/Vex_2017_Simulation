@@ -17,6 +17,8 @@ public:
 	float PID_controller();
 	void update();
 	void moveAround(float jAnalogX, float jAnalogY);
+	void deceleration(int timePassed);
+	void setVertices();
 	void NavigationUpdate();
 	void PIDControlUpdate();
 	void TruSpeedUpdate();
@@ -38,16 +40,18 @@ public:
 	float encoderLast = 0;//last encoder value after a rotation
 	bool rotating = false;
 	int size = 18;
-	vec3 position;//X, Y, and Z
 	float mRot = 0;
 	float ActualHeading = mRot;//weird drawing issues where 0° is where 90° should be irl
-	float motorPower = 0;
+	vec3 position;//X, Y, and Z
 	vec3 speed;//diff x, diff y, diff z
+	vec3 acceleration = vec3(0, 0, 0);
 	volatile struct maintainPosition PID;
-	int forwardPower = 0;//used for arrow keys 
-	int rotationPower = 0;//used for arrow keys
-	volatile bool KeyFwds = false;//if the arrow keys are triggering a forwards/backwards motion
-	volatile bool KeyRot = false;//used for whether the keys are supposed to be triggering a rotation
+	volatile bool ArrowKeyUp = false;//if the arrow keys are triggering a forwards/backwards motion
+	volatile bool ArrowKeyDown = false;//if the arrow keys are triggering a forwards/backwards motion
+	volatile bool RotRight = false;//used for whether the keys are supposed to be triggering a rotation
+	volatile bool RotLeft = false;//used for whether the keys are supposed to be triggering a rotation
+
 	struct position current;
+	vec3 vertices[4];
 };
 #endif  // ROBOT_H
