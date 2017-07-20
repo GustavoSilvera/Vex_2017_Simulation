@@ -1,4 +1,4 @@
-# 5327C_simulation
+# Vex Robotics 2017 "In the Zone" Simulation
 A Cinder C++ based tool for simulating real world vex robotics applications
 
 Essentially this is a fully C++ built Vex robotics simulation making use of the open source Cinder C++ graphics libraries. 
