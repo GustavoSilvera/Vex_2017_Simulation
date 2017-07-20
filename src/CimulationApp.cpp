@@ -206,8 +206,10 @@ void CimulationApp::keyUp(KeyEvent event) {
 	v.r.RotLeft = false;
 
 	if (event.getCode() == KeyEvent::KEY_UP) {
+		v.r.lastMovedPositive = true;
 	}
 	if (event.getCode() == KeyEvent::KEY_DOWN) {
+		v.r.lastMovedPositive = false;
 	}
 	if (event.getCode() == KeyEvent::KEY_LEFT) {
 		//v.r.rotationPower = 0;
@@ -225,7 +227,6 @@ void CimulationApp::update() {
 	case simulation::NAVIGATION:
 		v.r.NavigationUpdate();
 		v.r.moveAround(v.j.analogX, v.j.analogY);
-
 		v.f.initialized = false;//only initialize the field elements when running FIELD
 			break;
 	case simulation::PIDCTRL:
@@ -402,14 +403,28 @@ void CimulationApp::draw() {
 
 	stringstream accel;
 	string accel2;
-	accel << v.r.acceleration.Y;
+	accel << v.r.velocity.Y;
 	accel >> accel2;
 	gl::drawString(accel2, Vec2f(1000, 340), Color(1, 1, 1), Font("Arial", 30));
 	stringstream accel3;
 	string accel4;
-	accel3 << v.r.acceleration.X;
+	accel3 << v.r.velocity.X;
 	accel3 >> accel4;
 	gl::drawString(accel4, Vec2f(1000, 440), Color(1, 1, 1), Font("Arial", 30));
+
+	stringstream heading1;
+	string heading2;
+	heading1 << v.f.c[0].heading;
+	heading1 >> heading2;
+	gl::drawString(heading2, Vec2f(1000, 640), Color(1, 1, 1), Font("Arial", 30));
+
+	if (v.r.movingForwards) {
+		gl::drawString("YES", Vec2f(1000, 740), Color(1, 1, 1), Font("Arial", 30));
+	}
+	else {
+		gl::drawString("NO", Vec2f(1000, 740), Color(1, 1, 1), Font("Arial", 30));
+	}
+
 	//USER INTERFACE
 	buttons();
 }

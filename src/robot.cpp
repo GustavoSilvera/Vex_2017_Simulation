@@ -4,28 +4,31 @@
 
 //declares and defines the robot class and functions
 
-robot::robot(vec3 p, vec3 s) : position(p), speed(s) {}
+robot::robot(vec3 p, vec3 s) : position(p), velocity(s) {}//constructor 
+
 float limitSmall(float noLessThan, float value) {//not really working anyways. idk
 	if (abs(value) >= noLessThan)
 		return value;
 	else return getSign(value)* noLessThan;
 }
 void robot::forwards(float power) {
+	//konstants that should be changed later
 	float rateOfChange = 45;//constant changing the amount of initial change the acceleration goes through? maibe
 	float amountOfFriction = 3;//constant changing the amount of friction for the robot
-
-	acceleration.X = limitSmall(0.01, 2 * power*cos((ActualHeading)*(PI / 180)) / rateOfChange - amountOfFriction*speed.X);
-	acceleration.Y = limitSmall(0.01, -2*power*sin((ActualHeading)*(PI / 180))/ rateOfChange - amountOfFriction*speed.Y);
+	//calculate acceleration taking friction into account
+	float Xaccel = 2 * (power / rateOfChange) - (amountOfFriction*velocity.X);
+	float Yaccel = 2 * (power / rateOfChange) - (amountOfFriction*velocity.Y);
+	//limiting acceleration to 0.01, no need for further acceleration rly
+	if(abs(Xaccel) > 0.01) acceleration.X = Xaccel;
+	else acceleration.X = 0;
+	if (abs(Yaccel) > 0.01) acceleration.Y = Yaccel;
+	else acceleration.Y = 0;
 	
 	//if (abs(power) > 0.01)
 	//	encoder1 += power;//increments the encoder while going forwards or backwards
 }
 void robot::rotateBase(float rotAmount) {
 	mRot += (truSpeed(3, -rotAmount) / 50);
-}
-void robot::stop() {
-	//speed = vec3(0, 0, 0);
-	//mRot += 0;
 }
 float robot::truSpeed(int degree, float value) {//see here for reference https://www.desmos.com/calculator/bhwj2xjmef
 	float exponented = value;//finished value after being taken to the degree's exponent
@@ -53,7 +56,6 @@ void robot::calculatePos() {
 		current.Ypos -= sin(current.deg*(PI / 180))*(encoder1 - encoderLast);//sine of angle times magnitude RADIANS(vector trig)//NOT WORKING
 		encoderLast = encoder1;
 	}
-
 }
 float robot::PID_controller() {//accelerates and decelerates robot based on location and goal. 
 	float kP = 1;//remove later
@@ -110,18 +112,34 @@ void robot::setVertices() {
 
 }
 void robot::update() {
-	
-	speed = speed + acceleration.times(1.0/60.0);
-	position = position + speed;
+	velocity = velocity + acceleration.times(1.0/60.0);
+	position.X += velocity.X * cos((ActualHeading)*(PI / 180));//velocity scaled because of rotation
+	position.Y -= velocity.Y * sin((ActualHeading)*(PI / 180));//velocity scaled because of rotation
 	ActualHeading = mRot + 90;
 	robot::setVertices();
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {
-	if (ArrowKeyUp) forwards(127);
-	else if (ArrowKeyDown) forwards(-127);
-	else if (jAnalogY != 0) forwards(truSpeed(3, jAnalogY));
-	else forwards(0);
+	if (ArrowKeyUp) { forwards(127); movingForwards = true; }
+	else if (ArrowKeyDown) { forwards(-127); movingForwards = false; }
+	else if (jAnalogY != 0) {
+		forwards(truSpeed(3, jAnalogY));
+		if (jAnalogY > 0) {
+			movingForwards = true;
+		}
+		else if (jAnalogY < 0) {
+			movingForwards = false;
+		}
+	}
+	else {
+		forwards(0);
+		if (lastMovedPositive) {
+			movingForwards = true;
+		}
+		else {
+			movingForwards = false;
+		}
+	}
 
 	if (RotLeft) rotateBase(-127);
 	if (RotRight) rotateBase(127);
@@ -134,18 +152,12 @@ void robot::moveAround(float jAnalogX, float jAnalogY) {
 	else {
 		rotating = false;
 	}
-}
-void robot::deceleration(int timePassed) {
-	float power = 127;
-	if (abs(power) > 0) {
-		power = 127/timePassed;
-		forwards(power);
-	}
+
 }
 void robot::PIDControlUpdate() {
 	PID.isRunning = true;
 	acceleration.X = 0;
-	speed.X = -PID_controller()/127;
+	velocity.X = -PID_controller()/127;
 	ActualHeading = 0;
 	position.Y = 69.6;
 }

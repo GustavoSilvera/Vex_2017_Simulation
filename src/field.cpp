@@ -68,15 +68,37 @@ void field::initializeField() {
 
 void distance2Vertices(robot *robit, struct field::cone *c) {
 	/******vertices:*******
-		1----------2
+		0----------1
 		|    r     |
 		|          |
-		4----------3
+		3----------2
 	**********************/
 	for (int v = 0; v < 4; v++) {
 		//calculates distance between the cone's centre and each vertice
 		c->d2V[v] = sqrt(sqr(c->pos.X - robit->vertices[v].X) + sqr(c->pos.Y - robit->vertices[v].Y));
 	}
+}
+float calculateAngle(robot *robit, struct field::cone *c) {
+	float changeInX = c->pos.X - robit->position.X;
+	float changeInY = c->pos.Y - robit->position.Y;
+	return atan(changeInY / changeInX) * (180 / PI);
+}
+void findSmallestD2V(float v1, float v2, float v3, float v4, robot *robit, struct field::cone *c) {
+	//supposed to return the distances to the nearest two vertices based off direction of the speed
+	//WHAT TO FIX: MAKE THE BACK VERTICES DO SOMETHING IF MOVING BACKWARDS, AND SOMETIMES CONES ARE BEING CAUGHT IF CLOSE TO FRONT VERTICES
+	if (robit->velocity.X > 0 && robit->velocity.Y > 0) {
+		c->SmallestD2V[0] = c->d2V[0];
+		c->SmallestD2V[1] = c->d2V[1];
+	}
+	else {
+		c->SmallestD2V[0] = c->d2V[3];
+		c->SmallestD2V[1] = c->d2V[2];
+	}
+}
+float calcD2Edge(float a, float b, robot *robit) {
+	//EXPLANATION HERE:
+	float C1 = ((((sqr(a) - sqr(b)) / robit->size) + robit->size) / 2);
+	return sqrt(abs(sqr(a) - sqr(C1)));
 }
 void field::FieldUpdate(robot *robit) {
 	if (!initialized) {
@@ -88,56 +110,21 @@ void field::FieldUpdate(robot *robit) {
 	}
 	for (int i = 0; i < c.size(); i++) {
 		float dConeToRobot = sqrt(sqr(c[i].pos.X - robit->position.X) + sqr(c[i].pos.Y - robit->position.Y));
-		if (dConeToRobot < robit->size) {//within a radius around the robot of 18 inches around the main body
+		if (dConeToRobot < robit->size) {//within a radius around the robot of 18 inches around the center point of the body
 			distance2Vertices(robit, &c[i]);//calculate all the distances
-			//shortest distance: (a)
-				float a = SortSmallest(c[i].d2V[0], c[i].d2V[1], c[i].d2V[2], c[i].d2V[3]);//sorts the smallest of the distances
-			//2nd shortest distance: (b)
-				float b = Sort2ndSmallest(c[i].d2V[0], c[i].d2V[1], c[i].d2V[2], c[i].d2V[3]);
-				//EXPLANATION HERE:
-				float C1 = ( ( ( ( sqr ( a ) - sqr ( b ) ) / robit->size ) + robit->size ) / 2 );
-				float d2RobotEdge = sqrt( sqr ( a ) - sqr ( C1 ) );
-				bool touchingFrontRobot = (a == c[i].d2V[0] || a == c[i].d2V[1]) && (b == c[i].d2V[0] || b == c[i].d2V[1]);//if smallest made triangle is with the 1st and 2nd vertices
-				bool touchingFrontVertices = (abs(c[i].d2V[0] - coneRad) < .15 || abs(c[i].d2V[1] - coneRad) < .15);//if shortest distance possible from cone to 1st and 2nd vertices
-				bool touchingBackRobot = (a == c[i].d2V[2] || a == c[i].d2V[3]) && (b == c[i].d2V[2] || b == c[i].d2V[3]);//if smallest made triangle is with the 3rd and 4th vertices
-				bool touchingBackVertices = (abs( c[i].d2V[2] - coneRad) < .15 || abs(c[i].d2V[3] - coneRad) < .15);//if shortest distance possible from cone to 3rd and 4th vertices
-				if (d2RobotEdge <= coneRad) {
-					//then touching :D
-					bool movingForwards = (robit->acceleration.X > 0 || robit->acceleration.Y > 0);
-					bool movingBackwards = ((robit->acceleration.X < 0 || robit->acceleration.Y < 0));
-					if (movingForwards && (touchingFrontRobot || touchingFrontVertices) ) {//if going forwards(positive)
-						c[i].pos.X += robit->speed.X;
-						c[i].pos.Y += robit->speed.Y;
-					}
-					else if (movingBackwards && (touchingBackRobot || touchingBackVertices)) {//if going backwards(negative)
-						c[i].pos.X += robit->speed.X;
-						c[i].pos.Y += robit->speed.Y;
-					}
-					if (d2RobotEdge < coneRad) {//WHAAAA
-						//works for pushing stray cones away from the robot if they get too close
-						c[i].pos.X += getSign(robit->speed.X) * abs(d2RobotEdge - coneRad);
-						c[i].pos.Y += getSign(robit->speed.Y) * abs(d2RobotEdge - coneRad);
-						//current issue, if cone is already too inside, it'll push them MORE inside
-					}
-					
-				}
+			findSmallestD2V(c[i].d2V[0], c[i].d2V[1], c[i].d2V[2], c[i].d2V[3], robit, &c[i]);//figure out which vertices are the ones we care about when the robot is moving a certain direction
+			float d2RobotEdge = calcD2Edge(c[i].SmallestD2V[0], c[i].SmallestD2V[1], robit);
+			vec3 edgePoint = vec3(c[i].pos.X - (coneRad - d2RobotEdge)*cos(robit->ActualHeading * (PI / 180)), c[i].pos.Y + (coneRad - d2RobotEdge)*sin(robit->ActualHeading * (PI / 180)));
+			vec3 penetrationDepth = c[i].pos + edgePoint.times(-1);//creates the vector between the cone's center and the perpendicular point of contact on the robot's edge (amount of penetration)
+			if (robit->velocity.X < 0 && robit->velocity.Y < 0) penetrationDepth = penetrationDepth.times(-1);//pushed in the opposite direction when moving backwards (makes logical sense, yes?)
+			if (d2RobotEdge <= coneRad)	c[i].pos = c[i].pos + penetrationDepth;//then touching :D
 		}
-		else {
-			for (int v = 0; v < 4; v++) {
-				c[i].d2V[v] = 1000;//given a garbage number of being 1000 units away, just to not have to be rendered
-			}
-		}
+		//things to do:
+		//fix basic velocity physics (DONE)
+		//fix basic robot->cone collisions(MOSTLY DONE)
+		//have to make cones interact with other cones(NOT DONE)
+		//		it makes sure that you only resolve a collision if the objects are moving towards each other.
 
-
-		/*
-		float dConeToRobot = sqrt(sqr(c[i].pos.X - robit->position.X) + sqr(c[i].pos.Y - robit->position.Y));
-		if (dConeToRobot < ( robit->size/2 + coneRad) && movingTowardsCone(robit, &c[i])) {
-			//robot is touching a cone
-			//AND MOVING TOWARDS IT
-			c[i].pos.X += robit->speed.X;
-			c[i].pos.Y += robit->speed.Y;
-
-		}*///technically works, but not very well... i guess... kinda 
 	}
 }
 //make functino to compute ONLY the cones closest to the robot(by like 1 metre or something idk)

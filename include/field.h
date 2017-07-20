@@ -14,9 +14,10 @@ public:
 	//static  int NUMBER_OF_CONES = 50;
 	struct cone {
 		vec3 pos;//position
-		int heading;//direction of the cone in 360° when tipped
+		float heading;//direction of the cone in 360° when tipped
 		bool tipped;//if fallen 
 		float d2V[4];//distance to each vertice on the robot
+		float SmallestD2V[2];
 	};
 	std::vector<cone> c;//vector of cones
 	struct MoGo {
