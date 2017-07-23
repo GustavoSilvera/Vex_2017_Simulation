@@ -32,13 +32,18 @@ public:
 	struct position {
 		double Xpos, Ypos, deg;
 	};
+	//lines
+	float slope[2];
+	float Yint[2];
 
+	//other stuff
 	ci::gl::Texture TankBase;
 	float encoder1 = 0;//simulating vex encoder
 	float encoderLast = 0;//last encoder value after a rotation
 	bool rotating = false;
-	volatile bool movingForwards = false;
-	volatile bool lastMovedPositive = false;
+	bool reversed = false;
+	volatile bool fieldSpeed = false;
+	float amountOfFriction = 3;	//constant changing the amount of friction for the robot
 	int size = 18;
 	float mRot = 0;
 	float ActualHeading = mRot;//weird drawing issues where 0° is where 90° should be irl

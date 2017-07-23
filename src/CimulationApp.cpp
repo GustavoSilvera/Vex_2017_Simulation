@@ -206,10 +206,8 @@ void CimulationApp::keyUp(KeyEvent event) {
 	v.r.RotLeft = false;
 
 	if (event.getCode() == KeyEvent::KEY_UP) {
-		v.r.lastMovedPositive = true;
 	}
 	if (event.getCode() == KeyEvent::KEY_DOWN) {
-		v.r.lastMovedPositive = false;
 	}
 	if (event.getCode() == KeyEvent::KEY_LEFT) {
 		//v.r.rotationPower = 0;
@@ -274,9 +272,70 @@ void buttons() {//function for drawing the buttons
 		clicky(BUTTON_AMOUNT);//function for if a button is being hovered of pressed
 	}
 }
+void robotDebug(vex *v, bool reversed) {
+	float fieldEnd = v->f.dFromEdge + v->f.fieldSize*ppi;
+	gl::color(1, 0, 0);
+	/*for (int i = 0; i < 4; i++) {//simplified version of drawing the vertices
+		if (reversed) gl::drawSolidCircle(Vec2f(fieldEnd - ppi * v->r.vertices[i].X, fieldEnd - ppi * v->r.vertices[i].Y), 5);
+		else gl::drawSolidCircle(Vec2f(ppi * v->r.vertices[i].X, ppi * v->r.vertices[i].Y), 5);
+	}*/
+	if (reversed) {
+		//vertice rectangles
+		gl::drawStrokedRect(Area(fieldEnd - v->r.vertices[0].X*ppi, fieldEnd - v->r.vertices[0].Y*ppi, fieldEnd - v->r.vertices[1].X*ppi, fieldEnd - v->r.vertices[1].Y*ppi));
+		gl::drawStrokedRect(Area(fieldEnd - v->r.vertices[2].X*ppi, fieldEnd - v->r.vertices[2].Y*ppi, fieldEnd - v->r.vertices[3].X*ppi, fieldEnd - v->r.vertices[3].Y*ppi));
+		//vertical lines
+		gl::drawLine(cinder::Vec2f(fieldEnd - (v->r.vertices[1].X + 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
+			fieldEnd - (v->r.vertices[1].Y + 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi),
+			cinder::Vec2f(fieldEnd - (v->r.vertices[2].X - 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
+				fieldEnd - (v->r.vertices[2].Y - 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(fieldEnd - (v->r.vertices[0].X + 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
+			fieldEnd - (v->r.vertices[0].Y + 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi),
+			cinder::Vec2f(fieldEnd - (v->r.vertices[3].X - 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
+				fieldEnd - (v->r.vertices[3].Y - 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi));
+		//horizontal lines
+		gl::drawLine(cinder::Vec2f(fieldEnd - (v->r.vertices[0].X + 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
+			fieldEnd - (v->r.vertices[0].Y + 300 * cos((v->r.ActualHeading) * PI / 180))*ppi),
+			cinder::Vec2f(fieldEnd - (v->r.vertices[1].X - 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
+				fieldEnd - (v->r.vertices[1].Y - 300 * cos((v->r.ActualHeading) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(fieldEnd - (v->r.vertices[2].X + 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
+			fieldEnd - (v->r.vertices[2].Y + 300 * cos((v->r.ActualHeading) * PI / 180))*ppi),
+			cinder::Vec2f(fieldEnd - (v->r.vertices[3].X - 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
+				fieldEnd - (v->r.vertices[3].Y - 300 * cos((v->r.ActualHeading) * PI / 180))*ppi));
+		//draw circle
+		gl::drawStrokedCircle(Vec2f(fieldEnd - v->r.position.X*ppi, fieldEnd - v->r.position.Y*ppi), 3*v->r.size*ppi);
+	}
+	else {
+		//vertice rectangles
+		gl::drawStrokedRect(Area(v->r.vertices[0].X*ppi, v->r.vertices[0].Y*ppi, v->r.vertices[1].X*ppi, v->r.vertices[1].Y*ppi));
+		gl::drawStrokedRect(Area(v->r.vertices[2].X*ppi, v->r.vertices[2].Y*ppi, v->r.vertices[3].X*ppi, v->r.vertices[3].Y*ppi));
+		//vertical lines
+		gl::drawLine(cinder::Vec2f((v->r.vertices[1].X + 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
+			(v->r.vertices[1].Y + 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi),
+			cinder::Vec2f((v->r.vertices[2].X - 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
+			(v->r.vertices[2].Y - 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f((v->r.vertices[0].X + 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
+			(v->r.vertices[0].Y + 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi),
+			cinder::Vec2f((v->r.vertices[3].X - 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
+			(v->r.vertices[3].Y - 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi));
+		//horizontal lines
+		gl::drawLine(cinder::Vec2f((v->r.vertices[0].X + 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
+			(v->r.vertices[0].Y + 300 * cos((v->r.ActualHeading) * PI / 180))*ppi),
+			cinder::Vec2f((v->r.vertices[1].X - 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
+			(v->r.vertices[1].Y - 300 * cos((v->r.ActualHeading) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f((v->r.vertices[2].X + 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
+			(v->r.vertices[2].Y + 300 * cos((v->r.ActualHeading) * PI / 180))*ppi),
+			cinder::Vec2f((v->r.vertices[3].X - 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
+			(v->r.vertices[3].Y - 300 * cos((v->r.ActualHeading) * PI / 180))*ppi));
+		//draw circle
+		gl::drawStrokedCircle(Vec2f(v->r.position.X*ppi, v->r.position.Y*ppi), 3*v->r.size*ppi);
+	}
+	//gl::drawLine(cinder::Vec2f(v.r.vertices[0].X*ppi, v.r.vertices[0].Y*ppi), cinder::Vec2f(v.r.vertices[3].X*ppi, v.r.vertices[3].Y*ppi));
+	gl::color(1, 1, 1);//resets colour to white
 
+}
 void CimulationApp::draw() {
 	float fieldEnd;//end right side of the field
+		 fieldEnd = v.f.dFromEdge + v.f.fieldSize*ppi;//the value for the very end of the field drawing, used to properly display cones because in the reference sheet their values were based off the bottom right vertice
 	gl::enableAlphaBlending();//good for transparent images
 	// clear out the window with black
 	gl::clear(Color(0, 0, 0));
@@ -285,15 +344,13 @@ void CimulationApp::draw() {
 		if (s.SimRunning == s.FIELD) {
 			v.j.drawX = v.f.fieldSize*ppi + v.f.dFromEdge+20;
 			v.j.drawY = getWindowHeight()/2;
+			v.r.reversed = true;
 		}
 		else {
+			v.r.reversed = false;
 			v.j.drawX = 600;
 			v.j.drawY = 500;
-			for (int i = 0; i < 4; i++) {//simplified version of drawing the vertices
-				gl::color(1, 0, 0);
-				gl::drawSolidCircle(Vec2f(ppi * v.r.vertices[i].X, ppi * v.r.vertices[i].Y), 5);
-				gl::color(1, 1, 1);//resets colour to white
-			}
+			robotDebug(&v, false);
 		}
 		gl::drawStrokedCircle(Vec2f(v.j.drawX+v.j.drawSize, v.j.drawY+v.j.drawSize), v.j.drawSize);//circle at (800px, 300px) with radius 127px
 		gl::drawStrokedRect(Area(v.j.drawX, v.j.drawY, v.j.drawX + 2*v.j.drawSize, v.j.drawY + 2*v.j.drawSize));
@@ -330,27 +387,23 @@ void CimulationApp::draw() {
 			gl::draw(v.f.fieldBare, Area(-v.f.fieldSize*ppi/2, -v.f.fieldSize*ppi/2, v.f.fieldSize*ppi/2, v.f.fieldSize*ppi/2));
 		gl::popModelView();//finish drawing the field
 		//drawing each individual cone. oh my
-		 fieldEnd = v.f.dFromEdge + v.f.fieldSize*ppi;//the value for the very end of the field drawing, used to properly display cones because in the reference sheet their values were based off the bottom right vertice
 		for (int i = 0; i < v.f.c.size(); i++) {
 			//fieldend for where the end of the field is, to subtract values because: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
-			//+-(3*ppi) for sayin that the point pos.X and pos.Y are the center, and the 3*ppi is 3 inches RADIUS away from the center point
+			//+-(coneRad*ppi) for sayin that the point pos.X and pos.Y are the center, and the coneRad*ppi is 3 inches RADIUS away from the center point
 			gl::draw(v.f.coneTexture, Area((fieldEnd) - (v.f.c[i].pos.X*ppi) - (v.f.coneRad*ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) - (v.f.coneRad * ppi), (fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.coneRad * ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.coneRad * ppi)));
 		}
-		for (int i = 0; i < 4; i++) {//simplified version
-			gl::color(1, 0, 0);
-			gl::drawSolidCircle(Vec2f(fieldEnd - ppi * v.r.vertices[i].X, fieldEnd - ppi * v.r.vertices[i].Y), 5);
-			gl::color(1, 1, 1);
-		}
+		robotDebug(&v, true);
+		gl::color(1, 1, 1) ;
 	}
 	/*****************************ROBOT***********************************/
+	
 	glPushMatrix();
 	if (s.SimRunning == s.FIELD) {
 		gl::translate(Vec3f(fieldEnd - v.r.position.X*ppi, fieldEnd - v.r.position.Y*ppi, 0.0));//origin of rotation
-
+		v.r.fieldSpeed = true;
 	}
 	else {
 		gl::translate(Vec3f(v.r.position.X*ppi, v.r.position.Y*ppi, 0.0));//origin of rotation
-
 	}
 	gl::rotate(Vec3f(0, 0, -v.r.ActualHeading-90));//something for like 3D rotation.... ugh
 	
@@ -411,19 +464,28 @@ void CimulationApp::draw() {
 	accel3 << v.r.velocity.X;
 	accel3 >> accel4;
 	gl::drawString(accel4, Vec2f(1000, 440), Color(1, 1, 1), Font("Arial", 30));
-
+	/**
 	stringstream heading1;
 	string heading2;
 	heading1 << v.f.c[0].heading;
 	heading1 >> heading2;
 	gl::drawString(heading2, Vec2f(1000, 640), Color(1, 1, 1), Font("Arial", 30));
-
-	if (v.r.movingForwards) {
-		gl::drawString("YES", Vec2f(1000, 740), Color(1, 1, 1), Font("Arial", 30));
+	*/
+	if (v.f.c[1].directlyInPath) {
+		gl::drawString("YAY", Vec2f(1000, 740), Color(1, 1, 1), Font("Arial", 30));
 	}
 	else {
-		gl::drawString("NO", Vec2f(1000, 740), Color(1, 1, 1), Font("Arial", 30));
+		gl::drawString("Nay", Vec2f(1000, 740), Color(1, 1, 1), Font("Arial", 30));
 	}
+	gl::color(1, 0, 0);
+	gl::drawSolidCircle(Vec2f(fieldEnd - v.f.c[1].closestPoint.X*ppi, fieldEnd - v.f.c[1].closestPoint.Y*ppi), 5);
+	gl::color(1, 1, 1);
+
+	stringstream hello1;
+	string hello2;
+	hello1 << v.f.HELLO;
+	hello1 >> hello2;
+	gl::drawString(hello2, Vec2f(1000, 640), Color(1, 1, 1), Font("Arial", 30));
 
 	//USER INTERFACE
 	buttons();

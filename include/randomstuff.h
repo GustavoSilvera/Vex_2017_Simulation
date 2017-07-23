@@ -15,4 +15,8 @@ inline int getSign(double value) {//returns whether a number is negative or posi
 inline float sqr(double value) {
 	return value*value;
 }
+inline int sortSmallVER(float value1, float value2) {
+	if (value1 <= value2)return 0;
+	return 1;
+}
 #endif
