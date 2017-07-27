@@ -487,6 +487,19 @@ void CimulationApp::draw() {
 	hello1 >> hello2;
 	gl::drawString(hello2, Vec2f(1000, 640), Color(1, 1, 1), Font("Arial", 30));
 
+
+	stringstream yint1;
+	string yint2;
+	yint1 << v.r.Yint[0];
+	yint1 >> yint2;
+	gl::drawString(yint2, Vec2f(800, 600), Color(1, 1, 1), Font("Arial", 30));
+
+	stringstream yint10;
+	string yint20;
+	yint10 << v.r.Yint[1];
+	yint10 >> yint20;
+	gl::drawString(yint20, Vec2f(800, 550), Color(1, 1, 1), Font("Arial", 30));
+
 	//USER INTERFACE
 	buttons();
 }
