@@ -22,12 +22,21 @@ void robot::forwards(float power) {
 	else acceleration.X = 0;
 	if (abs(Yaccel) > 0.01) acceleration.Y = Yaccel;
 	else acceleration.Y = 0;
-	
+	if (abs(velocity.X) < 0.01) velocity.X = 0;
+	if (abs(velocity.Y) < 0.01) velocity.Y = 0;
 	//if (abs(power) > 0.01)
 	//	encoder1 += power;//increments the encoder while going forwards or backwards
 }
-void robot::rotateBase(float rotAmount) {
-	mRot += (truSpeed(3, -rotAmount) / 50);
+void robot::rotate(float power) {
+	//konstants that should be changed later
+	float rateOfChange = 15;//constant changing the amount of initial change the acceleration goes through? maibe
+							//calculate acceleration taking friction into account
+	float rotAccel = (power / rateOfChange) - (amountOfFriction*rotVel);
+	//limiting acceleration to 0.01, no need for further acceleration rly
+	if (abs(rotAccel) > 0.3) rotAcceleration = rotAccel;
+	else rotAcceleration = 0;
+	if (abs(rotVel) < 0.1) rotVel = 0;
+
 }
 float robot::truSpeed(int degree, float value) {//see here for reference https://www.desmos.com/calculator/bhwj2xjmef
 	float exponented = value;//finished value after being taken to the degree's exponent
@@ -48,9 +57,9 @@ float robot::truSpeed(int degree, float value) {//see here for reference https:/
 	}
 }
 void robot::calculatePos() {
-	if (!rotating) {
+	if (rotVel == 0) {//not rotating
 		//float Magnitude = ((changeInDist) * 4 * PI) / (360);//function for adding the change in inches to current posiiton
-		current.deg = ActualHeading;
+		current.deg = mRot;
 		current.Xpos += cos(current.deg*(PI / 180))*(encoder1 - encoderLast);//cosine of angle times magnitude RADIANS(vector trig)//NOT WORKING
 		current.Ypos -= sin(current.deg*(PI / 180))*(encoder1 - encoderLast);//sine of angle times magnitude RADIANS(vector trig)//NOT WORKING
 		encoderLast = encoder1;
@@ -101,65 +110,59 @@ void robot::setVertices() {
 	//gross i know, but its for calculating each vertice of the robot based off its current angle;
 	//math behind is based off basic trig and 45 45 90° triangle analytic geometry
 	if (!reversed) {
-		vertices[0].X = (position.X - ((size / 2) * (sqrt(2)) * cos((ActualHeading - 135) * PI / 180)));
-		vertices[0].Y = (position.Y + ((size / 2) * (sqrt(2)) * sin((ActualHeading - 135)* PI / 180)));
-		vertices[1].X = (position.X + (-1 * ((size / 2) * (sqrt(2)) * cos(180 - (ActualHeading + 7.62) * PI / 180))));
-		vertices[1].Y = (position.Y + (-1 * ((size / 2) * (sqrt(2)) * sin(180 - (ActualHeading + 7.62)* PI / 180))));
-		vertices[2].X = (position.X + ((size / 2) * (sqrt(2)) * cos((ActualHeading - 135) * PI / 180)));
-		vertices[2].Y = (position.Y - ((size / 2) * (sqrt(2)) * sin((ActualHeading - 135)* PI / 180)));
-		vertices[3].X = (position.X - (-1 * ((size / 2) * (sqrt(2)) * cos(180 - (ActualHeading + 7.62) * PI / 180))));
-		vertices[3].Y = (position.Y - (-1 * ((size / 2) * (sqrt(2)) * sin(180 - (ActualHeading + 7.62)* PI / 180))));
+		vertices[0].X = (position.X - ((size / 2) * (sqrt(2)) * cos((mRot - 135) * PI / 180)));
+		vertices[0].Y = (position.Y + ((size / 2) * (sqrt(2)) * sin((mRot - 135)* PI / 180)));
+		vertices[1].X = (position.X + (-1 * ((size / 2) * (sqrt(2)) * cos(180 - (mRot + 7.62) * PI / 180))));
+		vertices[1].Y = (position.Y + (-1 * ((size / 2) * (sqrt(2)) * sin(180 - (mRot + 7.62)* PI / 180))));
+		vertices[2].X = (position.X + ((size / 2) * (sqrt(2)) * cos((mRot - 135) * PI / 180)));
+		vertices[2].Y = (position.Y - ((size / 2) * (sqrt(2)) * sin((mRot - 135)* PI / 180)));
+		vertices[3].X = (position.X - (-1 * ((size / 2) * (sqrt(2)) * cos(180 - (mRot + 7.62) * PI / 180))));
+		vertices[3].Y = (position.Y - (-1 * ((size / 2) * (sqrt(2)) * sin(180 - (mRot + 7.62)* PI / 180))));
 	}
 	else {//because when drawing with new vertice, entire robot gets rotated and so do all its vertices
-		vertices[2].X = (position.X - ((size / 2) * (sqrt(2)) * cos((ActualHeading - 135) * PI / 180)));
-		vertices[2].Y = (position.Y + ((size / 2) * (sqrt(2)) * sin((ActualHeading - 135)* PI / 180)));
-		vertices[3].X = (position.X + (-1 * ((size / 2) * (sqrt(2)) * cos(180 - (ActualHeading + 7.62) * PI / 180))));
-		vertices[3].Y = (position.Y + (-1 * ((size / 2) * (sqrt(2)) * sin(180 - (ActualHeading + 7.62)* PI / 180))));
-		vertices[0].X = (position.X + ((size / 2) * (sqrt(2)) * cos((ActualHeading - 135) * PI / 180)));
-		vertices[0].Y = (position.Y - ((size / 2) * (sqrt(2)) * sin((ActualHeading - 135)* PI / 180)));
-		vertices[1].X = (position.X - (-1 * ((size / 2) * (sqrt(2)) * cos(180 - (ActualHeading + 7.62) * PI / 180))));
-		vertices[1].Y = (position.Y - (-1 * ((size / 2) * (sqrt(2)) * sin(180 - (ActualHeading + 7.62)* PI / 180))));
+		vertices[2].X = (position.X - ((size / 2) * (sqrt(2)) * cos((mRot - 135) * PI / 180)));
+		vertices[2].Y = (position.Y + ((size / 2) * (sqrt(2)) * sin((mRot - 135)* PI / 180)));
+		vertices[3].X = (position.X + (-1 * ((size / 2) * (sqrt(2)) * cos(180 - (mRot + 7.62) * PI / 180))));
+		vertices[3].Y = (position.Y + (-1 * ((size / 2) * (sqrt(2)) * sin(180 - (mRot + 7.62)* PI / 180))));
+		vertices[0].X = (position.X + ((size / 2) * (sqrt(2)) * cos((mRot - 135) * PI / 180)));
+		vertices[0].Y = (position.Y - ((size / 2) * (sqrt(2)) * sin((mRot - 135)* PI / 180)));
+		vertices[1].X = (position.X - (-1 * ((size / 2) * (sqrt(2)) * cos(180 - (mRot + 7.62) * PI / 180))));
+		vertices[1].Y = (position.Y - (-1 * ((size / 2) * (sqrt(2)) * sin(180 - (mRot + 7.62)* PI / 180))));
 	}
 }
 
 void robot::update() {
 	velocity = velocity + acceleration.times(1.0/60.0);
 	if (fieldSpeed) {//weird issue with how the robot is being drawn in the field update with the origin on the bottom right rather than top left
-		position.X -= velocity.X * cos((ActualHeading)*(PI / 180));//velocity scaled because of rotation
-		position.Y += velocity.Y * sin((ActualHeading)*(PI / 180));//velocity scaled because of rotation
+		position.X -= velocity.X * cos((mRot)*(PI / 180));//velocity scaled because of rotation
+		position.Y += velocity.Y * sin((mRot)*(PI / 180));//velocity scaled because of rotation
 	}
 	else {
-		position.X += velocity.X * cos((ActualHeading)*(PI / 180));//velocity scaled because of rotation
-		position.Y -= velocity.Y * sin((ActualHeading)*(PI / 180));//velocity scaled because of rotation
+		position.X += velocity.X * cos((mRot)*(PI / 180));//velocity scaled because of rotation
+		position.Y -= velocity.Y * sin((mRot)*(PI / 180));//velocity scaled because of rotation
 	}
-	ActualHeading = mRot;
+	rotVel += rotAcceleration*(1.0 / 60.0);
+	mRot += rotVel;
+	mRot = mRot;
 	robot::setVertices();
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {
-	if (ArrowKeyUp) { forwards(127);}
-	else if (ArrowKeyDown) { forwards(-127);}
-	else if (jAnalogY != 0) {
-		forwards(truSpeed(3, jAnalogY));
-	}
-	else {
-		forwards(0);
-	}
-	if (RotLeft) rotateBase(-127);
-	if (RotRight) rotateBase(127);
+	if (ArrowKeyUp) forwards(127);//checking up key
+	else if (ArrowKeyDown) forwards(-127);//checking down key
+	else if (jAnalogY != 0) forwards(truSpeed(3, jAnalogY));//chacking analog drawing
+	else forwards(0);//welp, no movement
 
-	//forwards(motorPower/127);//used to move the robot forwards or backwards
-	if (abs(jAnalogX) > 10) {//checking to see if rotation should occur.
-		rotating = true;
-		rotateBase(jAnalogX);
-	}
-	else rotating = false;
+	if (RotLeft) rotate(127);//checking left key
+	else if (RotRight) rotate(-127);//checking right key
+	else if (abs(jAnalogX) > 10) rotate(-jAnalogX);//checking analog drawing
+	else rotate(0);//welp, no rotation
 }
 void robot::PIDControlUpdate() {
 	PID.isRunning = true;
 	acceleration.X = 0;
 	velocity.X = -PID_controller()/127;
-	ActualHeading = 0;
+	mRot = 0;
 	position.Y = 69.6;
 }
 

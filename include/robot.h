@@ -10,7 +10,7 @@ public:
 	robot(vec3 p, vec3 s);
 
 	void forwards(float  power);
-	void rotateBase(float rotAmount);
+	void rotate(float power);
 	float truSpeed(int degree, float value);
 	void calculatePos();
 	float PID_controller();
@@ -33,24 +33,30 @@ public:
 		double Xpos, Ypos, deg;
 	};
 	//lines
-	float slope[2];
-	float Yint[2];
+		//vertical
+		float slopeV[2];
+		float YintV[2];
+		//horizontal
+		float slopeH[2];
+		float YintH[2];
 
 	//other stuff
 	ci::gl::Texture TankBase;
 	float encoder1 = 0;//simulating vex encoder
 	float encoderLast = 0;//last encoder value after a rotation
-	bool rotating = false;
 	bool reversed = false;
 	volatile bool fieldSpeed = false;
 	float amountOfFriction = 3;	//constant changing the amount of friction for the robot
 	int size = 18;
-	float mRot = 0;
-	float ActualHeading = mRot;//weird drawing issues where 0° is where 90° should be irl
+	float mRot = 0;//drawing rotation
+	//PHYSICS
 	vec3 position;//X, Y, and Z
 	vec3 velocity;//diff x, diff y, diff z
+	float rotVel = 0;
 	//vec3 speed;//abs value (positive) of the robit
 	vec3 acceleration = vec3(0, 0, 0);
+	float rotAcceleration = 0;
+	//OTHER STUFF
 	volatile struct maintainPosition PID;
 	volatile bool ArrowKeyUp = false;//if the arrow keys are triggering a forwards/backwards motion
 	volatile bool ArrowKeyDown = false;//if the arrow keys are triggering a forwards/backwards motion

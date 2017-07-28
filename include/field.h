@@ -22,7 +22,8 @@ public:
 		float SmallestD2V[2];
 		float distanceToCone[53];
 		bool touchingRobot;
-		bool directlyInPath;
+		bool directlyInVerticalPath;
+		bool directlyInHorizontalPath;
 		vec3 closestPoint;
 	};
 	std::vector<cone> c;//vector of cones

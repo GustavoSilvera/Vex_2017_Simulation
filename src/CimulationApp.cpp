@@ -284,23 +284,23 @@ void robotDebug(vex *v, bool reversed) {
 		gl::drawStrokedRect(Area(fieldEnd - v->r.vertices[0].X*ppi, fieldEnd - v->r.vertices[0].Y*ppi, fieldEnd - v->r.vertices[1].X*ppi, fieldEnd - v->r.vertices[1].Y*ppi));
 		gl::drawStrokedRect(Area(fieldEnd - v->r.vertices[2].X*ppi, fieldEnd - v->r.vertices[2].Y*ppi, fieldEnd - v->r.vertices[3].X*ppi, fieldEnd - v->r.vertices[3].Y*ppi));
 		//vertical lines
-		gl::drawLine(cinder::Vec2f(fieldEnd - (v->r.vertices[1].X + 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
-			fieldEnd - (v->r.vertices[1].Y + 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi),
-			cinder::Vec2f(fieldEnd - (v->r.vertices[2].X - 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
-				fieldEnd - (v->r.vertices[2].Y - 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f(fieldEnd - (v->r.vertices[0].X + 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
-			fieldEnd - (v->r.vertices[0].Y + 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi),
-			cinder::Vec2f(fieldEnd - (v->r.vertices[3].X - 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
-				fieldEnd - (v->r.vertices[3].Y - 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(fieldEnd - (v->r.vertices[1].X + 300 * cos((-v->r.mRot) * PI / 180))*ppi,
+			fieldEnd - (v->r.vertices[1].Y + 300 * sin((-v->r.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(fieldEnd - (v->r.vertices[2].X - 300 * cos((-v->r.mRot) * PI / 180))*ppi,
+				fieldEnd - (v->r.vertices[2].Y - 300 * sin((-v->r.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(fieldEnd - (v->r.vertices[0].X + 300 * cos((-v->r.mRot) * PI / 180))*ppi,
+			fieldEnd - (v->r.vertices[0].Y + 300 * sin((-v->r.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(fieldEnd - (v->r.vertices[3].X - 300 * cos((-v->r.mRot) * PI / 180))*ppi,
+				fieldEnd - (v->r.vertices[3].Y - 300 * sin((-v->r.mRot) * PI / 180))*ppi));
 		//horizontal lines
-		gl::drawLine(cinder::Vec2f(fieldEnd - (v->r.vertices[0].X + 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
-			fieldEnd - (v->r.vertices[0].Y + 300 * cos((v->r.ActualHeading) * PI / 180))*ppi),
-			cinder::Vec2f(fieldEnd - (v->r.vertices[1].X - 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
-				fieldEnd - (v->r.vertices[1].Y - 300 * cos((v->r.ActualHeading) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f(fieldEnd - (v->r.vertices[2].X + 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
-			fieldEnd - (v->r.vertices[2].Y + 300 * cos((v->r.ActualHeading) * PI / 180))*ppi),
-			cinder::Vec2f(fieldEnd - (v->r.vertices[3].X - 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
-				fieldEnd - (v->r.vertices[3].Y - 300 * cos((v->r.ActualHeading) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(fieldEnd - (v->r.vertices[0].X + 300 * sin((v->r.mRot) * PI / 180))*ppi,
+			fieldEnd - (v->r.vertices[0].Y + 300 * cos((v->r.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(fieldEnd - (v->r.vertices[1].X - 300 * sin((v->r.mRot) * PI / 180))*ppi,
+				fieldEnd - (v->r.vertices[1].Y - 300 * cos((v->r.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(fieldEnd - (v->r.vertices[2].X + 300 * sin((v->r.mRot) * PI / 180))*ppi,
+			fieldEnd - (v->r.vertices[2].Y + 300 * cos((v->r.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(fieldEnd - (v->r.vertices[3].X - 300 * sin((v->r.mRot) * PI / 180))*ppi,
+				fieldEnd - (v->r.vertices[3].Y - 300 * cos((v->r.mRot) * PI / 180))*ppi));
 		//draw circle
 		gl::drawStrokedCircle(Vec2f(fieldEnd - v->r.position.X*ppi, fieldEnd - v->r.position.Y*ppi), 3*v->r.size*ppi);
 	}
@@ -309,23 +309,23 @@ void robotDebug(vex *v, bool reversed) {
 		gl::drawStrokedRect(Area(v->r.vertices[0].X*ppi, v->r.vertices[0].Y*ppi, v->r.vertices[1].X*ppi, v->r.vertices[1].Y*ppi));
 		gl::drawStrokedRect(Area(v->r.vertices[2].X*ppi, v->r.vertices[2].Y*ppi, v->r.vertices[3].X*ppi, v->r.vertices[3].Y*ppi));
 		//vertical lines
-		gl::drawLine(cinder::Vec2f((v->r.vertices[1].X + 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
-			(v->r.vertices[1].Y + 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi),
-			cinder::Vec2f((v->r.vertices[2].X - 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
-			(v->r.vertices[2].Y - 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f((v->r.vertices[0].X + 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
-			(v->r.vertices[0].Y + 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi),
-			cinder::Vec2f((v->r.vertices[3].X - 300 * cos((-v->r.ActualHeading) * PI / 180))*ppi,
-			(v->r.vertices[3].Y - 300 * sin((-v->r.ActualHeading) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f((v->r.vertices[1].X + 300 * cos((-v->r.mRot) * PI / 180))*ppi,
+			(v->r.vertices[1].Y + 300 * sin((-v->r.mRot) * PI / 180))*ppi),
+			cinder::Vec2f((v->r.vertices[2].X - 300 * cos((-v->r.mRot) * PI / 180))*ppi,
+			(v->r.vertices[2].Y - 300 * sin((-v->r.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f((v->r.vertices[0].X + 300 * cos((-v->r.mRot) * PI / 180))*ppi,
+			(v->r.vertices[0].Y + 300 * sin((-v->r.mRot) * PI / 180))*ppi),
+			cinder::Vec2f((v->r.vertices[3].X - 300 * cos((-v->r.mRot) * PI / 180))*ppi,
+			(v->r.vertices[3].Y - 300 * sin((-v->r.mRot) * PI / 180))*ppi));
 		//horizontal lines
-		gl::drawLine(cinder::Vec2f((v->r.vertices[0].X + 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
-			(v->r.vertices[0].Y + 300 * cos((v->r.ActualHeading) * PI / 180))*ppi),
-			cinder::Vec2f((v->r.vertices[1].X - 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
-			(v->r.vertices[1].Y - 300 * cos((v->r.ActualHeading) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f((v->r.vertices[2].X + 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
-			(v->r.vertices[2].Y + 300 * cos((v->r.ActualHeading) * PI / 180))*ppi),
-			cinder::Vec2f((v->r.vertices[3].X - 300 * sin((v->r.ActualHeading) * PI / 180))*ppi,
-			(v->r.vertices[3].Y - 300 * cos((v->r.ActualHeading) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f((v->r.vertices[0].X + 300 * sin((v->r.mRot) * PI / 180))*ppi,
+			(v->r.vertices[0].Y + 300 * cos((v->r.mRot) * PI / 180))*ppi),
+			cinder::Vec2f((v->r.vertices[1].X - 300 * sin((v->r.mRot) * PI / 180))*ppi,
+			(v->r.vertices[1].Y - 300 * cos((v->r.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f((v->r.vertices[2].X + 300 * sin((v->r.mRot) * PI / 180))*ppi,
+			(v->r.vertices[2].Y + 300 * cos((v->r.mRot) * PI / 180))*ppi),
+			cinder::Vec2f((v->r.vertices[3].X - 300 * sin((v->r.mRot) * PI / 180))*ppi,
+			(v->r.vertices[3].Y - 300 * cos((v->r.mRot) * PI / 180))*ppi));
 		//draw circle
 		gl::drawStrokedCircle(Vec2f(v->r.position.X*ppi, v->r.position.Y*ppi), 3*v->r.size*ppi);
 	}
@@ -405,7 +405,7 @@ void CimulationApp::draw() {
 	else {
 		gl::translate(Vec3f(v.r.position.X*ppi, v.r.position.Y*ppi, 0.0));//origin of rotation
 	}
-	gl::rotate(Vec3f(0, 0, -v.r.ActualHeading-90));//something for like 3D rotation.... ugh
+	gl::rotate(Vec3f(0, 0, -v.r.mRot-90));//something for like 3D rotation.... ugh
 	
 	gl::draw(v.r.TankBase, Area((-(v.r.size / 2))*ppi, (-(v.r.size / 2))*ppi, ((v.r.size / 2))*ppi, ((v.r.size / 2))*ppi));
 	
@@ -415,32 +415,26 @@ void CimulationApp::draw() {
 	/*gl::color(1, 0, 0);
 	
 //	#1
-	gl::drawSolidCircle(Vec2f(ppi * (v.r.position.X - (((v.r.size / 2) * (sqrt(2)) * cos(((v.r.ActualHeading -135)) * PI / 180)))),
-		ppi * (v.r.position.Y + ((v.r.size / 2) * (sqrt(2)) * sin((v.r.ActualHeading  -135)* PI / 180)))), 5);
+	gl::drawSolidCircle(Vec2f(ppi * (v.r.position.X - (((v.r.size / 2) * (sqrt(2)) * cos(((v.r.mRot -135)) * PI / 180)))),
+		ppi * (v.r.position.Y + ((v.r.size / 2) * (sqrt(2)) * sin((v.r.mRot  -135)* PI / 180)))), 5);
 //	#2
-	gl::drawSolidCircle(Vec2f(ppi * (v.r.position.X + (-1 * ((v.r.size / 2) * (sqrt(2)) * cos(180 - (v.r.ActualHeading + 7.62) * PI / 180)))),
-		ppi * (v.r.position.Y + (-1 * (v.r.size / 2) * (sqrt(2)) * sin(180 - (v.r.ActualHeading + 7.62)* PI / 180)))), 5);
+	gl::drawSolidCircle(Vec2f(ppi * (v.r.position.X + (-1 * ((v.r.size / 2) * (sqrt(2)) * cos(180 - (v.r.mRot + 7.62) * PI / 180)))),
+		ppi * (v.r.position.Y + (-1 * (v.r.size / 2) * (sqrt(2)) * sin(180 - (v.r.mRot + 7.62)* PI / 180)))), 5);
 //  #3
-	gl::drawSolidCircle(Vec2f(ppi * (v.r.position.X + (((v.r.size / 2) * (sqrt(2)) * cos(((v.r.ActualHeading -135)) * PI / 180)))),
-		ppi * (v.r.position.Y - ((v.r.size / 2) * (sqrt(2)) * sin((v.r.ActualHeading -135)* PI / 180)))), 5);
+	gl::drawSolidCircle(Vec2f(ppi * (v.r.position.X + (((v.r.size / 2) * (sqrt(2)) * cos(((v.r.mRot -135)) * PI / 180)))),
+		ppi * (v.r.position.Y - ((v.r.size / 2) * (sqrt(2)) * sin((v.r.mRot -135)* PI / 180)))), 5);
 //	#4
-	gl::drawSolidCircle(Vec2f(ppi * (v.r.position.X - (-1*((v.r.size / 2) * (sqrt(2)) * cos(180 - (v.r.ActualHeading + 7.62) * PI / 180)))),
-		ppi * (v.r.position.Y - (-1 * (v.r.size / 2) * (sqrt(2)) * sin(180 - (v.r.ActualHeading + 7.62)* PI / 180)))), 5);
+	gl::drawSolidCircle(Vec2f(ppi * (v.r.position.X - (-1*((v.r.size / 2) * (sqrt(2)) * cos(180 - (v.r.mRot + 7.62) * PI / 180)))),
+		ppi * (v.r.position.Y - (-1 * (v.r.size / 2) * (sqrt(2)) * sin(180 - (v.r.mRot + 7.62)* PI / 180)))), 5);
 	
 	gl::drawSolidCircle(Vec2f((v.r.position.X + 9 )* ppi,(v.r.position.Y - 9) * ppi), 5);//circle at (800px, 300px) with radius 127px
 	*/
 
 	stringstream actualY;
 	string actualY2;
-	actualY << v.r.ActualHeading;
+	actualY << v.r.mRot;
 	actualY >> actualY2;
 	gl::drawString(actualY2, Vec2f(600, 40), Color(1, 1, 1), Font("Arial", 30));
-
-	stringstream thing;
-	string thing2;
-	thing << v.r.current.Ypos;
-	thing >> thing2;
-	gl::drawString(thing2, Vec2f(650, 40), Color(1, 1, 1), Font("Arial", 30));
 
 	stringstream thingy;
 	string thingy2;
@@ -452,16 +446,16 @@ void CimulationApp::draw() {
 	string thingi2;
 	thingi << v.r.position.Y;
 	thingi >> thingi2;
-	gl::drawString(thingi2, Vec2f(650, 140), Color(1, 1, 1), Font("Arial", 30));
+	gl::drawString(thingi2, Vec2f(750, 140), Color(1, 1, 1), Font("Arial", 30));
 
 	stringstream accel;
 	string accel2;
-	accel << v.r.velocity.Y;
+	accel << v.r.rotVel;
 	accel >> accel2;
 	gl::drawString(accel2, Vec2f(1000, 340), Color(1, 1, 1), Font("Arial", 30));
 	stringstream accel3;
 	string accel4;
-	accel3 << v.r.velocity.X;
+	accel3 << v.r.rotAcceleration;
 	accel3 >> accel4;
 	gl::drawString(accel4, Vec2f(1000, 440), Color(1, 1, 1), Font("Arial", 30));
 	/**
@@ -471,7 +465,7 @@ void CimulationApp::draw() {
 	heading1 >> heading2;
 	gl::drawString(heading2, Vec2f(1000, 640), Color(1, 1, 1), Font("Arial", 30));
 	*/
-	if (v.f.c[1].directlyInPath) {
+	if (v.f.c[1].directlyInHorizontalPath) {
 		gl::drawString("YAY", Vec2f(1000, 740), Color(1, 1, 1), Font("Arial", 30));
 	}
 	else {
@@ -486,19 +480,6 @@ void CimulationApp::draw() {
 	hello1 << v.f.HELLO;
 	hello1 >> hello2;
 	gl::drawString(hello2, Vec2f(1000, 640), Color(1, 1, 1), Font("Arial", 30));
-
-
-	stringstream yint1;
-	string yint2;
-	yint1 << v.r.Yint[0];
-	yint1 >> yint2;
-	gl::drawString(yint2, Vec2f(800, 600), Color(1, 1, 1), Font("Arial", 30));
-
-	stringstream yint10;
-	string yint20;
-	yint10 << v.r.Yint[1];
-	yint10 >> yint20;
-	gl::drawString(yint20, Vec2f(800, 550), Color(1, 1, 1), Font("Arial", 30));
 
 	//USER INTERFACE
 	buttons();

@@ -86,7 +86,24 @@ float calcD2Edge(float a, float b, robot *robit) {
 	float C1 = ((((sqr(a) - sqr(b)) / robit->size) + robit->size) / 2);
 	return sqrt(abs(sqr(a) - sqr(C1)));
 }
+void inPath(robot *robit, struct field::cone *c) {
+	vec3 origin = c->pos;//calculattes yintercepts for each cone relative to their position
+	float x = 0;//finds the y intercept
+	robit->slopeV[0] = (robit->vertices[0].Y - robit->vertices[3].Y) / (robit->vertices[0].X - robit->vertices[3].X);
+	robit->YintV[0] = robit->slopeV[0] * (x - (robit->vertices[0].X - origin.X)) + (robit->vertices[0].Y - origin.Y);
+	robit->slopeV[1] = (robit->vertices[1].Y - robit->vertices[2].Y) / (robit->vertices[1].X - robit->vertices[2].X);
+	robit->YintV[1] = robit->slopeV[1] * (x - (robit->vertices[1].X - origin.X)) + (robit->vertices[1].Y - origin.Y);
+	//with the y intrcepts, checks if the y intercepts are not the same sign, thus the cone (origin) is between them
+	c->directlyInVerticalPath = (getSign(robit->YintV[0]) != getSign(robit->YintV[1]));//works for telling me if between the two lines
+		//horizontal lines
+	robit->slopeH[0] = (robit->vertices[0].Y - robit->vertices[1].Y) / (robit->vertices[0].X - robit->vertices[1].X);
+	robit->YintH[0] = robit->slopeH[0] * (x - (robit->vertices[0].X - origin.X)) + (robit->vertices[0].Y - origin.Y);
+	robit->slopeH[1] = (robit->vertices[3].Y - robit->vertices[2].Y) / (robit->vertices[3].X - robit->vertices[2].X);
+	robit->YintH[1] = robit->slopeH[1] * (x - (robit->vertices[3].X - origin.X)) + (robit->vertices[3].Y - origin.Y);
+	//with the y intrcepts, checks if the y intercepts are not the same sign, thus the cone (origin) is between them
+	c->directlyInHorizontalPath = (getSign(robit->YintH[0]) != getSign(robit->YintH[1]));//works for telling me if between the two lines
 
+}
 void field::FieldUpdate(robot *robit) {
 	if (!initialized) {
 		initializeField();
@@ -98,18 +115,9 @@ void field::FieldUpdate(robot *robit) {
 	for (int i = 0; i < c.size(); i++) {
 		//optimizing tip( find a way to rid the sqrt function)
 		float dConeToRobot = sqrt(sqr(c[i].pos.X - robit->position.X) + sqr(c[i].pos.Y - robit->position.Y));
-		if (dConeToRobot < 3*robit->size) {//within a radius around the robot of 18 inches around the center point of the body
-			
-			vec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
-			float x = 0;//finds the y intercept
+		if (dConeToRobot < 3*robit->size) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
 			//WORKS
-			robit->slope[0] = (robit->vertices[0].Y - robit->vertices[3].Y) / (robit->vertices[0].X - robit->vertices[3].X);
-			robit->Yint[0] = robit->slope[0] * (x - (robit->vertices[0].X - origin.X) ) + (robit->vertices[0].Y - origin.Y);
-
-			robit->slope[1] = (robit->vertices[1].Y - robit->vertices[2].Y) / (robit->vertices[1].X - robit->vertices[2].X);
-			robit->Yint[1] = robit->slope[1] * (x - (robit->vertices[1].X - origin.X) ) + (robit->vertices[1].Y - origin.Y);
-
-			c[i].directlyInPath = (getSign(robit->Yint[0]) != getSign(robit->Yint[1]));//works for telling me if between the two lines
+			inPath(robit, &c[i]);
 
 			distance2Vertices(robit, &c[i]);//calculate all the distances
 
@@ -128,13 +136,26 @@ void field::FieldUpdate(robot *robit) {
 				robotMovingFwds = true;
 			}
 
+			if (robit->rotVel >= 0 && robit->velocity.X == 0 && robit->velocity.Y ==0) {//(rotating to the right//only care about the rightvertices 
+				c[i].SmallestD2V[0] = c[i].d2V[1];
+				c[i].SmallestD2V[1] = c[i].d2V[2];
+			}
+			else {//only care about the left two vertices
+				c[i].SmallestD2V[0] = c[i].d2V[0];
+				c[i].SmallestD2V[1] = c[i].d2V[3];
+			}
+
+
 			float d2RobotEdge = calcD2Edge(c[i].SmallestD2V[0], c[i].SmallestD2V[1], robit);//calculates the distance to the edge of the robit
 			//make penetration vector as (x, y) = (coneRad - closestPOint.X, coneRad)
-			if (c[i].directlyInPath && robotMovingFwds) {//either directly in front or behing based off center x and y position
-				c[i].closestPoint = vec3(c[i].pos.X - (d2RobotEdge)*cos(robit->ActualHeading * (PI / 180)), c[i].pos.Y + (d2RobotEdge)*sin(robit->ActualHeading * (PI / 180)));//does work
+			if (c[i].directlyInVerticalPath && robotMovingFwds) {//either directly in front or behing based off center x and y position
+				c[i].closestPoint = vec3(c[i].pos.X - (d2RobotEdge)*cos(robit->mRot * (PI / 180)), c[i].pos.Y + (d2RobotEdge)*sin(robit->mRot * (PI / 180)));//does work
 			}
-			else if (c[i].directlyInPath && !robotMovingFwds) {//either directly in front or behing based off center x and y position
-				c[i].closestPoint = vec3(c[i].pos.X + (d2RobotEdge)*cos(robit->ActualHeading * (PI / 180)), c[i].pos.Y - (d2RobotEdge)*sin(robit->ActualHeading * (PI / 180)));//does work
+			else if (c[i].directlyInVerticalPath && !robotMovingFwds) {//either directly in front or behing based off center x and y position
+				c[i].closestPoint = vec3(c[i].pos.X + (d2RobotEdge)*cos(robit->mRot * (PI / 180)), c[i].pos.Y - (d2RobotEdge)*sin(robit->mRot * (PI / 180)));//does work
+			}
+			else if (c[i].directlyInHorizontalPath) {//either directly in front or behing based off center x and y position
+				c[i].closestPoint = vec3(c[i].pos.X + (d2RobotEdge)*cos(robit->mRot * (PI / 180)), c[i].pos.Y - (d2RobotEdge)*sin(robit->mRot * (PI / 180)));//does work
 			}
 			else {//not directly in path
 				//will return which vertice is the closest to the cone
@@ -156,17 +177,17 @@ void field::FieldUpdate(robot *robit) {
 			/*if (d2RobotEdge <= coneRad) { //touching :D
 				//c[i].velocity = normal;
 				//c[i].touchingRobot = true;//used for adding to the list of which cones are slowing down the robot
-				//c[i].heading = robit->ActualHeading; 
+				//c[i].heading = robit->mRot; 
 				c[i].pos = c[i].pos + vec3(coneRad - closestPoint.X, coneRad - closestPoint.Y);
 			}*/
 			
 		}
 		else {
-			c[i].directlyInPath = false;
+			c[i].directlyInVerticalPath = false;
 		}
 		//things to do:
 		//fix basic velocity physics (DONE)
-		//fix basic robot->cone collisions(75% DONE) add penetration and normal vector maths:
+		//fix basic robot->cone collisions(95% DONE) add penetration and normal vector maths:
 		//https://cdn.tutsplus.com/gamedev/authors/randy-gaul/custom-physics-aabb-to-circle.png
 		//make some sort of increase in friction when cones touching robot (OR OTHER CONES) ew
 		/*if (c[i].touchingRobot) {
