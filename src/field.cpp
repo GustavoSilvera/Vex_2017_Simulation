@@ -4,9 +4,9 @@
 #include "robot.h"
 //declares and defines the field class and functions
 
-field::cone initialConfiguration[54] = {//array for each configuration of the cone (in field.h)
+field::cone initialConfiguration[1] = {//array for each configuration of the cone (in field.h)
 	{ { 2.9, 2.9 }, 0, false},//position X,Y; initial heading; if tipped or not
-	{ { 2.9, 13.0 }, 0, false},
+	/*{ { 2.9, 13.0 }, 0, false},
 	{ { 2.9, 23.2 }, 0, false},
 	{ { 2.9, 34.9 }, 0, false},
 	{ { 2.9, 46.7 }, 0, false},
@@ -58,10 +58,11 @@ field::cone initialConfiguration[54] = {//array for each configuration of the co
 	{ { 137.8, 105.8 }, 0, false },
 	{ { 137.8, 117.5 }, 0, false },
 	{ { 137.8, 127.6 }, 0, false },
-	{ { 137.8, 137.8 }, 0, false }
+	{ { 137.8, 137.8 }, 0, false }*/
 }; 
 void field::initializeField() {
 	c.assign(&initialConfiguration[0], &initialConfiguration[54]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
+	initialized = true;//so that this only gets called ONCE when the field tab is running
 }
 void distance2Vertices(robot *robit, struct field::cone *c) {
 	/******vertices:*******
@@ -110,7 +111,6 @@ void field::FieldUpdate(robot *robit) {
 		robit->position.X = 100 ;
 		robit->position.Y = 35;
 		robit->mRot = 45;
-		initialized = true;//so that this only gets called ONCE when the field tab is running
 	}
 	for (int i = 0; i < c.size(); i++) {
 		//optimizing tip( find a way to rid the sqrt function)
@@ -118,49 +118,31 @@ void field::FieldUpdate(robot *robit) {
 		if (dConeToRobot < 3*robit->size) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
 			//WORKS
 			inPath(robit, &c[i]);
-
+			//distance to each vertice
 			distance2Vertices(robit, &c[i]);//calculate all the distances
 
-			bool robotMovingFwds;
+			bool robotMovingFwds = (robit->velocity.X >= 0 && robit->velocity.Y >= 0);
 
-			if (robit->velocity.X >= 0 && robit->velocity.Y >= 0) {//(going forwards//only care about the front vertices 
-				c[i].SmallestD2V[0] = c[i].d2V[0];
-				c[i].SmallestD2V[1] = c[i].d2V[1];
-				frontOrBack = 0;//what is made sure to be the minimum vertice 
-				robotMovingFwds = false;
-			}
-			else {//only care about the back two vertices
-				c[i].SmallestD2V[0] = c[i].d2V[2];
-				c[i].SmallestD2V[1] = c[i].d2V[3];
-				frontOrBack = 2;//what is made sure to be the minimum vertice
-				robotMovingFwds = true;
-			}
-
-			if (robit->rotVel >= 0 && robit->velocity.X == 0 && robit->velocity.Y ==0) {//(rotating to the right//only care about the rightvertices 
-				c[i].SmallestD2V[0] = c[i].d2V[1];
-				c[i].SmallestD2V[1] = c[i].d2V[2];
-			}
-			else {//only care about the left two vertices
-				c[i].SmallestD2V[0] = c[i].d2V[0];
-				c[i].SmallestD2V[1] = c[i].d2V[3];
-			}
-
-
-			float d2RobotEdge = calcD2Edge(c[i].SmallestD2V[0], c[i].SmallestD2V[1], robit);//calculates the distance to the edge of the robit
-			//make penetration vector as (x, y) = (coneRad - closestPOint.X, coneRad)
+			float d2RobotEdge = calcD2Edge(SortSmallest(c[i].d2V[0], c[i].d2V[1], c[i].d2V[2], c[i].d2V[3]), Sort2ndSmallest(c[i].d2V[0], c[i].d2V[1], c[i].d2V[2], c[i].d2V[3]), robit);//calculates the distance to the edge of the robit
+			
 			if (c[i].directlyInVerticalPath && robotMovingFwds) {//either directly in front or behing based off center x and y position
-				c[i].closestPoint = vec3(c[i].pos.X - (d2RobotEdge)*cos(robit->mRot * (PI / 180)), c[i].pos.Y + (d2RobotEdge)*sin(robit->mRot * (PI / 180)));//does work
+				c[i].closestPoint = vec3(c[i].pos.X + (d2RobotEdge)*cos(robit->mRot * (PI / 180)), c[i].pos.Y - (d2RobotEdge)*sin(robit->mRot * (PI / 180)));//does work
 			}
 			else if (c[i].directlyInVerticalPath && !robotMovingFwds) {//either directly in front or behing based off center x and y position
-				c[i].closestPoint = vec3(c[i].pos.X + (d2RobotEdge)*cos(robit->mRot * (PI / 180)), c[i].pos.Y - (d2RobotEdge)*sin(robit->mRot * (PI / 180)));//does work
+				c[i].closestPoint = vec3(c[i].pos.X - (d2RobotEdge)*cos(robit->mRot * (PI / 180)), c[i].pos.Y + (d2RobotEdge)*sin(robit->mRot * (PI / 180)));//does work
 			}
-			else if (c[i].directlyInHorizontalPath) {//either directly in front or behing based off center x and y position
-				c[i].closestPoint = vec3(c[i].pos.X + (d2RobotEdge)*cos(robit->mRot * (PI / 180)), c[i].pos.Y - (d2RobotEdge)*sin(robit->mRot * (PI / 180)));//does work
+			//had to inverse x and y because horiontal lines
+			else if (c[i].directlyInHorizontalPath && robit->rotVel > 0) {//rotating to the right
+				c[i].closestPoint = vec3(c[i].pos.Y + (d2RobotEdge)*sin(robit->mRot * (PI / 180)), c[i].pos.X + (d2RobotEdge)*cos(robit->mRot * (PI / 180)));//does work
+			}
+			else if (c[i].directlyInHorizontalPath && robit->rotVel < 0) {//rotating to the right
+				c[i].closestPoint = vec3(c[i].pos.Y - (d2RobotEdge)*sin(robit->mRot * (PI / 180)), c[i].pos.X - (d2RobotEdge)*cos(robit->mRot * (PI / 180)));//does work
 			}
 			else {//not directly in path
 				//will return which vertice is the closest to the cone
-				HELLO = sortSmallVER(c[i].SmallestD2V[0], c[i].SmallestD2V[1]) + frontOrBack;
-				c[i].closestPoint = robit->vertices[sortSmallVER(c[i].SmallestD2V[0], c[i].SmallestD2V[1]) + frontOrBack];//closest point to center will then be the vertice
+				int smallest_vertice = sortSmallVER(c[i].d2V[0], c[i].d2V[1], c[i].d2V[2], c[i].d2V[3]);
+				HELLO = smallest_vertice;
+				c[i].closestPoint = robit->vertices[smallest_vertice];//closest point to center will then be the vertice
 			}
 			float d2closestPoint = sqrt(sqr(c[i].pos.X - c[i].closestPoint.X) + sqr(c[i].pos.Y - c[i].closestPoint.Y));
 			vec3 R = (c[i].closestPoint + c[i].pos.times(-1)).times(coneRad / d2closestPoint) + c[i].pos;
@@ -184,6 +166,7 @@ void field::FieldUpdate(robot *robit) {
 		}
 		else {
 			c[i].directlyInVerticalPath = false;
+			c[i].directlyInHorizontalPath = false;
 		}
 		//things to do:
 		//fix basic velocity physics (DONE)

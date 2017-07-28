@@ -19,9 +19,7 @@ public:
 		float heading;//direction of the cone in 360° when tipped
 		bool tipped;//if fallen 
 		float d2V[4];//distance to each vertice on the robot
-		float SmallestD2V[2];
 		float distanceToCone[53];
-		bool touchingRobot;
 		bool directlyInVerticalPath;
 		bool directlyInHorizontalPath;
 		vec3 closestPoint;
@@ -39,7 +37,6 @@ public:
 	ci::gl::Texture fieldBare;
 	ci::gl::Texture fieldFull;
 
-	int frontOrBack = 0;
 	float fieldSize = 141.05;// 140.5 + 2 * (1.27);wall thickness accounted for
 	int dFromEdge = 100;//draw distance from the start of the field verticie to the edge of the window
 	bool initialized;//if the field bare texture is visible or not. 
