@@ -4,9 +4,9 @@
 #include "robot.h"
 //declares and defines the field class and functions
 
-field::cone initialConfiguration[1] = {//array for each configuration of the cone (in field.h)
+field::cone initialConfiguration[54] = {//array for each configuration of the cone (in field.h)
 	{ { 2.9, 2.9 }, 0, false},//position X,Y; initial heading; if tipped or not
-	/*{ { 2.9, 13.0 }, 0, false},
+	{ { 2.9, 13.0 }, 0, false},
 	{ { 2.9, 23.2 }, 0, false},
 	{ { 2.9, 34.9 }, 0, false},
 	{ { 2.9, 46.7 }, 0, false},
@@ -58,7 +58,7 @@ field::cone initialConfiguration[1] = {//array for each configuration of the con
 	{ { 137.8, 105.8 }, 0, false },
 	{ { 137.8, 117.5 }, 0, false },
 	{ { 137.8, 127.6 }, 0, false },
-	{ { 137.8, 137.8 }, 0, false }*/
+	{ { 137.8, 137.8 }, 0, false }
 }; 
 void field::initializeField() {
 	c.assign(&initialConfiguration[0], &initialConfiguration[54]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
@@ -125,19 +125,24 @@ void field::FieldUpdate(robot *robit) {
 
 			float d2RobotEdge = calcD2Edge(SortSmallest(c[i].d2V[0], c[i].d2V[1], c[i].d2V[2], c[i].d2V[3]), Sort2ndSmallest(c[i].d2V[0], c[i].d2V[1], c[i].d2V[2], c[i].d2V[3]), robit);//calculates the distance to the edge of the robit
 			
-			if (c[i].directlyInVerticalPath && robotMovingFwds) {//either directly in front or behing based off center x and y position
-				c[i].closestPoint = vec3(c[i].pos.X + (d2RobotEdge)*cos(robit->mRot * (PI / 180)), c[i].pos.Y - (d2RobotEdge)*sin(robit->mRot * (PI / 180)));//does work
-			}
-			else if (c[i].directlyInVerticalPath && !robotMovingFwds) {//either directly in front or behing based off center x and y position
-				c[i].closestPoint = vec3(c[i].pos.X - (d2RobotEdge)*cos(robit->mRot * (PI / 180)), c[i].pos.Y + (d2RobotEdge)*sin(robit->mRot * (PI / 180)));//does work
+			if (c[i].directlyInVerticalPath) {//either directly in front or behing based off center x and y position
+				bool inFront = (c[i].d2V[0] + c[i].d2V[1] < c[i].d2V[3] + c[i].d2V[3]);//if the distance to the verti ces 0 and 1 is less than that of 2 and 3
+				if(inFront)
+					c[i].closestPoint = vec3(c[i].pos.X + (d2RobotEdge)*cos(robit->mRot * (PI / 180)), c[i].pos.Y - (d2RobotEdge)*sin(robit->mRot * (PI / 180)));//does work
+				else
+					c[i].closestPoint = vec3(c[i].pos.X - (d2RobotEdge)*cos(robit->mRot * (PI / 180)), c[i].pos.Y + (d2RobotEdge)*sin(robit->mRot * (PI / 180)));//does work
 			}
 			//had to inverse x and y because horiontal lines
-			else if (c[i].directlyInHorizontalPath && robit->rotVel > 0) {//rotating to the right
-				c[i].closestPoint = vec3(c[i].pos.Y + (d2RobotEdge)*sin(robit->mRot * (PI / 180)), c[i].pos.X + (d2RobotEdge)*cos(robit->mRot * (PI / 180)));//does work
+			else if (c[i].directlyInHorizontalPath) {//rotating to the right
+				bool onRight = (c[i].d2V[1] + c[i].d2V[2] < c[i].d2V[0] + c[i].d2V[3]);
+				if(onRight)
+					c[i].closestPoint = vec3(c[i].pos.X + (d2RobotEdge)*sin(robit->mRot * (PI / 180)), c[i].pos.Y + (d2RobotEdge)*cos(robit->mRot * (PI / 180)));//does work
+				else
+					c[i].closestPoint = vec3(c[i].pos.X - (d2RobotEdge)*sin(robit->mRot * (PI / 180)), c[i].pos.Y - (d2RobotEdge)*cos(robit->mRot * (PI / 180)));//does work
 			}
-			else if (c[i].directlyInHorizontalPath && robit->rotVel < 0) {//rotating to the right
+			/*else if (c[i].directlyInHorizontalPath && robit->rotVel < 0) {//rotating to the right
 				c[i].closestPoint = vec3(c[i].pos.Y - (d2RobotEdge)*sin(robit->mRot * (PI / 180)), c[i].pos.X - (d2RobotEdge)*cos(robit->mRot * (PI / 180)));//does work
-			}
+			}*/
 			else {//not directly in path
 				//will return which vertice is the closest to the cone
 				int smallest_vertice = sortSmallVER(c[i].d2V[0], c[i].d2V[1], c[i].d2V[2], c[i].d2V[3]);
@@ -170,7 +175,7 @@ void field::FieldUpdate(robot *robit) {
 		}
 		//things to do:
 		//fix basic velocity physics (DONE)
-		//fix basic robot->cone collisions(95% DONE) add penetration and normal vector maths:
+		//fix tracking of closest point (for normal v calculation)
 		//https://cdn.tutsplus.com/gamedev/authors/randy-gaul/custom-physics-aabb-to-circle.png
 		//make some sort of increase in friction when cones touching robot (OR OTHER CONES) ew
 		/*if (c[i].touchingRobot) {
