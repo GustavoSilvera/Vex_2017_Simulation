@@ -15,20 +15,25 @@ public:
 	//static  int NUMBER_OF_CONES = 50;
 	struct cone {
 		vec3 pos;//position
-		vec3 velocity;
 		float heading;//direction of the cone in 360° when tipped
 		bool tipped;//if fallen 
+		void calcD2Vertices(robot *r);
 		float d2V[4];//distance to each vertice on the robot
 		float distanceToCone[53];
-		bool directlyInVerticalPath;
-		bool directlyInHorizontalPath;
+		bool directlyInVerticalPath(robot *r);
+		bool directlyInHorizontalPath(robot *r);
 		vec3 closestPoint;
 	};
 	std::vector<cone> c;//vector of cones
-	std::list<int> s;//how many cones are stacked
+	std::vector<int> s;//how many cones are stacked
 	struct MoGo {
 		vec3 pos;
 		bool red;
+		void calcD2Vertices(robot *r);
+		float d2V[4];//distance to each vertice on the robot
+		bool directlyInVerticalPath(robot *r);
+		bool directlyInHorizontalPath(robot *r);
+		vec3 closestPoint;
 	};
 	std::vector<MoGo> mg;//vector of mogos
 
@@ -41,6 +46,9 @@ public:
 	int dFromEdge = 100;//draw distance from the start of the field verticie to the edge of the window
 	bool initialized;//if the field bare texture is visible or not. 
 	int coneRad = 3;
+	int MoGoRad = 5;
 	int HELLO;
+	int renderRad = 1;//amount of the robot's radii that are used to calculate cone distance, smaller is more optimized (but calculates for less cones)
+	int pushingCones = 0;
 };
 

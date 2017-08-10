@@ -132,6 +132,7 @@ void robot::setVertices() {
 }
 
 void robot::update() {
+	acceleration = acceleration + friction.times(-1);
 	velocity = velocity + acceleration.times(1.0/60.0);
 	if (fieldSpeed) {//weird issue with how the robot is being drawn in the field update with the origin on the bottom right rather than top left
 		position.X -= velocity.X * cos((mRot)*(PI / 180));//velocity scaled because of rotation

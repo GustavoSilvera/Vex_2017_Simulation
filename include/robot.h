@@ -47,6 +47,7 @@ public:
 	bool reversed = false;
 	volatile bool fieldSpeed = false;
 	float amountOfFriction = 3;	//constant changing the amount of friction for the robot
+	vec3 friction;
 	int size = 18;
 	float mRot = 0;//drawing rotation
 	//PHYSICS

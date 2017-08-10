@@ -145,7 +145,7 @@ void CimulationApp::setup() {
 	v.f.fieldBare = gl::Texture(loadImage(loadAsset("InTheZoneFieldBare.jpg")));
 	v.f.fieldFull = gl::Texture(loadImage(loadAsset("InTheZoneFieldFull.jpg")));
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
-	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGo.png")));
+	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
 	setWindowSize(WindowWidth, WindowHeight);
 	v.r.current.Xpos = 0;
 	v.r.current.Ypos = 0;
@@ -302,7 +302,7 @@ void robotDebug(vex *v, bool reversed) {
 			cinder::Vec2f(fieldEnd - (v->r.vertices[3].X - 300 * sin((v->r.mRot) * PI / 180))*ppi,
 				fieldEnd - (v->r.vertices[3].Y - 300 * cos((v->r.mRot) * PI / 180))*ppi));
 		//draw circle
-		gl::drawStrokedCircle(Vec2f(fieldEnd - v->r.position.X*ppi, fieldEnd - v->r.position.Y*ppi), 3*v->r.size*ppi);
+		gl::drawStrokedCircle(Vec2f(fieldEnd - v->r.position.X*ppi, fieldEnd - v->r.position.Y*ppi), v->f.renderRad* v->r.size*ppi);
 	}
 	else {
 		//vertice rectangles
@@ -327,7 +327,7 @@ void robotDebug(vex *v, bool reversed) {
 			cinder::Vec2f((v->r.vertices[3].X - 300 * sin((v->r.mRot) * PI / 180))*ppi,
 			(v->r.vertices[3].Y - 300 * cos((v->r.mRot) * PI / 180))*ppi));
 		//draw circle
-		gl::drawStrokedCircle(Vec2f(v->r.position.X*ppi, v->r.position.Y*ppi), 3*v->r.size*ppi);
+		gl::drawStrokedCircle(Vec2f(v->r.position.X*ppi, v->r.position.Y*ppi), v->f.renderRad* v->r.size*ppi);
 	}
 	//gl::drawLine(cinder::Vec2f(v.r.vertices[0].X*ppi, v.r.vertices[0].Y*ppi), cinder::Vec2f(v.r.vertices[3].X*ppi, v.r.vertices[3].Y*ppi));
 	gl::color(1, 1, 1);//resets colour to white
@@ -391,6 +391,13 @@ void CimulationApp::draw() {
 			//fieldend for where the end of the field is, to subtract values because: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
 			//+-(coneRad*ppi) for sayin that the point pos.X and pos.Y are the center, and the coneRad*ppi is 3 inches RADIUS away from the center point
 			gl::draw(v.f.coneTexture, Area((fieldEnd) - (v.f.c[i].pos.X*ppi) - (v.f.coneRad*ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) - (v.f.coneRad * ppi), (fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.coneRad * ppi), (fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.coneRad * ppi)));
+		}
+		for (int i = 0; i < v.f.mg.size(); i++) {
+			vec3 RGB;//true color value because cinder uses values from 0->1 for their colours
+			if (v.f.mg[i].red)		RGB = vec3(217, 38, 38);
+			else/*blue mogo*/	    RGB = vec3(0, 64, 255);
+				gl::color(RGB.X/255, RGB.Y/255, RGB.Z/255);
+			gl::draw(v.f.MobileGoal, Area((fieldEnd)-(v.f.mg[i].pos.X*ppi) - (v.f.MoGoRad*ppi), (fieldEnd)-(v.f.mg[i].pos.Y*ppi) - (v.f.MoGoRad * ppi), (fieldEnd)-(v.f.mg[i].pos.X*ppi) + (v.f.MoGoRad * ppi), (fieldEnd)-(v.f.mg[i].pos.Y*ppi) + (v.f.MoGoRad * ppi)));
 		}
 		robotDebug(&v, true);
 		gl::color(1, 1, 1) ;
@@ -465,14 +472,14 @@ void CimulationApp::draw() {
 	heading1 >> heading2;
 	gl::drawString(heading2, Vec2f(1000, 640), Color(1, 1, 1), Font("Arial", 30));
 	*/
-	if (v.f.c[1].directlyInHorizontalPath) {
+	if (v.f.c[1].directlyInHorizontalPath(&v.r)) {
 		gl::drawString("YAY", Vec2f(1000, 740), Color(1, 1, 1), Font("Arial", 30));
 	}
 	else {
 		gl::drawString("Nay", Vec2f(1000, 740), Color(1, 1, 1), Font("Arial", 30));
 	}
 	gl::color(1, 0, 0);
-	gl::drawSolidCircle(Vec2f(fieldEnd - v.f.c[1].closestPoint.X*ppi, fieldEnd - v.f.c[1].closestPoint.Y*ppi), 5);
+	gl::drawSolidCircle(Vec2f(fieldEnd - v.f.c[0].closestPoint.X*ppi, fieldEnd - v.f.c[0].closestPoint.Y*ppi), 5);
 	gl::color(1, 1, 1);
 
 	stringstream hello1;
