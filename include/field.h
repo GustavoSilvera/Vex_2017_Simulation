@@ -2,6 +2,7 @@
 #include "cinder/gl/Texture.h"
 #include "vec3.h"
 #include "robot.h"
+#include "randomstuff.h"
 #include <vector>
 #include <list>
 //declares the class for the robot and all the data that goes with it.
@@ -23,6 +24,8 @@ public:
 		bool directlyInVerticalPath(robot *r);
 		bool directlyInHorizontalPath(robot *r);
 		vec3 closestPoint;
+		void fencePush(int coneRad, double fieldSize);
+		float d2E[2];//0 is d2 right, 1 is d2 top, 2 is d2left, 3 is d2 bottom
 	};
 	std::vector<cone> c;//vector of cones
 	std::vector<int> s;//how many cones are stacked
@@ -34,16 +37,22 @@ public:
 		bool directlyInVerticalPath(robot *r);
 		bool directlyInHorizontalPath(robot *r);
 		vec3 closestPoint;
+		void fencePush(int coneRad, double fieldSize);
+		float d2E[2];//0 is d2 right, 1 is d2 top, 2 is d2left, 3 is d2 bottom
 	};
 	std::vector<MoGo> mg;//vector of mogos
 
 	ci::gl::Texture MobileGoal;
 	ci::gl::Texture coneTexture;
 	ci::gl::Texture fieldBare;
-	ci::gl::Texture fieldFull;
 
-	float fieldSize = 141.05;// 140.5 + 2 * (1.27);wall thickness accounted for
-	int dFromEdge = 100;//draw distance from the start of the field verticie to the edge of the window
+	struct fence {
+		float fieldSize = 141.05;// 140.5 + 2 * (1.27);wall thickness accounted for
+		vec3 centre = vec3(606, 606);//in pixels
+		float fieldEnd = centre.X + fieldSize*ppi / 2;//furthest to the right the field is touching
+
+	};
+	fence f;
 	bool initialized;//if the field bare texture is visible or not. 
 	int coneRad = 3;
 	int MoGoRad = 5;

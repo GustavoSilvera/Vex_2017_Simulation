@@ -15,6 +15,9 @@ inline int getSign(double value) {//returns whether a number is negative or posi
 inline float sqr(double value) {
 	return value*value;
 }
+inline float dist(vec3 A, vec3 B) {
+	return sqrt(sqr(A.X - B.X) + sqr(A.Y - B.Y));
+}
 inline float SortSmallest3(float v1, float v2, float v3) {
 	float smallest = v1;//initially assumes v1 is the smallest
 	if (v2 < smallest) smallest = v2;//resets to v2 if its smaller than v1
