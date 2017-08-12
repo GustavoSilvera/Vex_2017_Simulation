@@ -1,39 +1,40 @@
-#include "vec3.h"
 #include "field.h"
-#include "randomstuff.h"
-#include "robot.h"
-#include <vector>
 
 //declares and defines the field class and functions
 
 field::element initConeConfig[numCones] = {//array for each configuration of the cone (in field.h)
 	//{initial posision (X, Y), color (Y, R, B), radii }
-	{ { 2.9, 13.0 }, 0, 3 }, { { 2.9, 23.2 }, 0, 3 }, { { 2.9, 34.9 }, 0, 3 }, { { 2.9, 46.7 }, 0, 3 },
-	{ { 2.9, 58.4 }, 0, 3 }, { { 2.9, 70.2 }, 0, 3 }, { { 13.0, 2.9 }, 0, 3 }, { { 13.0, 13.0 }, 0, 3 },
-	{ { 13.0, 23.2 }, 0, 3 }, { { 23.2, 2.9 }, 0, 3 }, { { 23.2, 13.0 }, 0, 3 }, { { 23.2, 23.2 }, 0, 3 },
-	{ { 23.2, 34.9 }, 0, 3 }, { { 23.2, 46.7 }, 0, 3 }, { { 23.2, 58.4 }, 0, 3 }, { { 23.2, 70.2 }, 0, 3 },
-	{ { 34.9, 2.9 }, 0, 3 }, { { 34.9, 23.2 }, 0, 3 }, { { 46.7, 2.9 }, 0, 3 }, { { 46.7, 23.2 }, 0, 3 },
-	{ { 46.7, 46.7 }, 0, 3 }, { { 46.7, 58.4 }, 0, 3 }, { { 58.4, 2.9 }, 0, 3 }, { { 58.4, 23.2 }, 0, 3 },
-	{ { 58.4, 46.7 }, 0, 3 }, { { 58.4, 70.2 }, 0, 3 }, { { 70.2, 2.9 }, 0, 3 }, { { 70.2, 23.2 }, 0, 3 },
-	{ { 70.2, 58.4 }, 0, 3 }, { { 70.2, 82.1 }, 0, 3 }, { { 82.1, 70.2 }, 0, 3 }, { { 82.1, 93.9 }, 0, 3 },
-	{ { 82.1, 139.2 }, 0, 3 }, { { 93.9, 82.1 }, 0, 3 }, { { 93.9, 93.9 }, 0, 3 }, { { 93.9, 117.5 }, 0, 3 },
-	{ { 93.9, 137.8 }, 0, 3 }, { { 105.8, 117.5 }, 0, 3 }, { { 105.8, 137.8 }, 0, 3 }, { { 117.5, 93.9 }, 0, 3 },
-	{ { 117.5, 105.8 }, 0, 3 }, { { 117.5, 117.5 }, 0, 3 }, { { 117.5, 127.6 }, 0, 3 }, { { 117.5, 137.8 }, 0, 3 },
-	{ { 127.6, 117.5 }, 0, 3 }, { { 127.6, 127.6 }, 0, 3 }, { { 127.6, 137.8 }, 0, 3 }, { { 137.8, 82.1 }, 0, 3 },
-	{ { 137.8, 93.9 }, 0, 3 }, { { 137.8, 105.8 }, 0, 3 }, { { 137.8, 117.5 }, 0, 3 }, { { 137.8, 127.6 }, 0, 3 },
-	{ { 137.8, 137.8 }, 0, 3 }
+	{ { 2.9, 13.0 }, 0, coneRad }, { { 2.9, 23.2 }, 0, coneRad }, { { 2.9, 34.9 }, 0, coneRad }, { { 2.9, 46.7 }, 0, coneRad },
+	{ { 2.9, 58.4 }, 0, coneRad }, { { 2.9, 70.2 }, 0, coneRad }, { { 13.0, 2.9 }, 0, coneRad }, { { 13.0, 13.0 }, 0, coneRad },
+	{ { 13.0, 23.2 }, 0, coneRad }, { { 23.2, 2.9 }, 0, coneRad }, { { 23.2, 13.0 }, 0, coneRad }, { { 23.2, 23.2 }, 0, coneRad },
+	{ { 23.2, 34.9 }, 0, coneRad }, { { 23.2, 46.7 }, 0, coneRad }, { { 23.2, 58.4 }, 0, coneRad }, { { 23.2, 70.2 }, 0, coneRad },
+	{ { 34.9, 2.9 }, 0, coneRad }, { { 34.9, 23.2 }, 0, coneRad }, { { 46.7, 2.9 }, 0, coneRad }, { { 46.7, 23.2 }, 0, coneRad },
+	{ { 46.7, 46.7 }, 0, coneRad }, { { 46.7, 58.4 }, 0, coneRad }, { { 58.4, 2.9 }, 0, coneRad }, { { 58.4, 23.2 }, 0, coneRad },
+	{ { 58.4, 46.7 }, 0, coneRad }, { { 58.4, 70.2 }, 0, coneRad }, { { 70.2, 2.9 }, 0, coneRad }, { { 70.2, 23.2 }, 0, coneRad },
+	{ { 70.2, 58.4 }, 0, coneRad }, { { 70.2, 82.1 }, 0, coneRad }, { { 82.1, 70.2 }, 0, coneRad }, { { 82.1, 93.9 }, 0, coneRad },
+	{ { 82.1, 139.2 }, 0, coneRad }, { { 93.9, 82.1 }, 0, coneRad }, { { 93.9, 93.9 }, 0, coneRad }, { { 93.9, 117.5 }, 0, coneRad },
+	{ { 93.9, 137.8 }, 0, coneRad }, { { 105.8, 117.5 }, 0, coneRad }, { { 105.8, 137.8 }, 0, coneRad }, { { 117.5, 93.9 }, 0, coneRad },
+	{ { 117.5, 105.8 }, 0, coneRad }, { { 117.5, 117.5 }, 0, coneRad }, { { 117.5, 127.6 }, 0, coneRad }, { { 117.5, 137.8 }, 0, coneRad },
+	{ { 127.6, 117.5 }, 0, coneRad }, { { 127.6, 127.6 }, 0, coneRad }, { { 127.6, 137.8 }, 0, coneRad }, { { 137.8, 82.1 }, 0, coneRad },
+	{ { 137.8, 93.9 }, 0, coneRad }, { { 137.8, 105.8 }, 0, coneRad }, { { 137.8, 117.5 }, 0, coneRad }, { { 137.8, 127.6 }, 0, coneRad },
+	{ { 137.8, 137.8 }, 0, coneRad }
 };
 //initial cone values for position
 field::element initMoGoConfig[numMoGos] = {//array for each configuration of the mobile goal (in field.h)
-	{ { 34.9, 13.0 }, 1 , 5}, { { 13.0, 34.9 }, 2 , 5 },
-	{ { 70.2, 46.7 }, 2 , 5 }, { { 46.7, 70.2 }, 1 , 5 },
-	{ { 93.9, 70.2 }, 2 , 5 }, { { 70.2, 93.9 }, 1 , 5 },
-	{ { 127.6, 105.8 }, 1 , 5 }, { { 105.8, 127.6 }, 2 , 5 }
+	{ { 34.9, 13.0 }, 1 , MoGoRad }, { { 13.0, 34.9 }, 2 ,MoGoRad},
+	{ { 70.2, 46.7 }, 2 ,MoGoRad}, { { 46.7, 70.2 }, 1 ,MoGoRad},
+	{ { 93.9, 70.2 }, 2 ,MoGoRad}, { { 70.2, 93.9 }, 1 ,MoGoRad},
+	{ { 127.6, 105.8 }, 1 ,MoGoRad}, { { 105.8, 127.6 }, 2 ,MoGoRad}
 };
+field::element initPoleConfig[2] = {
+	{ { 93.9, 46.7 }, 3 , 4 },{ { 46.7, 93.9 }, 3 , 4 }
+};
+
 //initial mogo values for position and colour
 void field::initializeField(robot *robit) {
 	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
 	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
+	pl.assign(&initPoleConfig[0], &initPoleConfig[2]);
 	robit->position.X = 100;
 	robit->position.Y = 35;
 	robit->mRot = 45;
@@ -97,7 +98,7 @@ void field::element::fencePush(fence *f) {
 	}
 }
 //calculates distances to the edges of the field, and acts accordingly
-void field::element::robotColl(robot *robit) {
+void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
 	//collisions from robot
 	float d2Robot = dist(pos, robit->position);
 	if (d2Robot < renderRad * robit->size) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
@@ -124,14 +125,18 @@ void field::element::robotColl(robot *robit) {
 		}
 		float d2closestPoint = dist(pos, closestPoint);
 		vec3 R = (closestPoint + pos.times(-1)).times(rad / d2closestPoint) + pos;
-		if (d2closestPoint < rad) {
+		if (d2closestPoint <= rad) {//touching
+			s.insert(index);//adds index of which cone is in the stack (being pushed)
 			pos.X -= R.X - closestPoint.X;
 			pos.Y -= R.Y - closestPoint.Y;
+		}
+		else {
+			s.erase(index);//removes index of which cone is in the stack (being pushed)
 		}
 	}
 }
 //functions for collisions between the element and the robot
-void field::element::collision(element *e) {
+void field::element::collision(int index, element *e, std::set<int> &s) {
 	//collisions from element->element
 	float distance = dist(pos, e->pos);
 	if (distance < rad + e->rad) {//touching
@@ -142,27 +147,54 @@ void field::element::collision(element *e) {
 		overlap = 2*coneRad - distance
 		therefore: ? = (2*coneRad - distance)/distance;
 		*/
+		s.insert(index);//adds index of which cone is in the stack (being pushed)
 	}
 }
 //functions for collisions between the element and another element
 void field::physics(int index, element *e, robot *robit) {
 	e->fencePush(&f);//pushes the cone from the fence if touching
-	e->robotColl(robit);
+	e->robotColl(index, robit, stacked);
 	for (int k = 0; k < c.size(); k++) {
-		if (k != index) e->collision(&c[k]);
+		if (k != index) e->collision(index, &c[k], stacked);
 	}
 	for (int m = 0; m < mg.size(); m++) {
-		if (m != index) e->collision(&mg[m]);
+		if (m != index) e->collision(index, &mg[m], stacked);
+	}
+	for (int p = 0; p < pl.size(); p++) {
+		e->collision(index, &pl[p], stacked);
 	}
 }
 //function for calling all the collision functions together for el->el and el->robot
+void field::fence::robotPush(robot *r) {
+	d2E[0] = fieldSize - r->position.Y;
+	d2E[1] = fieldSize - r->position.X;
+	if (r->position.X <= (r->size*.5 + depth)) {
+		r->position.X += (r->size*.5 + depth) - r->position.X;
+	}
+	if (d2E[0] <= (r->size*.5 + depth)) {//g
+		r->position.Y -= (r->size*.5 + depth) - d2E[0];
+	}
+	if (d2E[1] <= (r->size*.5 + depth)) {
+		r->position.X -= (r->size*.5 + depth) - d2E[1];
+	}
+	if (r->position.Y <= (r->size*.5 + depth)) {//g
+		r->position.Y += (r->size*.5 + depth) - r->position.Y;
+	}
+}
+//function for making sure the robot cannot move past the fence
 void field::FieldUpdate(robot *robit) {
 	if (!initialized) initializeField(robit);
+	f.robotPush(robit);
 	for (int i = 0; i < c.size(); i++) {
 		physics(i, &c[i], robit);
 	}
 	for (int i = 0; i < mg.size(); i++) {
 		physics(i, &mg[i], robit);
+	}
+	for (int i = 0; i < pl.size(); i++) {
+		pl[0].pos = vec3(93.9, 46.7);//stationary goal (not moving)
+		pl[1].pos = vec3(46.7, 93.9);//stationary goal (not moving)
+		physics(i, &pl[i], robit);
 	}
 }
 //update task for the entire field simulation

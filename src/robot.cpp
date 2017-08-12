@@ -11,6 +11,7 @@ float limitSmall(float noLessThan, float value) {//not really working anyways. i
 		return value;
 	else return getSign(value)* noLessThan;
 }
+
 void robot::forwards(float power) {
 	//konstants that should be changed later
 	float rateOfChange = 45;//constant changing the amount of initial change the acceleration goes through? maibe
@@ -27,6 +28,7 @@ void robot::forwards(float power) {
 	//if (abs(power) > 0.01)
 	//	encoder1 += power;//increments the encoder while going forwards or backwards
 }
+
 void robot::rotate(float power) {
 	//konstants that should be changed later
 	float rateOfChange = 15;//constant changing the amount of initial change the acceleration goes through? maibe
@@ -38,6 +40,7 @@ void robot::rotate(float power) {
 	if (abs(rotVel) < 0.1) rotVel = 0;
 
 }
+
 float robot::truSpeed(int degree, float value) {//see here for reference https://www.desmos.com/calculator/bhwj2xjmef
 	float exponented = value;//finished value after being taken to the degree's exponent
 	int divisor = 1;
@@ -56,6 +59,7 @@ float robot::truSpeed(int degree, float value) {//see here for reference https:/
 		return (exponented) / (divisor);
 	}
 }
+
 void robot::calculatePos() {
 	if (rotVel == 0) {//not rotating
 		//float Magnitude = ((changeInDist) * 4 * PI) / (360);//function for adding the change in inches to current posiiton
@@ -65,6 +69,7 @@ void robot::calculatePos() {
 		encoderLast = encoder1;
 	}
 }
+
 float robot::PID_controller() {//accelerates and decelerates robot based on location and goal. 
 	float kP = 1;//remove later
 	float kI = 5;//remove later
@@ -106,6 +111,7 @@ float robot::PID_controller() {//accelerates and decelerates robot based on loca
 		// Run at 50Hz
 	}
 }
+
 void robot::setVertices() {
 	//gross i know, but its for calculating each vertice of the robot based off its current angle;
 	//math behind is based off basic trig and 45 45 90° triangle analytic geometry
@@ -159,6 +165,7 @@ void robot::moveAround(float jAnalogX, float jAnalogY) {
 	else if (abs(jAnalogX) > 10) rotate(-jAnalogX);//checking analog drawing
 	else rotate(0);//welp, no rotation
 }
+
 void robot::PIDControlUpdate() {
 	PID.isRunning = true;
 	acceleration.X = 0;
