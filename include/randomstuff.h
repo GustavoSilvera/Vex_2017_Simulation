@@ -1,6 +1,5 @@
 #if !defined(RANDOMSTUFF_H)
 #define RANDOMSTUFF_H
-
 //random #defines and other things that are used throughout all the files
 #define ppi 7.1839
 #define PI 3.1415926283846387236983
@@ -53,4 +52,5 @@ inline int sortSmallVER(float v1, float v2, float v3, float v4) {
 	else if (smallestD2V == v3) return 2;
 	else if (smallestD2V == v4) return 3;
 }
+
 #endif
