@@ -106,18 +106,14 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
 		float d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
 		if (directlyInVerticalPath(robit)) {//either directly in front or behing based off center x and y position
 			bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if cone is closer to the front side
-			if (inFront)
-				closestPoint = vec3(pos.X + (d2RobotEdge)*cos(gAngle), pos.Y - (d2RobotEdge)*sin(gAngle));//does work
-			else
-				closestPoint = vec3(pos.X - (d2RobotEdge)*cos(gAngle), pos.Y + (d2RobotEdge)*sin(gAngle));//does work
+			if (inFront) closestPoint = vec3(pos.X + (d2RobotEdge)*cos(gAngle), pos.Y - (d2RobotEdge)*sin(gAngle));//does work
+			else closestPoint = vec3(pos.X - (d2RobotEdge)*cos(gAngle), pos.Y + (d2RobotEdge)*sin(gAngle));//does work
 		}
 		//had to inverse x and y because horiontal lines
 		else if (directlyInHorizontalPath(robit)) {
 			bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if cone is closer to the right side
-			if (onRight)
-				closestPoint = vec3(pos.X + (d2RobotEdge)*sin(gAngle), pos.Y + (d2RobotEdge)*cos(gAngle));//does work
-			else
-				closestPoint = vec3(pos.X - (d2RobotEdge)*sin(gAngle), pos.Y - (d2RobotEdge)*cos(gAngle));//does work
+			if (onRight) closestPoint = vec3(pos.X + (d2RobotEdge)*sin(gAngle), pos.Y + (d2RobotEdge)*cos(gAngle));//does work
+			else closestPoint = vec3(pos.X - (d2RobotEdge)*sin(gAngle), pos.Y - (d2RobotEdge)*cos(gAngle));//does work
 		}
 		else {//not directly in path finds which vertice is the closest to the cone
 			int smallest_vertice = sortSmallVER(d2V[0], d2V[1], d2V[2], d2V[3]);
@@ -166,20 +162,39 @@ void field::physics(int index, element *e, robot *robit) {
 }
 //function for calling all the collision functions together for el->el and el->robot
 void field::fence::robotPush(robot *r) {
-	d2E[0] = fieldSize - r->position.Y;
-	d2E[1] = fieldSize - r->position.X;
-	if (r->position.X <= (r->size*.5 + depth)) {
-		r->position.X += (r->size*.5 + depth) - r->position.X;
+	//deals with robot's boundaries and stationary goals
+	for (int i = 0; i < 4; i++) {
+		d2E[0] = fieldSize - r->vertices[i].Y;
+		d2E[1] = fieldSize - r->vertices[i].X;
+		if (r->vertices[i].X <= (depth)) {//checking right side
+			r->position.X += (depth) - r->vertices[i].X;
+			if (abs(r->mRot) < 90 && abs(r->mRot) > 0)  r->mRot += r->velocity.X * cos((r->mRot)*(PI / 180));
+			else if (abs(r->mRot) < 360 && abs(r->mRot) > 270) r->mRot -= r->velocity.X * cos((r->mRot)*(PI / 180));			
+		}
+		else if (d2E[1] <= (depth)) {//checking left side
+			r->position.X -= (depth) - d2E[1];
+			//if (abs(r->mRot) < 180 && abs(r->mRot) > 90)  r->mRot -= r->velocity.X * cos((r->mRot)*(PI / 180));
+			//else if (abs(r->mRot) < 270 && abs(r->mRot) > 180) r->mRot += r->velocity.X * cos((r->mRot)*(PI / 180));
+		}
+		if (d2E[0] <= (depth)) {//checking top
+			r->position.Y -= (depth) - d2E[0];
+		}
+		else if (r->vertices[i].Y <= (depth)) {//checking bottom side
+			r->position.Y += (depth) - r->vertices[i].Y;
+		}
 	}
-	if (d2E[0] <= (r->size*.5 + depth)) {//g
-		r->position.Y -= (r->size*.5 + depth) - d2E[0];
-	}
-	if (d2E[1] <= (r->size*.5 + depth)) {
-		r->position.X -= (r->size*.5 + depth) - d2E[1];
-	}
-	if (r->position.Y <= (r->size*.5 + depth)) {//g
-		r->position.Y += (r->size*.5 + depth) - r->position.Y;
-	}
+	/*for (int i = 0; i < 2; i++) {
+		vec3 polePos;
+		if (i == 0) polePos = vec3(93.9, 46.7);
+		else polePos = vec3(46.7, 93.9);
+		d2StatGoal[i] = dist(r->position, polePos);
+		if (d2StatGoal[i] < renderRad * r->size) {
+			for (int v = 0; v < 4; v++) {
+				d2V[v] = dist(polePos, r->vertices[v]);
+			}
+
+		}
+	}*/
 }
 //function for making sure the robot cannot move past the fence
 void field::FieldUpdate(robot *robit) {
