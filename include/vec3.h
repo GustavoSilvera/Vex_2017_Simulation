@@ -21,9 +21,4 @@ private:
 	static double sqr(double x) { return x*x; }
 };
 
-inline vec3 colorRGB(vec3 RGB) {//provides a "Cinder Readable" color spectrum for drawing
-						 //because cinder color(), only reads numbers from 0 to 1, in the (R,G,B) values
-	return(vec3((RGB.X / 255), (RGB.Y / 255), (RGB.Z / 255)));//returns rgb values within 0-1
-}
-
 #endif

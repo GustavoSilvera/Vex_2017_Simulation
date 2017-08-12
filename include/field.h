@@ -12,52 +12,43 @@ public:
 	field();
 
 	void FieldUpdate(robot *r );
-	void initializeField();
+	void initializeField(robot *r);
 	//static  int NUMBER_OF_CONES = 50;
-	struct cone {
-		vec3 pos;//position
-		float heading;//direction of the cone in 360° when tipped
-		bool tipped;//if fallen 
-		void calcD2Vertices(robot *r);
-		float d2V[4];//distance to each vertice on the robot
-		float distanceToCone[53];
-		bool directlyInVerticalPath(robot *r);
-		bool directlyInHorizontalPath(robot *r);
-		vec3 closestPoint;
-		void fencePush(int coneRad, double fieldSize);
-		float d2E[2];//0 is d2 right, 1 is d2 top, 2 is d2left, 3 is d2 bottom
-	};
-	std::vector<cone> c;//vector of cones
-	std::vector<int> s;//how many cones are stacked
-	struct MoGo {
-		vec3 pos;
-		bool red;
-		void calcD2Vertices(robot *r);
-		float d2V[4];//distance to each vertice on the robot
-		bool directlyInVerticalPath(robot *r);
-		bool directlyInHorizontalPath(robot *r);
-		vec3 closestPoint;
-		void fencePush(int coneRad, double fieldSize);
-		float d2E[2];//0 is d2 right, 1 is d2 top, 2 is d2left, 3 is d2 bottom
-	};
-	std::vector<MoGo> mg;//vector of mogos
-
-	ci::gl::Texture MobileGoal;
-	ci::gl::Texture coneTexture;
-	ci::gl::Texture fieldBare;
-
 	struct fence {
 		float fieldSize = 141.05;// 140.5 + 2 * (1.27);wall thickness accounted for
 		vec3 centre = vec3(606, 606);//in pixels
 		float fieldEnd = centre.X + fieldSize*ppi / 2;//furthest to the right the field is touching
-
+		float depth = 1.27;//thickness of the vex fence
 	};
 	fence f;
+
+	struct element {
+		vec3 pos;
+		int col;//0 is yellow, 1 is red, 2 is blue 
+		int rad;//size of the object;
+		void calcD2Vertices(robot *r);
+		float d2V[4];//distance to each vertice on the robot
+		bool directlyInVerticalPath(robot *r);
+		bool directlyInHorizontalPath(robot *r);
+		vec3 closestPoint;
+		void fencePush(fence *f);
+		float d2E[2];//0 is d2 right, 1 is d2 top, 2 is d2left, 3 is d2 bottom
+		void robotColl(robot *r);
+		void collision(element *e);
+	};
+	std::vector<element> c;
+	std::vector<element> mg;
+
+	void physics(int index, element *e, robot *r);
+	
+	ci::gl::Texture MobileGoal;
+	ci::gl::Texture coneTexture;
+	ci::gl::Texture fieldBare;
+
 	bool initialized;//if the field bare texture is visible or not. 
 	int coneRad = 3;
 	int MoGoRad = 5;
 	int HELLO;
-	int renderRad = 1;//amount of the robot's radii that are used to calculate cone distance, smaller is more optimized (but calculates for less cones)
 	int pushingCones = 0;
 };
 

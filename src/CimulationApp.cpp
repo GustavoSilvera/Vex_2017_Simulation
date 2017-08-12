@@ -301,7 +301,7 @@ void robotDebug(vex *v, bool reversed) {
 			cinder::Vec2f(v->f.f.fieldEnd - (v->r.vertices[3].X - 300 * sin((v->r.mRot) * PI / 180))*ppi,
 				v->f.f.fieldEnd - (v->r.vertices[3].Y - 300 * cos((v->r.mRot) * PI / 180))*ppi));
 		//draw circle
-		gl::drawStrokedCircle(Vec2f(v->f.f.fieldEnd - v->r.position.X*ppi, v->f.f.fieldEnd - v->r.position.Y*ppi), v->f.renderRad* v->r.size*ppi);
+		gl::drawStrokedCircle(Vec2f(v->f.f.fieldEnd - v->r.position.X*ppi, v->f.f.fieldEnd - v->r.position.Y*ppi), renderRad * v->r.size*ppi);
 	}
 	else {
 		//vertice rectangles
@@ -326,7 +326,7 @@ void robotDebug(vex *v, bool reversed) {
 			cinder::Vec2f((v->r.vertices[3].X - 300 * sin((v->r.mRot) * PI / 180))*ppi,
 			(v->r.vertices[3].Y - 300 * cos((v->r.mRot) * PI / 180))*ppi));
 		//draw circle
-		gl::drawStrokedCircle(Vec2f(v->r.position.X*ppi, v->r.position.Y*ppi), v->f.renderRad* v->r.size*ppi);
+		gl::drawStrokedCircle(Vec2f(v->r.position.X*ppi, v->r.position.Y*ppi), renderRad* v->r.size*ppi);
 	}
 	//gl::drawLine(cinder::Vec2f(v.r.vertices[0].X*ppi, v.r.vertices[0].Y*ppi), cinder::Vec2f(v.r.vertices[3].X*ppi, v.r.vertices[3].Y*ppi));
 	gl::color(1, 1, 1);//resets colour to white
@@ -387,12 +387,14 @@ void CimulationApp::draw() {
 		for (int i = 0; i < v.f.c.size(); i++) {
 			//fieldend for where the end of the field is, to subtract values because: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
 			//+-(coneRad*ppi) for sayin that the point pos.X and pos.Y are the center, and the coneRad*ppi is 3 inches RADIUS away from the center point
+			gl::color(1, 1, 1);
 			gl::draw(v.f.coneTexture, Area((v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) - (v.f.coneRad*ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) - (v.f.coneRad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.coneRad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.coneRad * ppi)));
+
 		}
 		for (int i = 0; i < v.f.mg.size(); i++) {
 			vec3 RGB;//true color value because cinder uses values from 0->1 for their colours
-			if (v.f.mg[i].red)		RGB = vec3(217, 38, 38);
-			else/*blue mogo*/	    RGB = vec3(0, 64, 255);
+			if (v.f.mg[i].col == 1)/*red mogo*/			RGB = vec3(217, 38, 38);
+			else if (v.f.mg[i].col == 2)/*blue mogo*/	RGB = vec3(0, 64, 255);
 				gl::color(RGB.X/255, RGB.Y/255, RGB.Z/255);
 			gl::draw(v.f.MobileGoal, Area((v.f.f.fieldEnd)-(v.f.mg[i].pos.X*ppi) - (v.f.MoGoRad*ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.Y*ppi) - (v.f.MoGoRad * ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.X*ppi) + (v.f.MoGoRad * ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.Y*ppi) + (v.f.MoGoRad * ppi)));
 		}

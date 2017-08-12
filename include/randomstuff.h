@@ -6,6 +6,10 @@
 #define PI 3.1415926283846387236983
 #define WindowWidth  1400
 #define WindowHeight  1200
+#define numCones 54
+#define numMoGos 8
+#define gAngle robit->mRot * (PI / 180)
+#define renderRad 1//amount of the robot's radii that are used to calculate cone distance, smaller is more optimized (but calculates for less cones)
 
 inline int getSign(double value) {//returns whether a number is negative or positive.
 	if (value < 0) { return -1; }
