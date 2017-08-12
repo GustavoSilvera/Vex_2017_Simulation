@@ -27,6 +27,8 @@ public:
 		float depth = 1.27;//thickness of the vex fence
 		void robotPush(robot *r);
 		float d2E[2];
+		float d2StatGoal[2];
+		float d2V[4];//distance to each vertice on the robot
 	};
 	fence f;
 

@@ -150,7 +150,7 @@ void robot::update() {
 	}
 	rotVel += rotAcceleration*(1.0 / 60.0);
 	mRot += rotVel;
-	mRot = mRot;
+	mRot = ((mRot / 360) - (long)(mRot / 360)) * 360;//only within 360° and -360°
 	robot::setVertices();
 }
 
