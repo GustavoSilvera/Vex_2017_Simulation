@@ -168,19 +168,23 @@ void field::fence::robotPush(robot *r) {
 		d2E[1] = fieldSize - r->vertices[i].X;
 		if (r->vertices[i].X <= (depth)) {//checking right side
 			r->position.X += (depth) - r->vertices[i].X;
-			if (abs(r->mRot) < 90 && abs(r->mRot) > 0)  r->mRot += r->velocity.X * cos((r->mRot)*(PI / 180));
-			else if (abs(r->mRot) < 360 && abs(r->mRot) > 270) r->mRot -= r->velocity.X * cos((r->mRot)*(PI / 180));			
+			if ((r->mRot < 90 && r->mRot > 0 ) || (r->mRot < -270 && r->mRot > -360))  r->mRot -= r->velocity.X * cos((r->mRot)*(PI / 180));
+			else if ((r->mRot < 360 && r->mRot > 270) || (r->mRot < 0 && r->mRot > -90)) r->mRot += r->velocity.X * cos((r->mRot)*(PI / 180));
 		}
 		else if (d2E[1] <= (depth)) {//checking left side
 			r->position.X -= (depth) - d2E[1];
-			//if (abs(r->mRot) < 180 && abs(r->mRot) > 90)  r->mRot -= r->velocity.X * cos((r->mRot)*(PI / 180));
-			//else if (abs(r->mRot) < 270 && abs(r->mRot) > 180) r->mRot += r->velocity.X * cos((r->mRot)*(PI / 180));
+			if ((r->mRot < 180 && r->mRot > 90) || (r->mRot < -180 && r->mRot > -270))  r->mRot -= r->velocity.X * cos((r->mRot)*(PI / 180));
+			else if ((r->mRot < 270 && r->mRot > 180) || (r->mRot < -90 && r->mRot > -180)) r->mRot += r->velocity.X * cos((r->mRot)*(PI / 180));
 		}
 		if (d2E[0] <= (depth)) {//checking top
 			r->position.Y -= (depth) - d2E[0];
+			if ((r->mRot < 180 && r->mRot > 90) || (r->mRot < -180 && r->mRot > -270))  r->mRot -= r->velocity.Y * sin((r->mRot)*(PI / 180));
+			else if ((r->mRot < 90 && r->mRot > 0) || (r->mRot < -270 && r->mRot > -360)) r->mRot += r->velocity.Y * sin((r->mRot)*(PI / 180));
 		}
 		else if (r->vertices[i].Y <= (depth)) {//checking bottom side
 			r->position.Y += (depth) - r->vertices[i].Y;
+			if ((r->mRot < 360 && r->mRot > 270) || (r->mRot < 0 && r->mRot > -90))  r->mRot += r->velocity.Y * sin((r->mRot)*(PI / 180));
+			else if ((r->mRot < 270 && r->mRot > 180) || (r->mRot < -90 && r->mRot > -180)) r->mRot -= r->velocity.Y * sin((r->mRot)*(PI / 180));
 		}
 	}
 	/*for (int i = 0; i < 2; i++) {
