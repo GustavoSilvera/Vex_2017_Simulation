@@ -135,7 +135,7 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
 void field::element::collision(int index, element *e, std::set<int> &s) {
 	//collisions from element->element
 	float distance = dist(pos, e->pos);
-	if (distance < rad + e->rad) {//touching
+	if (distance <= MAGNETS * (rad + e->rad)) {//touching
 		vec3 normal = vec3(e->pos.X - pos.X, e->pos.Y - pos.Y);
 		e->pos = e->pos + normal.times(((rad + e->rad) - distance) / distance);//push of the cones
 		/*maths
@@ -147,19 +147,22 @@ void field::element::collision(int index, element *e, std::set<int> &s) {
 	}
 }
 //functions for collisions between the element and another element
-void field::physics(int index, element *e, robot *robit) {
+void field::physics(int index, element *e, robot *robit, int type) {
 	for (int k = 0; k < c.size(); k++) {
 		e->fencePush(&f);//pushes the cone from the fence if touching
 		e->robotColl(index, robit, stacked);
 		if (k != index) e->collision(index, &c[k], stacked);
+		else if (type != 0) e->collision(index, &c[k], stacked);
 	}
 	for (int m = 0; m < mg.size(); m++) {
 		e->fencePush(&f);//pushes the cone from the fence if touching
 		e->robotColl(index, robit, stacked);
 		if (m != index) e->collision(index, &mg[m], stacked);
+		else if (type != 1) e->collision(index, &mg[m], stacked);
 	}
 	for (int p = 0; p < pl.size(); p++) {
 		 if (index != p) e->collision(index, &pl[p], stacked);
+		 else if (type != 2) e->collision(index, &pl[p], stacked);
 	}
 }
 //function for calling all the collision functions together for el->el and el->robot
@@ -179,23 +182,23 @@ void field::fence::wallPush(robot *robit) {
 		d2E[1] = fieldSize - robit->vertices[i].X;//distance to far left
 		if (robit->vertices[i].X <= (depth)) {//checking right side
 			robit->position.X += (depth)-robit->vertices[i].X;
-			if (quadrant(robit->mRot, 1) || quadrant(robit->mRot, 3))  robit->mRot -= robit->velocity.X * cos((robit->mRot)*(PI / 180));
-			else if (quadrant(robit->mRot, 4) || quadrant(robit->mRot, 2)) robit->mRot += robit->velocity.X * cos((robit->mRot)*(PI / 180));
+			if (quadrant(robit->mRot, 1) || quadrant(robit->mRot, 3))  robit->mRot -= robit->velocity.X * cos(gAngle);
+			else if (quadrant(robit->mRot, 4) || quadrant(robit->mRot, 2)) robit->mRot += robit->velocity.X * cos(gAngle);
 		}
 		else if (d2E[1] <= (depth)) {//checking left side
 			robit->position.X -= (depth)-d2E[1];
-			if (quadrant(robit->mRot, 2) || quadrant(robit->mRot, 4))  robit->mRot -= robit->velocity.X * cos((robit->mRot)*(PI / 180));
-			else if (quadrant(robit->mRot, 3) || quadrant(robit->mRot, 1)) robit->mRot += robit->velocity.X * cos((robit->mRot)*(PI / 180));
+			if (quadrant(robit->mRot, 2) || quadrant(robit->mRot, 4))  robit->mRot -= robit->velocity.X * cos(gAngle);
+			else if (quadrant(robit->mRot, 3) || quadrant(robit->mRot, 1)) robit->mRot += robit->velocity.X * cos(gAngle);
 		}
 		if (d2E[0] <= (depth)) {//checking top
 			robit->position.Y -= (depth)-d2E[0];
-			if (quadrant(robit->mRot, 2) || quadrant(robit->mRot, 4))  robit->mRot -= robit->velocity.Y * sin((robit->mRot)*(PI / 180));
-			else if (quadrant(robit->mRot, 1) || quadrant(robit->mRot, 1)) robit->mRot += robit->velocity.Y * sin((robit->mRot)*(PI / 180));
+			if (quadrant(robit->mRot, 2) || quadrant(robit->mRot, 4))  robit->mRot -= robit->velocity.Y * sin(gAngle);
+			else if (quadrant(robit->mRot, 1) || quadrant(robit->mRot, 1)) robit->mRot += robit->velocity.Y * sin(gAngle);
 		}
 		else if (robit->vertices[i].Y <= (depth)) {//checking bottom side
 			robit->position.Y += (depth)-robit->vertices[i].Y;
-			if (quadrant(robit->mRot, 4) || quadrant(robit->mRot, 2))  robit->mRot += robit->velocity.Y * sin((robit->mRot)*(PI / 180));
-			else if (quadrant(robit->mRot, 3) || quadrant(robit->mRot, 1)) robit->mRot -= robit->velocity.Y * sin((robit->mRot)*(PI / 180));
+			if (quadrant(robit->mRot, 4) || quadrant(robit->mRot, 2))  robit->mRot += robit->velocity.Y * sin(gAngle);
+			else if (quadrant(robit->mRot, 3) || quadrant(robit->mRot, 1)) robit->mRot -= robit->velocity.Y * sin(gAngle);
 		}
 	}
 }
@@ -205,9 +208,9 @@ void field::statGoalPush(element *pl, robot *robit, fence *f) {
 		for (int v = 0; v < 4; v++) {
 			f->d2V[v] = dist(pl->pos, robit->vertices[v]);
 		}
+		bool inFront = (f->d2V[0] + f->d2V[1] < f->d2V[2] + f->d2V[3]);//checking if cone is closer to the front side
 		if (pl->directlyInVerticalPath(robit)) {
 			float d2RobotEdge = calcD2Edge(SortSmallest(f->d2V[0], f->d2V[1], f->d2V[2], f->d2V[3]), Sort2ndSmallest(f->d2V[0], f->d2V[1], f->d2V[2], f->d2V[3]), robit);//calculates the distance to the edge of the robit
-			bool inFront = (f->d2V[0] + f->d2V[1] < f->d2V[2] + f->d2V[3]);//checking if cone is closer to the front side
 			if (inFront) pl->closestPoint = vec3(pl->pos.X + (d2RobotEdge)*cos(gAngle), pl->pos.Y - (d2RobotEdge)*sin(gAngle));//does work
 			else pl->closestPoint = vec3(pl->pos.X - (d2RobotEdge)*cos(gAngle), pl->pos.Y + (d2RobotEdge)*sin(gAngle));//does work
 		}
@@ -221,6 +224,22 @@ void field::statGoalPush(element *pl, robot *robit, fence *f) {
 		if (d2closestPoint <= pl->rad) {//touching
 			robit->position.X += R.X - pl->closestPoint.X;
 			robit->position.Y += R.Y - pl->closestPoint.Y;
+			//rotation when hits the stationary goal
+			int thresh = 2;//degrees of freedom
+			if (inFront) {
+				if (abs(f->d2V[0] - f->d2V[1]) > thresh) {
+					if (f->d2V[0] < f->d2V[1])
+						robit->mRot += robit->velocity.Y * sin(gAngle);
+					else if (f->d2V[0] > f->d2V[1])
+						robit->mRot -= robit->velocity.Y * sin(gAngle);
+				}
+			}
+			else  if (abs(f->d2V[2] - f->d2V[3]) > thresh) {
+				if (f->d2V[2] > f->d2V[3])
+					robit->mRot -= robit->velocity.Y * sin(gAngle);
+				else if (f->d2V[2] < f->d2V[3])
+					robit->mRot += robit->velocity.Y * sin(gAngle);
+			}
 		}
 	}
 }
@@ -229,16 +248,16 @@ void field::FieldUpdate(robot *robit) {
 	if (!initialized) initializeField(robit);
 	f.wallPush(robit);
 	for (int i = 0; i < c.size(); i++) {
-		physics(i, &c[i], robit);
+		physics(i, &c[i], robit, 0);
 	}
 	for (int i = 0; i < mg.size(); i++) {
-		physics(i, &mg[i], robit);
+		physics(i, &mg[i], robit, 1);
 	}
 	for (int i = 0; i < pl.size(); i++) {
 		pl[0].pos = vec3(93, 47.3);//stationary goal (not moving)
 		pl[1].pos = vec3(46.9, 94);//stationary goal (not moving)
 		statGoalPush(&pl[i], robit, &f);
-		physics(i, &pl[i], robit);
+		physics(i, &pl[i], robit, 2);
 	}
 }
 //update task for the entire field simulation
