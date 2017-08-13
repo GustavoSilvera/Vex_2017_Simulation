@@ -161,6 +161,15 @@ void field::physics(int index, element *e, robot *robit) {
 	}
 }
 //function for calling all the collision functions together for el->el and el->robot
+bool quadrant(double angle, int quadrant) {
+	vec3 bounds;//(no greater than, no less than)
+	if (quadrant == 1) bounds = vec3(89, 1);
+	else if (quadrant == 2) bounds = vec3(179, 91);
+	else if (quadrant == 3) bounds = vec3(269, 181);
+	else if (quadrant == 4) bounds = vec3(359, 271);
+	else return false;
+	return (angle < bounds.X && angle > bounds.Y) || (angle < bounds.X - 360 && angle > bounds.Y - 360);
+}
 void field::fence::robotPush(robot *r) {
 	//deals with robot's boundaries and stationary goals
 	for (int i = 0; i < 4; i++) {
@@ -168,23 +177,23 @@ void field::fence::robotPush(robot *r) {
 		d2E[1] = fieldSize - r->vertices[i].X;
 		if (r->vertices[i].X <= (depth)) {//checking right side
 			r->position.X += (depth) - r->vertices[i].X;
-			if ((r->mRot < 90 && r->mRot > 0 ) || (r->mRot < -270 && r->mRot > -360))  r->mRot -= r->velocity.X * cos((r->mRot)*(PI / 180));
-			else if ((r->mRot < 360 && r->mRot > 270) || (r->mRot < 0 && r->mRot > -90)) r->mRot += r->velocity.X * cos((r->mRot)*(PI / 180));
+			if (quadrant(r->mRot, 1) || quadrant(r->mRot, 3))  r->mRot -= r->velocity.X * cos((r->mRot)*(PI / 180));
+			else if (quadrant(r->mRot, 4) || quadrant(r->mRot, 2)) r->mRot += r->velocity.X * cos((r->mRot)*(PI / 180));
 		}
 		else if (d2E[1] <= (depth)) {//checking left side
 			r->position.X -= (depth) - d2E[1];
-			if ((r->mRot < 180 && r->mRot > 90) || (r->mRot < -180 && r->mRot > -270))  r->mRot -= r->velocity.X * cos((r->mRot)*(PI / 180));
-			else if ((r->mRot < 270 && r->mRot > 180) || (r->mRot < -90 && r->mRot > -180)) r->mRot += r->velocity.X * cos((r->mRot)*(PI / 180));
+			if (quadrant(r->mRot, 2) || quadrant(r->mRot, 4))  r->mRot -= r->velocity.X * cos((r->mRot)*(PI / 180));
+			else if (quadrant(r->mRot, 3) || quadrant(r->mRot, 1)) r->mRot += r->velocity.X * cos((r->mRot)*(PI / 180));
 		}
 		if (d2E[0] <= (depth)) {//checking top
 			r->position.Y -= (depth) - d2E[0];
-			if ((r->mRot < 180 && r->mRot > 90) || (r->mRot < -180 && r->mRot > -270))  r->mRot -= r->velocity.Y * sin((r->mRot)*(PI / 180));
-			else if ((r->mRot < 90 && r->mRot > 0) || (r->mRot < -270 && r->mRot > -360)) r->mRot += r->velocity.Y * sin((r->mRot)*(PI / 180));
+			if (quadrant(r->mRot, 2) || quadrant(r->mRot, 4))  r->mRot -= r->velocity.Y * sin((r->mRot)*(PI / 180));
+			else if (quadrant(r->mRot, 1) || quadrant(r->mRot, 1)) r->mRot += r->velocity.Y * sin((r->mRot)*(PI / 180));
 		}
 		else if (r->vertices[i].Y <= (depth)) {//checking bottom side
 			r->position.Y += (depth) - r->vertices[i].Y;
-			if ((r->mRot < 360 && r->mRot > 270) || (r->mRot < 0 && r->mRot > -90))  r->mRot += r->velocity.Y * sin((r->mRot)*(PI / 180));
-			else if ((r->mRot < 270 && r->mRot > 180) || (r->mRot < -90 && r->mRot > -180)) r->mRot -= r->velocity.Y * sin((r->mRot)*(PI / 180));
+			if (quadrant(r->mRot, 4) || quadrant(r->mRot, 2))  r->mRot += r->velocity.Y * sin((r->mRot)*(PI / 180));
+			else if (quadrant(r->mRot, 3) || quadrant(r->mRot, 1)) r->mRot -= r->velocity.Y * sin((r->mRot)*(PI / 180));
 		}
 	}
 	/*for (int i = 0; i < 2; i++) {
