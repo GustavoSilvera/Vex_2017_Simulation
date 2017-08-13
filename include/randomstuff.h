@@ -9,7 +9,7 @@
 #define coneRad 3
 #define MoGoRad 5
 #define numMoGos 8
-#define MAGNETS 1
+#define MAGNETS 1.0//e.e
 #define gAngle robit->mRot * (PI / 180)
 
 #define renderRad 1//amount of the robot's radii that are used to calculate cone distance, smaller is more optimized (but calculates for less cones)

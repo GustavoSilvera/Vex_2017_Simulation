@@ -206,16 +206,16 @@ void field::statGoalPush(element *pl, robot *robit, fence *f) {
 	float d2StatGoal = dist(robit->position, pl->pos);
 	if (d2StatGoal < renderRad * robit->size) {
 		for (int v = 0; v < 4; v++) {
-			f->d2V[v] = dist(pl->pos, robit->vertices[v]);
+			pl->d2V[v] = dist(pl->pos, robit->vertices[v]);
 		}
-		bool inFront = (f->d2V[0] + f->d2V[1] < f->d2V[2] + f->d2V[3]);//checking if cone is closer to the front side
+		bool inFront = (pl->d2V[0] + pl->d2V[1] < pl->d2V[2] + pl->d2V[3]);//checking if cone is closer to the front side
 		if (pl->directlyInVerticalPath(robit)) {
-			float d2RobotEdge = calcD2Edge(SortSmallest(f->d2V[0], f->d2V[1], f->d2V[2], f->d2V[3]), Sort2ndSmallest(f->d2V[0], f->d2V[1], f->d2V[2], f->d2V[3]), robit);//calculates the distance to the edge of the robit
+			float d2RobotEdge = calcD2Edge(SortSmallest(pl->d2V[0], pl->d2V[1], pl->d2V[2], pl->d2V[3]), Sort2ndSmallest(pl->d2V[0], pl->d2V[1], pl->d2V[2], pl->d2V[3]), robit);//calculates the distance to the edge of the robit
 			if (inFront) pl->closestPoint = vec3(pl->pos.X + (d2RobotEdge)*cos(gAngle), pl->pos.Y - (d2RobotEdge)*sin(gAngle));//does work
 			else pl->closestPoint = vec3(pl->pos.X - (d2RobotEdge)*cos(gAngle), pl->pos.Y + (d2RobotEdge)*sin(gAngle));//does work
 		}
 		else {//not directly in path finds which vertice is the closest to the cone
-			int smallest_vertice = sortSmallVER(f->d2V[0], f->d2V[1], f->d2V[2], f->d2V[3]);
+			int smallest_vertice = sortSmallVER(pl->d2V[0], pl->d2V[1], pl->d2V[2], pl->d2V[3]);
 			pl->closestPoint = robit->vertices[smallest_vertice];//closest point to center will then be the vertice
 		}
 		float d2closestPoint = dist(pl->pos, pl->closestPoint);
@@ -227,17 +227,17 @@ void field::statGoalPush(element *pl, robot *robit, fence *f) {
 			//rotation when hits the stationary goal
 			int thresh = 2;//degrees of freedom
 			if (inFront) {
-				if (abs(f->d2V[0] - f->d2V[1]) > thresh) {
-					if (f->d2V[0] < f->d2V[1])
+				if (abs(pl->d2V[0] - pl->d2V[1]) > thresh) {
+					if (pl->d2V[0] < pl->d2V[1])
 						robit->mRot += robit->velocity.Y * sin(gAngle);
-					else if (f->d2V[0] > f->d2V[1])
+					else if (pl->d2V[0] > pl->d2V[1])
 						robit->mRot -= robit->velocity.Y * sin(gAngle);
 				}
 			}
-			else  if (abs(f->d2V[2] - f->d2V[3]) > thresh) {
-				if (f->d2V[2] > f->d2V[3])
+			else  if (abs(pl->d2V[2] - pl->d2V[3]) > thresh) {
+				if (pl->d2V[2] > pl->d2V[3])
 					robit->mRot -= robit->velocity.Y * sin(gAngle);
-				else if (f->d2V[2] < f->d2V[3])
+				else if (pl->d2V[2] < pl->d2V[3])
 					robit->mRot += robit->velocity.Y * sin(gAngle);
 			}
 		}

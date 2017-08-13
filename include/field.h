@@ -29,7 +29,6 @@ public:
 		float d2E[2];
 		/*for stationary goals*/
 		float d2StatGoal[2];
-		float d2V[4];//distance to each vertice on the robot
 	};
 	fence f;
 
