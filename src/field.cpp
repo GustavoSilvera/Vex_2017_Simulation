@@ -27,7 +27,7 @@ field::element initMoGoConfig[numMoGos] = {//array for each configuration of the
 	{ { 127.6, 105.8 }, 1 ,MoGoRad}, { { 105.8, 127.6 }, 2 ,MoGoRad}
 };
 field::element initPoleConfig[2] = {
-	{ { 93.9, 46.7 }, 3 , 4 },{ { 46.7, 93.9 }, 3 , 4 }
+	{ { 93, 47.3 }, 3 , 4 },{ { 46.9, 94 }, 3 , 4 }
 };
 
 //initial mogo values for position and colour
@@ -143,21 +143,23 @@ void field::element::collision(int index, element *e, std::set<int> &s) {
 		overlap = 2*coneRad - distance
 		therefore: ? = (2*coneRad - distance)/distance;
 		*/
-		s.insert(index);//adds index of which cone is in the stack (being pushed)
+		//s.insert(index);//adds index of which cone is in the stack (being pushed)
 	}
 }
 //functions for collisions between the element and another element
 void field::physics(int index, element *e, robot *robit) {
-	e->fencePush(&f);//pushes the cone from the fence if touching
-	e->robotColl(index, robit, stacked);
 	for (int k = 0; k < c.size(); k++) {
+		e->fencePush(&f);//pushes the cone from the fence if touching
+		e->robotColl(index, robit, stacked);
 		if (k != index) e->collision(index, &c[k], stacked);
 	}
 	for (int m = 0; m < mg.size(); m++) {
+		e->fencePush(&f);//pushes the cone from the fence if touching
+		e->robotColl(index, robit, stacked);
 		if (m != index) e->collision(index, &mg[m], stacked);
 	}
 	for (int p = 0; p < pl.size(); p++) {
-		e->collision(index, &pl[p], stacked);
+		 if (index != p) e->collision(index, &pl[p], stacked);
 	}
 }
 //function for calling all the collision functions together for el->el and el->robot
@@ -170,49 +172,62 @@ bool quadrant(double angle, int quadrant) {
 	else return false;
 	return (angle < bounds.X && angle > bounds.Y) || (angle < bounds.X - 360 && angle > bounds.Y - 360);
 }
-void field::fence::robotPush(robot *r) {
+void field::fence::wallPush(robot *robit) {
 	//deals with robot's boundaries and stationary goals
 	for (int i = 0; i < 4; i++) {
-		d2E[0] = fieldSize - r->vertices[i].Y;
-		d2E[1] = fieldSize - r->vertices[i].X;
-		if (r->vertices[i].X <= (depth)) {//checking right side
-			r->position.X += (depth) - r->vertices[i].X;
-			if (quadrant(r->mRot, 1) || quadrant(r->mRot, 3))  r->mRot -= r->velocity.X * cos((r->mRot)*(PI / 180));
-			else if (quadrant(r->mRot, 4) || quadrant(r->mRot, 2)) r->mRot += r->velocity.X * cos((r->mRot)*(PI / 180));
+		d2E[0] = fieldSize - robit->vertices[i].Y;//distance to top
+		d2E[1] = fieldSize - robit->vertices[i].X;//distance to far left
+		if (robit->vertices[i].X <= (depth)) {//checking right side
+			robit->position.X += (depth)-robit->vertices[i].X;
+			if (quadrant(robit->mRot, 1) || quadrant(robit->mRot, 3))  robit->mRot -= robit->velocity.X * cos((robit->mRot)*(PI / 180));
+			else if (quadrant(robit->mRot, 4) || quadrant(robit->mRot, 2)) robit->mRot += robit->velocity.X * cos((robit->mRot)*(PI / 180));
 		}
 		else if (d2E[1] <= (depth)) {//checking left side
-			r->position.X -= (depth) - d2E[1];
-			if (quadrant(r->mRot, 2) || quadrant(r->mRot, 4))  r->mRot -= r->velocity.X * cos((r->mRot)*(PI / 180));
-			else if (quadrant(r->mRot, 3) || quadrant(r->mRot, 1)) r->mRot += r->velocity.X * cos((r->mRot)*(PI / 180));
+			robit->position.X -= (depth)-d2E[1];
+			if (quadrant(robit->mRot, 2) || quadrant(robit->mRot, 4))  robit->mRot -= robit->velocity.X * cos((robit->mRot)*(PI / 180));
+			else if (quadrant(robit->mRot, 3) || quadrant(robit->mRot, 1)) robit->mRot += robit->velocity.X * cos((robit->mRot)*(PI / 180));
 		}
 		if (d2E[0] <= (depth)) {//checking top
-			r->position.Y -= (depth) - d2E[0];
-			if (quadrant(r->mRot, 2) || quadrant(r->mRot, 4))  r->mRot -= r->velocity.Y * sin((r->mRot)*(PI / 180));
-			else if (quadrant(r->mRot, 1) || quadrant(r->mRot, 1)) r->mRot += r->velocity.Y * sin((r->mRot)*(PI / 180));
+			robit->position.Y -= (depth)-d2E[0];
+			if (quadrant(robit->mRot, 2) || quadrant(robit->mRot, 4))  robit->mRot -= robit->velocity.Y * sin((robit->mRot)*(PI / 180));
+			else if (quadrant(robit->mRot, 1) || quadrant(robit->mRot, 1)) robit->mRot += robit->velocity.Y * sin((robit->mRot)*(PI / 180));
 		}
-		else if (r->vertices[i].Y <= (depth)) {//checking bottom side
-			r->position.Y += (depth) - r->vertices[i].Y;
-			if (quadrant(r->mRot, 4) || quadrant(r->mRot, 2))  r->mRot += r->velocity.Y * sin((r->mRot)*(PI / 180));
-			else if (quadrant(r->mRot, 3) || quadrant(r->mRot, 1)) r->mRot -= r->velocity.Y * sin((r->mRot)*(PI / 180));
+		else if (robit->vertices[i].Y <= (depth)) {//checking bottom side
+			robit->position.Y += (depth)-robit->vertices[i].Y;
+			if (quadrant(robit->mRot, 4) || quadrant(robit->mRot, 2))  robit->mRot += robit->velocity.Y * sin((robit->mRot)*(PI / 180));
+			else if (quadrant(robit->mRot, 3) || quadrant(robit->mRot, 1)) robit->mRot -= robit->velocity.Y * sin((robit->mRot)*(PI / 180));
 		}
 	}
-	/*for (int i = 0; i < 2; i++) {
-		vec3 polePos;
-		if (i == 0) polePos = vec3(93.9, 46.7);
-		else polePos = vec3(46.7, 93.9);
-		d2StatGoal[i] = dist(r->position, polePos);
-		if (d2StatGoal[i] < renderRad * r->size) {
-			for (int v = 0; v < 4; v++) {
-				d2V[v] = dist(polePos, r->vertices[v]);
-			}
-
+}
+void field::statGoalPush(element *pl, robot *robit, fence *f) {
+	float d2StatGoal = dist(robit->position, pl->pos);
+	if (d2StatGoal < renderRad * robit->size) {
+		for (int v = 0; v < 4; v++) {
+			f->d2V[v] = dist(pl->pos, robit->vertices[v]);
 		}
-	}*/
+		if (pl->directlyInVerticalPath(robit)) {
+			float d2RobotEdge = calcD2Edge(SortSmallest(f->d2V[0], f->d2V[1], f->d2V[2], f->d2V[3]), Sort2ndSmallest(f->d2V[0], f->d2V[1], f->d2V[2], f->d2V[3]), robit);//calculates the distance to the edge of the robit
+			bool inFront = (f->d2V[0] + f->d2V[1] < f->d2V[2] + f->d2V[3]);//checking if cone is closer to the front side
+			if (inFront) pl->closestPoint = vec3(pl->pos.X + (d2RobotEdge)*cos(gAngle), pl->pos.Y - (d2RobotEdge)*sin(gAngle));//does work
+			else pl->closestPoint = vec3(pl->pos.X - (d2RobotEdge)*cos(gAngle), pl->pos.Y + (d2RobotEdge)*sin(gAngle));//does work
+		}
+		else {//not directly in path finds which vertice is the closest to the cone
+			int smallest_vertice = sortSmallVER(f->d2V[0], f->d2V[1], f->d2V[2], f->d2V[3]);
+			pl->closestPoint = robit->vertices[smallest_vertice];//closest point to center will then be the vertice
+		}
+		float d2closestPoint = dist(pl->pos, pl->closestPoint);
+		HELLO = d2closestPoint;
+		vec3 R = (pl->closestPoint + pl->pos.times(-1)).times(pl->rad / d2closestPoint) + pl->pos;
+		if (d2closestPoint <= pl->rad) {//touching
+			robit->position.X += R.X - pl->closestPoint.X;
+			robit->position.Y += R.Y - pl->closestPoint.Y;
+		}
+	}
 }
 //function for making sure the robot cannot move past the fence
 void field::FieldUpdate(robot *robit) {
 	if (!initialized) initializeField(robit);
-	f.robotPush(robit);
+	f.wallPush(robit);
 	for (int i = 0; i < c.size(); i++) {
 		physics(i, &c[i], robit);
 	}
@@ -220,8 +235,9 @@ void field::FieldUpdate(robot *robit) {
 		physics(i, &mg[i], robit);
 	}
 	for (int i = 0; i < pl.size(); i++) {
-		pl[0].pos = vec3(93.9, 46.7);//stationary goal (not moving)
-		pl[1].pos = vec3(46.7, 93.9);//stationary goal (not moving)
+		pl[0].pos = vec3(93, 47.3);//stationary goal (not moving)
+		pl[1].pos = vec3(46.9, 94);//stationary goal (not moving)
+		statGoalPush(&pl[i], robit, &f);
 		physics(i, &pl[i], robit);
 	}
 }
@@ -229,6 +245,7 @@ void field::FieldUpdate(robot *robit) {
  field::field() : initialized(false) {
 	 c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
 	 mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
+	 pl.assign(&initPoleConfig[0], &initPoleConfig[2]);
  }
 //constructor
  

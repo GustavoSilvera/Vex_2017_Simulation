@@ -25,8 +25,9 @@ public:
 		vec3 centre = vec3(606, 606);//in pixels
 		float fieldEnd = centre.X + fieldSize*ppi / 2;//furthest to the right the field is touching
 		float depth = 1.27;//thickness of the vex fence
-		void robotPush(robot *r);
+		void wallPush(robot *r);
 		float d2E[2];
+		/*for stationary goals*/
 		float d2StatGoal[2];
 		float d2V[4];//distance to each vertice on the robot
 	};
@@ -49,6 +50,7 @@ public:
 	std::vector<element> c;
 	std::vector<element> mg;
 	std::vector<element> pl;//poles in the field
+	void statGoalPush(element *pl, robot *r, fence *f);
 	void physics(int index, element *e, robot *r);
 	
 	ci::gl::Texture MobileGoal;

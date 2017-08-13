@@ -360,9 +360,11 @@ void CimulationApp::draw() {
 	drawText(v.r.rotVel, vec3(1000, 340), vec3(1, 1, 1), 30);
 	drawText(v.r.rotAcceleration, vec3(1000, 440), vec3(1, 1, 1), 30);
 	drawText(v.f.stacked.size(), vec3(1000, 500), vec3(1, 1, 1), 30);
+	//drawText(v.f.HELLO, vec3(1000, 600), vec3(1, 1, 1), 30);
+
 	/*drawing closest point for the 0th (first) cone*/
 	gl::color(1, 0, 0);
-	gl::drawSolidCircle(Vec2f(v.f.f.fieldEnd - v.f.c[0].closestPoint.X*ppi, v.f.f.fieldEnd - v.f.c[0].closestPoint.Y*ppi), 5);
+	gl::drawStrokedCircle(Vec2f(v.f.f.fieldEnd - v.f.pl[0].pos.X*ppi, v.f.f.fieldEnd - v.f.pl[0].pos.Y*ppi), 4*ppi);
 	gl::color(1, 1, 1);
 	//USER INTERFACE
 	buttons();

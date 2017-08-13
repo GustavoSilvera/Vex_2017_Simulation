@@ -47,6 +47,7 @@ inline float Sort2ndSmallest(float v1, float v2, float v3, float v4) {//finds se
 	else if (v2 == smallest) Smallest2nd = SortSmallest3(v1, v3, v4);//exclude v2 from search to the smallest
 	else if (v3 == smallest) Smallest2nd = SortSmallest3(v2, v1, v4);//exclude v3 from search to the smallest
 	else if (v4 == smallest) Smallest2nd = SortSmallest3(v2, v3, v1);//exclude v4 from search to the smallest
+	else return 0;
 	return Smallest2nd;
 }
 inline int sortSmallVER(float v1, float v2, float v3, float v4) {
