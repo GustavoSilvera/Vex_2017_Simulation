@@ -38,6 +38,7 @@ public:
 		int rad;//size of the object;
 		void calcD2Vertices(robot *r);
 		float d2V[4];//distance to each vertice on the robot
+		float d2Robot;
 		bool directlyInVerticalPath(robot *r);
 		bool directlyInHorizontalPath(robot *r);
 		vec3 closestPoint;
@@ -45,6 +46,8 @@ public:
 		float d2E[2];//0 is d2 right, 1 is d2 top, 2 is d2left, 3 is d2 bottom
 		void robotColl(int index, robot *r, std::set<int> &s);
 		void collision(int index, element *e, std::set<int> &s);
+		void grabbed(robot *r);
+		bool held;
 	};
 	std::vector<element> c;
 	std::vector<element> mg;

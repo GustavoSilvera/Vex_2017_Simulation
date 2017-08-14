@@ -5,7 +5,7 @@
 #define PI 3.1415926283846387236983
 #define WindowWidth  1400
 #define WindowHeight  1200
-#define numCones 53
+#define numCones 54
 #define coneRad 3
 #define MoGoRad 5
 #define numMoGos 8

@@ -152,6 +152,14 @@ void robot::update() {
 	mRot += rotVel;
 	mRot = ((mRot / 360) - (long)(mRot / 360)) * 360;//only within 360° and -360°
 	robot::setVertices();
+	if (grabbing) {
+		if (clawPos > size/18)
+			clawPos -=0.5;
+	}
+	else {
+		if (clawPos < clawSize)
+			clawPos += 0.5;
+	}
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {

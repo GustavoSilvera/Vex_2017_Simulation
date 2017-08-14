@@ -50,6 +50,12 @@ public:
 	vec3 friction;
 	int size = 18;
 	float mRot = 0;//drawing rotation
+	//claw
+	float clawSize = 5;
+	float clawPos = clawSize;
+	int clawHeight = 1.5;
+	bool grabbing = false;
+	bool holding = false;
 	//PHYSICS
 	vec3 position;//X, Y, and Z
 	vec3 velocity;//diff x, diff y, diff z
@@ -63,7 +69,6 @@ public:
 	volatile bool ArrowKeyDown = false;//if the arrow keys are triggering a forwards/backwards motion
 	volatile bool RotRight = false;//used for whether the keys are supposed to be triggering a rotation
 	volatile bool RotLeft = false;//used for whether the keys are supposed to be triggering a rotation
-	
 	struct position current;
 	vec3 vertices[4];
 };

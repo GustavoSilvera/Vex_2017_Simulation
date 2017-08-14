@@ -62,7 +62,7 @@ void field::element::calcD2Vertices(robot *robit) {
 bool field::element::directlyInVerticalPath(robot *robit) {//vertical lines
 	vec3 origin = pos;//calculattes yintercepts for each cone relative to their position
 	float x = 0;//finds the y intercept
-	robit->slopeV[0] = (robit->vertices[0].Y - robit->vertices[3].Y) / (robit->vertices[0].X - robit->vertices[3].X);
+	robit->slopeV[0] = (robit->vertices[0].Y - robit->vertices[3].Y) / (robit->vertices[0].X - robit->vertices[3].X);//should be identical to slope[1] kinda redundant i guess
 	robit->YintV[0] = robit->slopeV[0] * (x - (robit->vertices[0].X - origin.X)) + (robit->vertices[0].Y - origin.Y);
 	robit->slopeV[1] = (robit->vertices[1].Y - robit->vertices[2].Y) / (robit->vertices[1].X - robit->vertices[2].X);
 	robit->YintV[1] = robit->slopeV[1] * (x - (robit->vertices[1].X - origin.X)) + (robit->vertices[1].Y - origin.Y);
@@ -100,7 +100,7 @@ void field::element::fencePush(fence *f) {
 //calculates distances to the edges of the field, and acts accordingly
 void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
 	//collisions from robot
-	float d2Robot = dist(pos, robit->position);
+	d2Robot = dist(pos, robit->position);
 	if (d2Robot < renderRad * robit->size) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
 		calcD2Vertices(robit);//calculate all the distances
 		float d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
@@ -226,32 +226,50 @@ void field::statGoalPush(element *pl, robot *robit, fence *f) {
 			robit->position.Y += R.Y - pl->closestPoint.Y;
 			//rotation when hits the stationary goal
 			int thresh = 2;//degrees of freedom
-			if (inFront) {
-				if (abs(pl->d2V[0] - pl->d2V[1]) > thresh) {
-					if (pl->d2V[0] < pl->d2V[1])
-						robit->mRot += robit->velocity.Y * sin(gAngle);
-					else if (pl->d2V[0] > pl->d2V[1])
-						robit->mRot -= robit->velocity.Y * sin(gAngle);
+			if (robit->acceleration.X > 0 || robit->acceleration.Y > 0){//if moving
+				if (inFront) {
+					if (abs(pl->d2V[0] - pl->d2V[1]) > thresh) {
+						if (pl->d2V[0] < pl->d2V[1])//checking which way to rotate
+							robit->mRot += abs(robit->velocity.Y * sin(gAngle));
+						else if (pl->d2V[0] > pl->d2V[1])
+							robit->mRot -= abs(robit->velocity.Y * sin(gAngle));
+					}
 				}
-			}
-			else  if (abs(pl->d2V[2] - pl->d2V[3]) > thresh) {
-				if (pl->d2V[2] > pl->d2V[3])
-					robit->mRot -= robit->velocity.Y * sin(gAngle);
-				else if (pl->d2V[2] < pl->d2V[3])
-					robit->mRot += robit->velocity.Y * sin(gAngle);
+				else  if (abs(pl->d2V[2] - pl->d2V[3]) > thresh) {
+					if (pl->d2V[2] > pl->d2V[3])
+						robit->mRot -= abs(robit->velocity.Y * sin(gAngle));
+					else if (pl->d2V[2] < pl->d2V[3])
+						robit->mRot += abs(robit->velocity.Y * sin(gAngle));
+				}
 			}
 		}
 	}
 }
 //function for making sure the robot cannot move past the fence
+void field::element::grabbed(robot *robit) {
+	if (robit->grabbing && !robit->holding) {
+		float slope = (robit->vertices[0].Y - robit->vertices[3].Y) / (robit->vertices[0].X - robit->vertices[3].X);
+		float yInt1 = slope * (0 - (robit->vertices[0].X + robit->clawSize*cos((robit->mRot - 135) * PI / 180) - pos.X)) + (robit->vertices[0].Y + robit->clawSize*sin((robit->mRot - 135) * PI / 180) - pos.Y);
+		float yInt2 = slope * (0 - (robit->vertices[1].X - robit->clawSize*cos((robit->mRot - 135) * PI / 180) - pos.X)) + (robit->vertices[1].Y - robit->clawSize*sin((robit->mRot - 135) * PI / 180) - pos.Y);
+		bool inPosition = (getSign(yInt1) != getSign(yInt2) && (d2Robot <.9*robit->size));
+		if (inPosition) {
+			//fix being able to hold more than one entitie at once
+			robit->holding = true;//locking the entities in place
+			pos.X = (robit->position.X) - (robit->size / 2 * cos(gAngle));
+			pos.Y = (robit->position.Y + (robit->size / 2 * sin(gAngle)));
+		}
+	}
+}
 void field::FieldUpdate(robot *robit) {
 	if (!initialized) initializeField(robit);
 	f.wallPush(robit);
 	for (int i = 0; i < c.size(); i++) {
 		physics(i, &c[i], robit, 0);
+		c[i].grabbed(robit);
 	}
 	for (int i = 0; i < mg.size(); i++) {
 		physics(i, &mg[i], robit, 1);
+		mg[i].grabbed(robit);
 	}
 	for (int i = 0; i < pl.size(); i++) {
 		pl[0].pos = vec3(93, 47.3);//stationary goal (not moving)

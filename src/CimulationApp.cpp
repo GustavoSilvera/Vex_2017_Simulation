@@ -168,12 +168,14 @@ void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_DOWN)	v.r.ArrowKeyDown = true;
 	if (event.getCode() == KeyEvent::KEY_LEFT)	v.r.RotLeft = true;
 	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.RotRight = true;
+	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.grabbing = true;
 }
 void CimulationApp::keyUp(KeyEvent event) {
-	v.r.ArrowKeyDown = false;
-	v.r.ArrowKeyUp = false;
-	v.r.RotRight = false;
-	v.r.RotLeft = false;
+	if (event.getCode() == KeyEvent::KEY_DOWN) v.r.ArrowKeyDown = false;
+	if (event.getCode() == KeyEvent::KEY_UP) v.r.ArrowKeyUp = false;
+	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.RotRight = false;
+	if (event.getCode() == KeyEvent::KEY_LEFT) v.r.RotLeft = false;
+	if (event.getCode() == KeyEvent::KEY_SPACE) { v.r.grabbing = false; v.r.holding = false; }
 }
 void CimulationApp::update() {
 	v.j.getAnalog(mousePos);
@@ -351,7 +353,13 @@ void CimulationApp::draw() {
 	}
 	else gl::translate(Vec3f(v.r.position.X*ppi, v.r.position.Y*ppi, 0.0));//origin of rotation
 	gl::rotate(Vec3f(0, 0, -v.r.mRot-90));//something for like 3D rotation.... ugh
-	gl::draw(v.r.TankBase, Area((-(v.r.size / 2))*ppi, (-(v.r.size / 2))*ppi, ((v.r.size / 2))*ppi, ((v.r.size / 2))*ppi));
+		//claw
+		gl::color(160.0/255, 160.0/255, 160.0/255);
+		gl::drawSolidRect(Area((v.r.clawPos + v.r.size / 18)*ppi, (v.r.size*.5 + v.r.clawHeight)*ppi, ( v.r.clawPos - v.r.size /18)*ppi, ( v.r.size*.5)*ppi));
+		gl::drawSolidRect(Area((-v.r.clawPos - v.r.size / 18)*ppi, (v.r.size*.5 + v.r.clawHeight)*ppi, (-v.r.clawPos + v.r.size / 18)*ppi, (v.r.size*.5)*ppi));
+		//base
+		gl::color(1, 1, 1);
+		gl::draw(v.r.TankBase, Area((-(v.r.size / 2))*ppi, (-(v.r.size / 2))*ppi, ((v.r.size / 2))*ppi, ((v.r.size / 2))*ppi));
 	glPopMatrix();
 	/*****************************MISC**********************************/
 	drawText(v.r.mRot, vec3(600, 40), vec3(1, 1, 1), 30);
@@ -360,11 +368,13 @@ void CimulationApp::draw() {
 	drawText(v.r.rotVel, vec3(1000, 340), vec3(1, 1, 1), 30);
 	drawText(v.r.rotAcceleration, vec3(1000, 440), vec3(1, 1, 1), 30);
 	drawText(v.f.stacked.size(), vec3(1000, 500), vec3(1, 1, 1), 30);
+	drawText(v.r.clawSize, vec3(1000, 700), vec3(1, 1, 1), 30);
 	//drawText(v.f.HELLO, vec3(1000, 600), vec3(1, 1, 1), 30);
-
+	if (v.f.c[1].held) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
+	else 	gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	/*drawing closest point for the 0th (first) cone*/
 	gl::color(1, 0, 0);
-	gl::drawStrokedCircle(Vec2f(v.f.f.fieldEnd - v.f.pl[0].pos.X*ppi, v.f.f.fieldEnd - v.f.pl[0].pos.Y*ppi), 4*ppi);
+	//gl::drawStrokedCircle(Vec2f(v.f.f.fieldEnd - v.f.pl[0].pos.X*ppi, v.f.f.fieldEnd - v.f.pl[0].pos.Y*ppi), 4*ppi);
 	gl::color(1, 1, 1);
 	//USER INTERFACE
 	buttons();
