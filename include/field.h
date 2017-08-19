@@ -38,15 +38,15 @@ public:
 		int rad;//size of the object;
 		void calcD2Vertices(robot *r);
 		float d2V[4];//distance to each vertice on the robot
-		float d2Robot;
+		float d2Robot, d2RobotEdge;
 		bool directlyInVerticalPath(robot *r);
 		bool directlyInHorizontalPath(robot *r);
 		vec3 closestPoint;
 		void fencePush(fence *f);
-		float d2E[2];//0 is d2 right, 1 is d2 top, 2 is d2left, 3 is d2 bottom
+		float d2E[2];//0 is d2 top, 1 is d2left, 
 		void robotColl(int index, robot *r, std::set<int> &s);
 		void collision(int index, element *e, std::set<int> &s);
-		void grabbed(robot *r);
+		void grabbed(robot *r, int index);
 		bool held;
 	};
 	std::vector<element> c;

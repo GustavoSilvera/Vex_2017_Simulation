@@ -55,7 +55,7 @@ public:
 	float clawPos = clawSize;
 	int clawHeight = 1.5;
 	bool grabbing = false;
-	bool holding = false;
+	int holding = -1;
 	//PHYSICS
 	vec3 position;//X, Y, and Z
 	vec3 velocity;//diff x, diff y, diff z

@@ -175,7 +175,7 @@ void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_UP) v.r.ArrowKeyUp = false;
 	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.RotRight = false;
 	if (event.getCode() == KeyEvent::KEY_LEFT) v.r.RotLeft = false;
-	if (event.getCode() == KeyEvent::KEY_SPACE) { v.r.grabbing = false; v.r.holding = false; }
+	if (event.getCode() == KeyEvent::KEY_SPACE) { v.r.grabbing = false; v.r.holding = -1; }
 }
 void CimulationApp::update() {
 	v.j.getAnalog(mousePos);
