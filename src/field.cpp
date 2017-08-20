@@ -84,16 +84,20 @@ bool field::element::directlyInHorizontalPath(robot *robit) {//horizontal lines
 void field::element::fencePush(fence *f) {
 	d2E[0] = f->fieldSize - pos.Y;
 	d2E[1] = f->fieldSize - pos.X;
-	if (pos.X <= (rad + f->depth)) {
+	bool touchingRight = (pos.X <= (rad + f->depth));
+	if (touchingRight) {
 		pos.X += (rad + f->depth) - 1.1*pos.X;
 	}
-	if (d2E[0] <= (rad + f->depth)) {//g
+	bool touchingTop = (d2E[0] <= (rad + f->depth));
+	if (touchingTop) {//g
 		pos.Y -= (rad + f->depth) - 1.1*d2E[0];
 	}
-	if (d2E[1] <= (rad + f->depth)) {
+	bool touchingLeft = (d2E[1] <= (rad + f->depth));
+	if (touchingLeft) {
 		pos.X -= (rad + f->depth) - 1.1*d2E[1];
 	}
-	if (pos.Y <= (rad + f->depth)) {//g
+	bool touchingBottom = (pos.Y <= (rad + f->depth));
+	if (touchingBottom) {//g
 		pos.Y += (rad + f->depth) - 1.1*pos.Y;
 	}
 }
@@ -202,61 +206,57 @@ void field::fence::wallPush(robot *robit) {
 		}
 	}
 }
-void field::statGoalPush(element *pl, robot *robit, fence *f) {
-	float d2StatGoal = dist(robit->position, pl->pos);
-	if (d2StatGoal < renderRad * robit->size) {
+void field::element::pushRobot(robot *robit, fence *f) {
+	float d2obj = dist(robit->position, pos);
+	if (d2obj < renderRad * robit->size) {
 		for (int v = 0; v < 4; v++) {
-			pl->d2V[v] = dist(pl->pos, robit->vertices[v]);
+			d2V[v] = dist(pos, robit->vertices[v]);
 		}
-		bool inFront = (pl->d2V[0] + pl->d2V[1] < pl->d2V[2] + pl->d2V[3]);//checking if cone is closer to the front side
-		if (pl->directlyInVerticalPath(robit)) {
-			float d2RobotEdge = calcD2Edge(SortSmallest(pl->d2V[0], pl->d2V[1], pl->d2V[2], pl->d2V[3]), Sort2ndSmallest(pl->d2V[0], pl->d2V[1], pl->d2V[2], pl->d2V[3]), robit);//calculates the distance to the edge of the robit
-			if (inFront) pl->closestPoint = vec3(pl->pos.X + (d2RobotEdge)*cos(gAngle), pl->pos.Y - (d2RobotEdge)*sin(gAngle));//does work
-			else pl->closestPoint = vec3(pl->pos.X - (d2RobotEdge)*cos(gAngle), pl->pos.Y + (d2RobotEdge)*sin(gAngle));//does work
+		bool inFront = (d2V[0] + d2V[1] < d2V[2] + d2V[3]);//checking if cone is closer to the front side
+		if (directlyInVerticalPath(robit)) {
+			float d2Edge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
+			if (inFront) closestPoint = vec3(pos.X + (d2Edge)*cos(gAngle), pos.Y - (d2Edge)*sin(gAngle));//does work
+			else closestPoint = vec3(pos.X - (d2Edge)*cos(gAngle), pos.Y + (d2Edge)*sin(gAngle));//does work
 		}
 		else {//not directly in path finds which vertice is the closest to the cone
-			int smallest_vertice = sortSmallVER(pl->d2V[0], pl->d2V[1], pl->d2V[2], pl->d2V[3]);
-			pl->closestPoint = robit->vertices[smallest_vertice];//closest point to center will then be the vertice
+			int smallest_vertice = sortSmallVER(d2V[0], d2V[1], d2V[2], d2V[3]);
+			closestPoint = robit->vertices[smallest_vertice];//closest point to center will then be the vertice
 		}
-		float d2closestPoint = dist(pl->pos, pl->closestPoint);
-		HELLO = d2closestPoint;
-		vec3 R = (pl->closestPoint + pl->pos.times(-1)).times(pl->rad / d2closestPoint) + pl->pos;
-		if (d2closestPoint <= pl->rad) {//touching
-			robit->position.X += R.X - pl->closestPoint.X;
-			robit->position.Y += R.Y - pl->closestPoint.Y;
+		float d2closestPoint = dist(pos, closestPoint);
+		vec3 R = (closestPoint + pos.times(-1)).times(rad / d2closestPoint) + pos;
+		if (d2closestPoint <= rad) {//touching
+			robit->position.X += 2*(R.X - closestPoint.X);
+			robit->position.Y += 2*(R.Y - closestPoint.Y);
 			//rotation when hits the stationary goal
 			int thresh = 2;//degrees of freedom
-			if (robit->acceleration.X > 0 || robit->acceleration.Y > 0){//if moving
-				if (inFront) {
-					if (abs(pl->d2V[0] - pl->d2V[1]) > thresh) {
-						if (pl->d2V[0] < pl->d2V[1])//checking which way to rotate
-							robit->mRot += abs(robit->velocity.Y * sin(gAngle));
-						else if (pl->d2V[0] > pl->d2V[1])
-							robit->mRot -= abs(robit->velocity.Y * sin(gAngle));
-					}
-				}
-				else  if (abs(pl->d2V[2] - pl->d2V[3]) > thresh) {
-					if (pl->d2V[2] > pl->d2V[3])
-						robit->mRot -= abs(robit->velocity.Y * sin(gAngle));
-					else if (pl->d2V[2] < pl->d2V[3])
+			if (inFront) {
+				if (abs(d2V[0] - d2V[1]) > thresh) {
+					if (d2V[0] < d2V[1])//checking which way to rotate
 						robit->mRot += abs(robit->velocity.Y * sin(gAngle));
+					else if (d2V[0] > d2V[1])
+						robit->mRot -= abs(robit->velocity.Y * sin(gAngle));
 				}
+			}
+			else  if (abs(d2V[2] - d2V[3]) > thresh) {
+				if (d2V[2] > d2V[3])
+					robit->mRot -= abs(robit->velocity.Y * sin(gAngle));
+				else if (d2V[2] < d2V[3])
+					robit->mRot += abs(robit->velocity.Y * sin(gAngle));
 			}
 		}
 	}
 }
 //function for making sure the robot cannot move past the fence
-void field::element::grabbed(robot *robit, int index) {
-	if ((robit->grabbing && robit->holding == index) || (robit->grabbing && robit->holding == -1) ) {//holding only one entity at once
+void field::element::grabbed(robot *robit, int index, int type) {
+	if ((robit->grabbing && robit->holding == index + type * 100) || (robit->grabbing && robit->holding == -1) ) {//holding only one entity at once
 		float slope = (robit->vertices[0].Y - robit->vertices[3].Y) / (robit->vertices[0].X - robit->vertices[3].X);
 		float yInt1 = slope * (0 - (robit->vertices[0].X + robit->clawSize*cos((robit->mRot - 135) * PI / 180) - pos.X)) + (robit->vertices[0].Y + robit->clawSize*sin((robit->mRot - 135) * PI / 180) - pos.Y);
 		float yInt2 = slope * (0 - (robit->vertices[1].X - robit->clawSize*cos((robit->mRot - 135) * PI / 180) - pos.X)) + (robit->vertices[1].Y - robit->clawSize*sin((robit->mRot - 135) * PI / 180) - pos.Y);
 		bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if cone is closer to the front side
-		bool inPosition = (getSign(yInt1) != getSign(yInt2) && (d2Robot < 0.9*robit->size)&& (d2RobotEdge <= 1.1*rad) && inFront);
+		bool inPosition = (getSign(yInt1) != getSign(yInt2) && (d2Robot < 0.65*robit->size + rad)&& (d2RobotEdge <= 1.1*rad) && inFront);
 		if (inPosition) {
-			//fix being able to hold more than one entity at once
 			//robit->holding = true;//locking the entities in place
-			robit->holding = index;
+			robit->holding = index + 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
 			pos.X = (robit->position.X) - (robit->size*.65 * cos(gAngle));
 			pos.Y = (robit->position.Y + (robit->size*.65 * sin(gAngle)));
 			held = true;
@@ -268,18 +268,26 @@ void field::FieldUpdate(robot *robit) {
 	if (!initialized) initializeField(robit);
 	f.wallPush(robit);
 	for (int i = 0; i < c.size(); i++) {
-		c[i].grabbed(robit, i);
-		physics(i, &c[i], robit, 0);
+		//type for "cone" is 0
+		int type = 0;
+		c[i].grabbed(robit, i, type);
+		physics(i, &c[i], robit, type);
+		c[i].pushRobot(robit, &f);
 	}
 	for (int i = 0; i < mg.size(); i++) {
-		mg[i].grabbed(robit, i);
-		physics(i, &mg[i], robit, 1);
+		//type for "mogo" is 1
+		int type = 1;
+		mg[i].grabbed(robit, i, type);
+		physics(i, &mg[i], robit, type);
+		mg[i].pushRobot(robit, &f);
 	}
 	for (int i = 0; i < pl.size(); i++) {
+		//type for stationary goal is 2
+		int type = 2;
 		pl[0].pos = vec3(93, 47.3);//stationary goal (not moving)
 		pl[1].pos = vec3(46.9, 94);//stationary goal (not moving)
-		statGoalPush(&pl[i], robit, &f);
-		physics(i, &pl[i], robit, 2);
+		pl[i].pushRobot(robit, &f);
+		physics(i, &pl[i], robit, type);
 	}
 }
 //update task for the entire field simulation

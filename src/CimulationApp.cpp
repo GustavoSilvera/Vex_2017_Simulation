@@ -168,14 +168,13 @@ void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_DOWN)	v.r.ArrowKeyDown = true;
 	if (event.getCode() == KeyEvent::KEY_LEFT)	v.r.RotLeft = true;
 	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.RotRight = true;
-	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.grabbing = true;
+	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.grabbing = !v.r.grabbing;//if want toggling, else look at a while ago
 }
 void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_DOWN) v.r.ArrowKeyDown = false;
 	if (event.getCode() == KeyEvent::KEY_UP) v.r.ArrowKeyUp = false;
 	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.RotRight = false;
 	if (event.getCode() == KeyEvent::KEY_LEFT) v.r.RotLeft = false;
-	if (event.getCode() == KeyEvent::KEY_SPACE) { v.r.grabbing = false; v.r.holding = -1; }
 }
 void CimulationApp::update() {
 	v.j.getAnalog(mousePos);
@@ -368,7 +367,7 @@ void CimulationApp::draw() {
 	drawText(v.r.rotVel, vec3(1000, 340), vec3(1, 1, 1), 30);
 	drawText(v.r.rotAcceleration, vec3(1000, 440), vec3(1, 1, 1), 30);
 	drawText(v.f.stacked.size(), vec3(1000, 500), vec3(1, 1, 1), 30);
-	drawText(v.r.clawSize, vec3(1000, 700), vec3(1, 1, 1), 30);
+	drawText(v.r.holding, vec3(1000, 700), vec3(1, 1, 1), 30);
 	//drawText(v.f.HELLO, vec3(1000, 600), vec3(1, 1, 1), 30);
 	if (v.f.c[1].held) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	else 	gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));

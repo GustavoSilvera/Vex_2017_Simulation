@@ -19,7 +19,7 @@ public:
 
 	void FieldUpdate(robot *r );
 	void initializeField(robot *r);
-	//static  int NUMBER_OF_CONES = 50;
+
 	struct fence {
 		float fieldSize = 141.05;// 140.5 + 2 * (1.27);wall thickness accounted for
 		vec3 centre = vec3(606, 606);//in pixels
@@ -46,8 +46,9 @@ public:
 		float d2E[2];//0 is d2 top, 1 is d2left, 
 		void robotColl(int index, robot *r, std::set<int> &s);
 		void collision(int index, element *e, std::set<int> &s);
-		void grabbed(robot *r, int index);
+		void grabbed(robot *r, int index, int type);
 		bool held;
+		void pushRobot(robot *r, fence *f);
 	};
 	std::vector<element> c;
 	std::vector<element> mg;

@@ -160,6 +160,7 @@ void robot::update() {
 		if (clawPos < clawSize)
 			clawPos += 0.5;
 	}
+	if (grabbing == false) holding = -1;
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {
