@@ -17,7 +17,7 @@ public:
 
 	std::set<int> stacked;
 
-	void FieldUpdate(robot *r );
+	void FieldUpdate(robot *r);
 	void initializeField(robot *r);
 
 	struct fence {
@@ -48,14 +48,14 @@ public:
 		void collision(int index, element *e, std::set<int> &s);
 		void grabbed(robot *r, int index, int type);
 		bool held;
-		void pushRobot(robot *r, fence *f);
+		bool touchingFence;
 	};
 	std::vector<element> c;
 	std::vector<element> mg;
 	std::vector<element> pl;//poles in the field
 	void statGoalPush(element *pl, robot *r, fence *f);
 	void physics(int index, element *e, robot *r, int type);
-	
+
 	ci::gl::Texture MobileGoal;
 	ci::gl::Texture coneTexture;
 	ci::gl::Texture fieldBare;
@@ -64,4 +64,3 @@ public:
 	int HELLO;
 	int pushingCones = 0;
 };
-

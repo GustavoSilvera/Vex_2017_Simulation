@@ -3,28 +3,28 @@
 //declares and defines the field class and functions
 
 field::element initConeConfig[numCones] = {//array for each configuration of the cone (in field.h)
-	//{initial posision (X, Y), color (Y, R, B), radii }
-	{ { 2.9, 13.0 }, 0, coneRad }, { { 2.9, 23.2 }, 0, coneRad }, { { 2.9, 34.9 }, 0, coneRad }, { { 2.9, 46.7 }, 0, coneRad },
-	{ { 2.9, 58.4 }, 0, coneRad }, { { 2.9, 70.2 }, 0, coneRad }, { { 13.0, 2.9 }, 0, coneRad }, { { 13.0, 13.0 }, 0, coneRad },
-	{ { 13.0, 23.2 }, 0, coneRad }, { { 23.2, 2.9 }, 0, coneRad }, { { 23.2, 13.0 }, 0, coneRad }, { { 23.2, 23.2 }, 0, coneRad },
-	{ { 23.2, 34.9 }, 0, coneRad }, { { 23.2, 46.7 }, 0, coneRad }, { { 23.2, 58.4 }, 0, coneRad }, { { 23.2, 70.2 }, 0, coneRad },
-	{ { 34.9, 2.9 }, 0, coneRad }, { { 34.9, 23.2 }, 0, coneRad }, { { 46.7, 2.9 }, 0, coneRad }, { { 46.7, 23.2 }, 0, coneRad },
-	{ { 46.7, 46.7 }, 0, coneRad }, { { 46.7, 58.4 }, 0, coneRad }, { { 58.4, 2.9 }, 0, coneRad }, { { 58.4, 23.2 }, 0, coneRad },
-	{ { 58.4, 46.7 }, 0, coneRad }, { { 58.4, 70.2 }, 0, coneRad }, { { 70.2, 2.9 }, 0, coneRad }, { { 70.2, 23.2 }, 0, coneRad },
-	{ { 70.2, 58.4 }, 0, coneRad }, { { 70.2, 82.1 }, 0, coneRad }, { { 82.1, 70.2 }, 0, coneRad }, { { 82.1, 93.9 }, 0, coneRad },
-	{ { 82.1, 139.2 }, 0, coneRad }, { { 93.9, 82.1 }, 0, coneRad }, { { 93.9, 93.9 }, 0, coneRad }, { { 93.9, 117.5 }, 0, coneRad },
-	{ { 93.9, 137.8 }, 0, coneRad }, { { 105.8, 117.5 }, 0, coneRad }, { { 105.8, 137.8 }, 0, coneRad }, { { 117.5, 93.9 }, 0, coneRad },
-	{ { 117.5, 105.8 }, 0, coneRad }, { { 117.5, 117.5 }, 0, coneRad }, { { 117.5, 127.6 }, 0, coneRad }, { { 117.5, 137.8 }, 0, coneRad },
-	{ { 127.6, 117.5 }, 0, coneRad }, { { 127.6, 127.6 }, 0, coneRad }, { { 127.6, 137.8 }, 0, coneRad }, { { 137.8, 82.1 }, 0, coneRad },
-	{ { 137.8, 93.9 }, 0, coneRad }, { { 137.8, 105.8 }, 0, coneRad }, { { 137.8, 117.5 }, 0, coneRad }, { { 137.8, 127.6 }, 0, coneRad },
+										   //{initial posision (X, Y), color (Y, R, B), radii }
+	{ { 2.9, 13.0 }, 0, coneRad },{ { 2.9, 23.2 }, 0, coneRad },{ { 2.9, 34.9 }, 0, coneRad },{ { 2.9, 46.7 }, 0, coneRad },
+	{ { 2.9, 58.4 }, 0, coneRad },{ { 2.9, 70.2 }, 0, coneRad },{ { 13.0, 2.9 }, 0, coneRad },{ { 13.0, 13.0 }, 0, coneRad },
+	{ { 13.0, 23.2 }, 0, coneRad },{ { 23.2, 2.9 }, 0, coneRad },{ { 23.2, 13.0 }, 0, coneRad },{ { 23.2, 23.2 }, 0, coneRad },
+	{ { 23.2, 34.9 }, 0, coneRad },{ { 23.2, 46.7 }, 0, coneRad },{ { 23.2, 58.4 }, 0, coneRad },{ { 23.2, 70.2 }, 0, coneRad },
+	{ { 34.9, 2.9 }, 0, coneRad },{ { 34.9, 23.2 }, 0, coneRad },{ { 46.7, 2.9 }, 0, coneRad },{ { 46.7, 23.2 }, 0, coneRad },
+	{ { 46.7, 46.7 }, 0, coneRad },{ { 46.7, 58.4 }, 0, coneRad },{ { 58.4, 2.9 }, 0, coneRad },{ { 58.4, 23.2 }, 0, coneRad },
+	{ { 58.4, 46.7 }, 0, coneRad },{ { 58.4, 70.2 }, 0, coneRad },{ { 70.2, 2.9 }, 0, coneRad },{ { 70.2, 23.2 }, 0, coneRad },
+	{ { 70.2, 58.4 }, 0, coneRad },{ { 70.2, 82.1 }, 0, coneRad },{ { 82.1, 70.2 }, 0, coneRad },{ { 82.1, 93.9 }, 0, coneRad },
+	{ { 82.1, 139.2 }, 0, coneRad },{ { 93.9, 82.1 }, 0, coneRad },{ { 93.9, 93.9 }, 0, coneRad },{ { 93.9, 117.5 }, 0, coneRad },
+	{ { 93.9, 137.8 }, 0, coneRad },{ { 105.8, 117.5 }, 0, coneRad },{ { 105.8, 137.8 }, 0, coneRad },{ { 117.5, 93.9 }, 0, coneRad },
+	{ { 117.5, 105.8 }, 0, coneRad },{ { 117.5, 117.5 }, 0, coneRad },{ { 117.5, 127.6 }, 0, coneRad },{ { 117.5, 137.8 }, 0, coneRad },
+	{ { 127.6, 117.5 }, 0, coneRad },{ { 127.6, 127.6 }, 0, coneRad },{ { 127.6, 137.8 }, 0, coneRad },{ { 137.8, 82.1 }, 0, coneRad },
+	{ { 137.8, 93.9 }, 0, coneRad },{ { 137.8, 105.8 }, 0, coneRad },{ { 137.8, 117.5 }, 0, coneRad },{ { 137.8, 127.6 }, 0, coneRad },
 	{ { 137.8, 137.8 }, 0, coneRad }
 };
 //initial cone values for position
 field::element initMoGoConfig[numMoGos] = {//array for each configuration of the mobile goal (in field.h)
-	{ { 34.9, 13.0 }, 1 , MoGoRad }, { { 13.0, 34.9 }, 2 ,MoGoRad},
-	{ { 70.2, 46.7 }, 2 ,MoGoRad}, { { 46.7, 70.2 }, 1 ,MoGoRad},
-	{ { 93.9, 70.2 }, 2 ,MoGoRad}, { { 70.2, 93.9 }, 1 ,MoGoRad},
-	{ { 127.6, 105.8 }, 1 ,MoGoRad}, { { 105.8, 127.6 }, 2 ,MoGoRad}
+	{ { 34.9, 13.0 }, 1 , MoGoRad },{ { 13.0, 34.9 }, 2 ,MoGoRad },
+	{ { 70.2, 46.7 }, 2 ,MoGoRad },{ { 46.7, 70.2 }, 1 ,MoGoRad },
+	{ { 93.9, 70.2 }, 2 ,MoGoRad },{ { 70.2, 93.9 }, 1 ,MoGoRad },
+	{ { 127.6, 105.8 }, 1 ,MoGoRad },{ { 105.8, 127.6 }, 2 ,MoGoRad }
 };
 field::element initPoleConfig[2] = {
 	{ { 93, 47.3 }, 3 , 4 },{ { 46.9, 94 }, 3 , 4 }
@@ -49,10 +49,10 @@ float calcD2Edge(float a, float b, robot *robit) {
 //calculate distance to edge of robot
 void field::element::calcD2Vertices(robot *robit) {
 	/******vertices:*******
-		0----------1
-		|    r     |
-		|          |
-		3----------2
+	0----------1
+	|    r     |
+	|          |
+	3----------2
 	**********************/
 	for (int v = 0; v < 4; v++) {
 		d2V[v] = dist(pos, robit->vertices[v]);
@@ -86,20 +86,25 @@ void field::element::fencePush(fence *f) {
 	d2E[1] = f->fieldSize - pos.X;
 	bool touchingRight = (pos.X <= (rad + f->depth));
 	if (touchingRight) {
+		touchingFence = true;
 		pos.X += (rad + f->depth) - 1.1*pos.X;
 	}
 	bool touchingTop = (d2E[0] <= (rad + f->depth));
 	if (touchingTop) {//g
+		touchingFence = true;
 		pos.Y -= (rad + f->depth) - 1.1*d2E[0];
 	}
 	bool touchingLeft = (d2E[1] <= (rad + f->depth));
 	if (touchingLeft) {
+		touchingFence = true;
 		pos.X -= (rad + f->depth) - 1.1*d2E[1];
 	}
 	bool touchingBottom = (pos.Y <= (rad + f->depth));
 	if (touchingBottom) {//g
+		touchingFence = true;
 		pos.Y += (rad + f->depth) - 1.1*pos.Y;
 	}
+	if (pos.X > (rad + f->depth) && d2E[0] > (rad + f->depth) && d2E[1] > (rad + f->depth) && pos.Y >= (rad + f->depth)) touchingFence = false;
 }
 //calculates distances to the edges of the field, and acts accordingly
 void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
@@ -108,8 +113,8 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
 	if (d2Robot < renderRad * robit->size) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
 		calcD2Vertices(robit);//calculate all the distances
 		d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
+		bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if cone is closer to the front side
 		if (directlyInVerticalPath(robit)) {//either directly in front or behing based off center x and y position
-			bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if cone is closer to the front side
 			if (inFront) closestPoint = vec3(pos.X + (d2RobotEdge)*cos(gAngle), pos.Y - (d2RobotEdge)*sin(gAngle));//does work
 			else closestPoint = vec3(pos.X - (d2RobotEdge)*cos(gAngle), pos.Y + (d2RobotEdge)*sin(gAngle));//does work
 		}
@@ -126,12 +131,27 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
 		float d2closestPoint = dist(pos, closestPoint);
 		vec3 R = (closestPoint + pos.times(-1)).times(rad / d2closestPoint) + pos;
 		if (d2closestPoint <= rad) {//touching
-			s.insert(index);//adds index of which cone is in the stack (being pushed)
 			pos.X -= R.X - closestPoint.X;
 			pos.Y -= R.Y - closestPoint.Y;
-		}
-		else {
-			s.erase(index);//removes index of which cone is in the stack (being pushed)
+			if (touchingFence ) {
+				robit->velocity.X = (R.X - closestPoint.X);
+				robit->velocity.Y = (R.Y - closestPoint.Y);
+				int thresh = 2;//degrees of freedom
+				if (inFront) {
+					if (abs(d2V[0] - d2V[1]) > thresh) {
+						if (d2V[0] < d2V[1])//checking which way to rotate
+							robit->mRot += abs(.07 * sin(gAngle));//CHANGE 0.07 TO SOMETHING OF USE, NOT A CONSTANT
+						else if (d2V[0] > d2V[1])
+							robit->mRot -= abs(.07 * sin(gAngle));
+					}
+				}
+				else if (abs(d2V[2] - d2V[3]) > thresh) {
+					if (d2V[2] > d2V[3])
+						robit->mRot -= abs(robit->velocity.Y * sin(gAngle));
+					else if (d2V[2] < d2V[3])
+						robit->mRot += abs(robit->velocity.Y * sin(gAngle));
+				}
+			}
 		}
 	}
 }
@@ -165,8 +185,8 @@ void field::physics(int index, element *e, robot *robit, int type) {
 		else if (type != 1) e->collision(index, &mg[m], stacked);
 	}
 	for (int p = 0; p < pl.size(); p++) {
-		 if (index != p) e->collision(index, &pl[p], stacked);
-		 else if (type != 2) e->collision(index, &pl[p], stacked);
+		if (index != p) e->collision(index, &pl[p], stacked);
+		else if (type != 2) e->collision(index, &pl[p], stacked);
 	}
 }
 //function for calling all the collision functions together for el->el and el->robot
@@ -206,41 +226,41 @@ void field::fence::wallPush(robot *robit) {
 		}
 	}
 }
-void field::element::pushRobot(robot *robit, fence *f) {
-	float d2obj = dist(robit->position, pos);
+void field::statGoalPush(element *pl, robot *robit, fence *f) {
+	float d2obj = dist(robit->position, pl->pos);
 	if (d2obj < renderRad * robit->size) {
 		for (int v = 0; v < 4; v++) {
-			d2V[v] = dist(pos, robit->vertices[v]);
+			pl->d2V[v] = dist(pl->pos, robit->vertices[v]);
 		}
-		bool inFront = (d2V[0] + d2V[1] < d2V[2] + d2V[3]);//checking if cone is closer to the front side
-		if (directlyInVerticalPath(robit)) {
-			float d2Edge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
-			if (inFront) closestPoint = vec3(pos.X + (d2Edge)*cos(gAngle), pos.Y - (d2Edge)*sin(gAngle));//does work
-			else closestPoint = vec3(pos.X - (d2Edge)*cos(gAngle), pos.Y + (d2Edge)*sin(gAngle));//does work
+		bool inFront = (pl->d2V[0] + pl->d2V[1] < pl->d2V[2] + pl->d2V[3]);//checking if cone is closer to the front side
+		if (pl->directlyInVerticalPath(robit)) {
+			float d2Edge = calcD2Edge(SortSmallest(pl->d2V[0], pl->d2V[1], pl->d2V[2], pl->d2V[3]), Sort2ndSmallest(pl->d2V[0], pl->d2V[1], pl->d2V[2], pl->d2V[3]), robit);//calculates the distance to the edge of the robit
+			if (inFront) pl->closestPoint = vec3(pl->pos.X + (d2Edge)*cos(gAngle), pl->pos.Y - (d2Edge)*sin(gAngle));//does work
+			else pl->closestPoint = vec3(pl->pos.X - (d2Edge)*cos(gAngle), pl->pos.Y + (d2Edge)*sin(gAngle));//does work
 		}
 		else {//not directly in path finds which vertice is the closest to the cone
-			int smallest_vertice = sortSmallVER(d2V[0], d2V[1], d2V[2], d2V[3]);
-			closestPoint = robit->vertices[smallest_vertice];//closest point to center will then be the vertice
+			int smallest_vertice = sortSmallVER(pl->d2V[0], pl->d2V[1], pl->d2V[2], pl->d2V[3]);
+			pl->closestPoint = robit->vertices[smallest_vertice];//closest point to center will then be the vertice
 		}
-		float d2closestPoint = dist(pos, closestPoint);
-		vec3 R = (closestPoint + pos.times(-1)).times(rad / d2closestPoint) + pos;
-		if (d2closestPoint <= rad) {//touching
-			robit->position.X += 2*(R.X - closestPoint.X);
-			robit->position.Y += 2*(R.Y - closestPoint.Y);
+		float d2closestPoint = dist(pl->pos, pl->closestPoint);
+		vec3 R = (pl->closestPoint + pl->pos.times(-1)).times(pl->rad / d2closestPoint) + pl->pos;
+		if (d2closestPoint <= pl->rad) {//touching
+			robit->position.X += (R.X - pl->closestPoint.X);
+			robit->position.Y += (R.Y - pl->closestPoint.Y);
 			//rotation when hits the stationary goal
 			int thresh = 2;//degrees of freedom
 			if (inFront) {
-				if (abs(d2V[0] - d2V[1]) > thresh) {
-					if (d2V[0] < d2V[1])//checking which way to rotate
+				if (abs(pl->d2V[0] - pl->d2V[1]) > thresh) {
+					if (pl->d2V[0] < pl->d2V[1])//checking which way to rotate
 						robit->mRot += abs(robit->velocity.Y * sin(gAngle));
-					else if (d2V[0] > d2V[1])
+					else if (pl->d2V[0] > pl->d2V[1])
 						robit->mRot -= abs(robit->velocity.Y * sin(gAngle));
 				}
 			}
-			else  if (abs(d2V[2] - d2V[3]) > thresh) {
-				if (d2V[2] > d2V[3])
+			else  if (abs(pl->d2V[2] - pl->d2V[3]) > thresh) {
+				if (pl->d2V[2] > pl->d2V[3])
 					robit->mRot -= abs(robit->velocity.Y * sin(gAngle));
-				else if (d2V[2] < d2V[3])
+				else if (pl->d2V[2] < pl->d2V[3])
 					robit->mRot += abs(robit->velocity.Y * sin(gAngle));
 			}
 		}
@@ -248,12 +268,12 @@ void field::element::pushRobot(robot *robit, fence *f) {
 }
 //function for making sure the robot cannot move past the fence
 void field::element::grabbed(robot *robit, int index, int type) {
-	if ((robit->grabbing && robit->holding == index + type * 100) || (robit->grabbing && robit->holding == -1) ) {//holding only one entity at once
+	if ((robit->grabbing && robit->holding == index + type * 100) || (robit->grabbing && robit->holding == -1)) {//holding only one entity at once
 		float slope = (robit->vertices[0].Y - robit->vertices[3].Y) / (robit->vertices[0].X - robit->vertices[3].X);
 		float yInt1 = slope * (0 - (robit->vertices[0].X + robit->clawSize*cos((robit->mRot - 135) * PI / 180) - pos.X)) + (robit->vertices[0].Y + robit->clawSize*sin((robit->mRot - 135) * PI / 180) - pos.Y);
 		float yInt2 = slope * (0 - (robit->vertices[1].X - robit->clawSize*cos((robit->mRot - 135) * PI / 180) - pos.X)) + (robit->vertices[1].Y - robit->clawSize*sin((robit->mRot - 135) * PI / 180) - pos.Y);
 		bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if cone is closer to the front side
-		bool inPosition = (getSign(yInt1) != getSign(yInt2) && (d2Robot < 0.65*robit->size + rad)&& (d2RobotEdge <= 1.1*rad) && inFront);
+		bool inPosition = (getSign(yInt1) != getSign(yInt2) && (d2Robot < 0.65*robit->size + rad) && (d2RobotEdge <= 1.1*rad) && inFront);
 		if (inPosition) {
 			//robit->holding = true;//locking the entities in place
 			robit->holding = index + 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
@@ -272,29 +292,26 @@ void field::FieldUpdate(robot *robit) {
 		int type = 0;
 		c[i].grabbed(robit, i, type);
 		physics(i, &c[i], robit, type);
-		c[i].pushRobot(robit, &f);
 	}
 	for (int i = 0; i < mg.size(); i++) {
 		//type for "mogo" is 1
 		int type = 1;
 		mg[i].grabbed(robit, i, type);
 		physics(i, &mg[i], robit, type);
-		mg[i].pushRobot(robit, &f);
 	}
 	for (int i = 0; i < pl.size(); i++) {
 		//type for stationary goal is 2
 		int type = 2;
 		pl[0].pos = vec3(93, 47.3);//stationary goal (not moving)
 		pl[1].pos = vec3(46.9, 94);//stationary goal (not moving)
-		pl[i].pushRobot(robit, &f);
+		statGoalPush(&pl[i], robit, &f);
 		physics(i, &pl[i], robit, type);
 	}
 }
 //update task for the entire field simulation
- field::field() : initialized(false) {
-	 c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
-	 mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
-	 pl.assign(&initPoleConfig[0], &initPoleConfig[2]);
- }
+field::field() : initialized(false) {
+	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
+	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
+	pl.assign(&initPoleConfig[0], &initPoleConfig[2]);
+}
 //constructor
- 
