@@ -133,24 +133,25 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
 		if (d2closestPoint <= rad) {//touching
 			pos.X -= R.X - closestPoint.X;
 			pos.Y -= R.Y - closestPoint.Y;
-			if (touchingFence ) {
-				robit->velocity.X = (R.X - closestPoint.X);
-				robit->velocity.Y = (R.Y - closestPoint.Y);
-				int thresh = 2;//degrees of freedom
+			if (touchingFence ) {//HAVE only affected when pushing further into fence
+				int thresh = 5;//degrees of freedom
+				float currentVel = sqrt(sqr(robit->velocity.X) + sqr(robit->velocity.Y));
 				if (inFront) {
 					if (abs(d2V[0] - d2V[1]) > thresh) {
 						if (d2V[0] < d2V[1])//checking which way to rotate
-							robit->mRot += abs(.07 * sin(gAngle));//CHANGE 0.07 TO SOMETHING OF USE, NOT A CONSTANT
+							robit->mRot += abs(currentVel * sin(gAngle));//CHANGE 0.07 TO SOMETHING OF USE, NOT A CONSTANT
 						else if (d2V[0] > d2V[1])
-							robit->mRot -= abs(.07 * sin(gAngle));
+							robit->mRot -= abs(currentVel * sin(gAngle));
 					}
 				}
 				else if (abs(d2V[2] - d2V[3]) > thresh) {
 					if (d2V[2] > d2V[3])
-						robit->mRot -= abs(robit->velocity.Y * sin(gAngle));
+						robit->mRot -= abs(currentVel * sin(gAngle));
 					else if (d2V[2] < d2V[3])
-						robit->mRot += abs(robit->velocity.Y * sin(gAngle));
+						robit->mRot += abs(currentVel * sin(gAngle));
 				}
+				robit->velocity.X = (R.X - closestPoint.X);
+				robit->velocity.Y = (R.Y - closestPoint.Y);
 			}
 		}
 	}
