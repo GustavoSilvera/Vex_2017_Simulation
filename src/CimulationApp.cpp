@@ -25,7 +25,7 @@ public:
 	robot r;
 	field f;
 	joystick j;
-	vex() : r(vec3(69.6,69.6,0), vec3()) {}
+	vex() : r() {}
 };
 inline void drawText(double text, vec3 pos, vec3 colour, int size) {//simplified way of printing variables as text to the display
 	stringstream dummyText;
@@ -131,7 +131,7 @@ void CimulationApp::setup() {
 	v.r.encoder1 = 0;
 	v.r.encoderLast = 0;
 	v.r.PID.isRunning = false;
-	v.r.PID.requestedValue = v.r.position.X*ppi;
+	v.r.PID.requestedValue = v.r.p.position.X*ppi;
 
 	//for graph
 	for (int i = 0; i < maxDots; i++) {
@@ -164,17 +164,18 @@ void CimulationApp::mouseMove(MouseEvent event) {
 	}
 }
 void CimulationApp::keyDown(KeyEvent event) {
-	if (event.getCode() == KeyEvent::KEY_UP)	v.r.ArrowKeyUp = true;
-	if (event.getCode() == KeyEvent::KEY_DOWN)	v.r.ArrowKeyDown = true;
-	if (event.getCode() == KeyEvent::KEY_LEFT)	v.r.RotLeft = true;
-	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.RotRight = true;
-	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.grabbing = !v.r.grabbing;//if want toggling, else look at a while ago
+	if (event.getCode() == KeyEvent::KEY_UP)	v.r.ctrl.ArrowKeyUp = true;
+	if (event.getCode() == KeyEvent::KEY_DOWN)	v.r.ctrl.ArrowKeyDown = true;
+	if (event.getCode() == KeyEvent::KEY_LEFT)	v.r.ctrl.RotLeft = true;
+	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.ctrl.RotRight = true;
+	if (event.getChar() == 'e' || event.getChar() == 'E') v.r.c.grabbing = !v.r.c.grabbing;//if want toggling, else look at a while ago
+	if (event.getChar() == 'r' || event.getChar() == 'R' ) v.r.mg.grabbing = !v.r.mg.grabbing;//if want toggling, else look at a while ago
 }
 void CimulationApp::keyUp(KeyEvent event) {
-	if (event.getCode() == KeyEvent::KEY_DOWN) v.r.ArrowKeyDown = false;
-	if (event.getCode() == KeyEvent::KEY_UP) v.r.ArrowKeyUp = false;
-	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.RotRight = false;
-	if (event.getCode() == KeyEvent::KEY_LEFT) v.r.RotLeft = false;
+	if (event.getCode() == KeyEvent::KEY_DOWN) v.r.ctrl.ArrowKeyDown = false;
+	if (event.getCode() == KeyEvent::KEY_UP) v.r.ctrl.ArrowKeyUp = false;
+	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.ctrl.RotRight = false;
+	if (event.getCode() == KeyEvent::KEY_LEFT) v.r.ctrl.RotLeft = false;
 }
 void CimulationApp::update() {
 	v.j.getAnalog(mousePos);
@@ -235,60 +236,60 @@ void buttons() {//function for drawing the buttons
 void robotDebug(vex *v, bool reversed) {
 	gl::color(1, 0, 0);
 	/*for (int i = 0; i < 4; i++) {//simplified version of drawing the vertices
-		if (reversed) gl::drawSolidCircle(Vec2f(v.f.f.fieldEnd - ppi * v->r.vertices[i].X, v.f.f.fieldEnd - ppi * v->r.vertices[i].Y), 5);
-		else gl::drawSolidCircle(Vec2f(ppi * v->r.vertices[i].X, ppi * v->r.vertices[i].Y), 5);
+		if (reversed) gl::drawSolidCircle(Vec2f(v.f.f.fieldEnd - ppi * v->r.db.vertices[i].X, v.f.f.fieldEnd - ppi * v->r.db.vertices[i].Y), 5);
+		else gl::drawSolidCircle(Vec2f(ppi * v->r.db.vertices[i].X, ppi * v->r.db.vertices[i].Y), 5);
 	}*/
 	if (reversed) {
 		//vertice rectangles
-		gl::drawStrokedRect(Area(v->f.f.fieldEnd - v->r.vertices[0].X*ppi, v->f.f.fieldEnd - v->r.vertices[0].Y*ppi, v->f.f.fieldEnd - v->r.vertices[1].X*ppi, v->f.f.fieldEnd - v->r.vertices[1].Y*ppi));
-		gl::drawStrokedRect(Area(v->f.f.fieldEnd - v->r.vertices[2].X*ppi, v->f.f.fieldEnd - v->r.vertices[2].Y*ppi, v->f.f.fieldEnd - v->r.vertices[3].X*ppi, v->f.f.fieldEnd - v->r.vertices[3].Y*ppi));
+		gl::drawStrokedRect(Area(v->f.f.fieldEnd - v->r.db.vertices[0].X*ppi, v->f.f.fieldEnd - v->r.db.vertices[0].Y*ppi, v->f.f.fieldEnd - v->r.db.vertices[1].X*ppi, v->f.f.fieldEnd - v->r.db.vertices[1].Y*ppi));
+		gl::drawStrokedRect(Area(v->f.f.fieldEnd - v->r.db.vertices[2].X*ppi, v->f.f.fieldEnd - v->r.db.vertices[2].Y*ppi, v->f.f.fieldEnd - v->r.db.vertices[3].X*ppi, v->f.f.fieldEnd - v->r.db.vertices[3].Y*ppi));
 		//vertical lines
-		gl::drawLine(cinder::Vec2f(v->f.f.fieldEnd - (v->r.vertices[1].X + 300 * cos((-v->r.mRot) * PI / 180))*ppi,
-			v->f.f.fieldEnd - (v->r.vertices[1].Y + 300 * sin((-v->r.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.fieldEnd - (v->r.vertices[2].X - 300 * cos((-v->r.mRot) * PI / 180))*ppi,
-				v->f.f.fieldEnd - (v->r.vertices[2].Y - 300 * sin((-v->r.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f(v->f.f.fieldEnd - (v->r.vertices[0].X + 300 * cos((-v->r.mRot) * PI / 180))*ppi,
-			v->f.f.fieldEnd - (v->r.vertices[0].Y + 300 * sin((-v->r.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.fieldEnd - (v->r.vertices[3].X - 300 * cos((-v->r.mRot) * PI / 180))*ppi,
-				v->f.f.fieldEnd - (v->r.vertices[3].Y - 300 * sin((-v->r.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[1].X + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
+			v->f.f.fieldEnd - (v->r.db.vertices[1].Y + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[2].X - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
+				v->f.f.fieldEnd - (v->r.db.vertices[2].Y - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[0].X + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
+			v->f.f.fieldEnd - (v->r.db.vertices[0].Y + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[3].X - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
+				v->f.f.fieldEnd - (v->r.db.vertices[3].Y - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi));
 		//horizontal lines
-		gl::drawLine(cinder::Vec2f(v->f.f.fieldEnd - (v->r.vertices[0].X + 300 * sin((v->r.mRot) * PI / 180))*ppi,
-			v->f.f.fieldEnd - (v->r.vertices[0].Y + 300 * cos((v->r.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.fieldEnd - (v->r.vertices[1].X - 300 * sin((v->r.mRot) * PI / 180))*ppi,
-				v->f.f.fieldEnd - (v->r.vertices[1].Y - 300 * cos((v->r.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f(v->f.f.fieldEnd - (v->r.vertices[2].X + 300 * sin((v->r.mRot) * PI / 180))*ppi,
-			v->f.f.fieldEnd - (v->r.vertices[2].Y + 300 * cos((v->r.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.fieldEnd - (v->r.vertices[3].X - 300 * sin((v->r.mRot) * PI / 180))*ppi,
-				v->f.f.fieldEnd - (v->r.vertices[3].Y - 300 * cos((v->r.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[0].X + 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
+			v->f.f.fieldEnd - (v->r.db.vertices[0].Y + 300 * cos((v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[1].X - 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
+				v->f.f.fieldEnd - (v->r.db.vertices[1].Y - 300 * cos((v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[2].X + 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
+			v->f.f.fieldEnd - (v->r.db.vertices[2].Y + 300 * cos((v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[3].X - 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
+				v->f.f.fieldEnd - (v->r.db.vertices[3].Y - 300 * cos((v->r.p.mRot) * PI / 180))*ppi));
 		//draw circle
-		gl::drawStrokedCircle(Vec2f(v->f.f.fieldEnd - v->r.position.X*ppi, v->f.f.fieldEnd - v->r.position.Y*ppi), renderRad * v->r.size*ppi);
+		gl::drawStrokedCircle(Vec2f(v->f.f.fieldEnd - v->r.p.position.X*ppi, v->f.f.fieldEnd - v->r.p.position.Y*ppi), renderRad * v->r.d.size*ppi);
 	}
 	else {
 		//vertice rectangles
-		gl::drawStrokedRect(Area(v->r.vertices[0].X*ppi, v->r.vertices[0].Y*ppi, v->r.vertices[1].X*ppi, v->r.vertices[1].Y*ppi));
-		gl::drawStrokedRect(Area(v->r.vertices[2].X*ppi, v->r.vertices[2].Y*ppi, v->r.vertices[3].X*ppi, v->r.vertices[3].Y*ppi));
+		gl::drawStrokedRect(Area(v->r.db.vertices[0].X*ppi, v->r.db.vertices[0].Y*ppi, v->r.db.vertices[1].X*ppi, v->r.db.vertices[1].Y*ppi));
+		gl::drawStrokedRect(Area(v->r.db.vertices[2].X*ppi, v->r.db.vertices[2].Y*ppi, v->r.db.vertices[3].X*ppi, v->r.db.vertices[3].Y*ppi));
 		//vertical lines
-		gl::drawLine(cinder::Vec2f((v->r.vertices[1].X + 300 * cos((-v->r.mRot) * PI / 180))*ppi,
-			(v->r.vertices[1].Y + 300 * sin((-v->r.mRot) * PI / 180))*ppi),
-			cinder::Vec2f((v->r.vertices[2].X - 300 * cos((-v->r.mRot) * PI / 180))*ppi,
-			(v->r.vertices[2].Y - 300 * sin((-v->r.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f((v->r.vertices[0].X + 300 * cos((-v->r.mRot) * PI / 180))*ppi,
-			(v->r.vertices[0].Y + 300 * sin((-v->r.mRot) * PI / 180))*ppi),
-			cinder::Vec2f((v->r.vertices[3].X - 300 * cos((-v->r.mRot) * PI / 180))*ppi,
-			(v->r.vertices[3].Y - 300 * sin((-v->r.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f((v->r.db.vertices[1].X + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
+			(v->r.db.vertices[1].Y + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f((v->r.db.vertices[2].X - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
+			(v->r.db.vertices[2].Y - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f((v->r.db.vertices[0].X + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
+			(v->r.db.vertices[0].Y + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f((v->r.db.vertices[3].X - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
+			(v->r.db.vertices[3].Y - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi));
 		//horizontal lines
-		gl::drawLine(cinder::Vec2f((v->r.vertices[0].X + 300 * sin((v->r.mRot) * PI / 180))*ppi,
-			(v->r.vertices[0].Y + 300 * cos((v->r.mRot) * PI / 180))*ppi),
-			cinder::Vec2f((v->r.vertices[1].X - 300 * sin((v->r.mRot) * PI / 180))*ppi,
-			(v->r.vertices[1].Y - 300 * cos((v->r.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f((v->r.vertices[2].X + 300 * sin((v->r.mRot) * PI / 180))*ppi,
-			(v->r.vertices[2].Y + 300 * cos((v->r.mRot) * PI / 180))*ppi),
-			cinder::Vec2f((v->r.vertices[3].X - 300 * sin((v->r.mRot) * PI / 180))*ppi,
-			(v->r.vertices[3].Y - 300 * cos((v->r.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f((v->r.db.vertices[0].X + 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
+			(v->r.db.vertices[0].Y + 300 * cos((v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f((v->r.db.vertices[1].X - 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
+			(v->r.db.vertices[1].Y - 300 * cos((v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f((v->r.db.vertices[2].X + 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
+			(v->r.db.vertices[2].Y + 300 * cos((v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f((v->r.db.vertices[3].X - 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
+			(v->r.db.vertices[3].Y - 300 * cos((v->r.p.mRot) * PI / 180))*ppi));
 		//draw circle
-		gl::drawStrokedCircle(Vec2f(v->r.position.X*ppi, v->r.position.Y*ppi), renderRad* v->r.size*ppi);
+		gl::drawStrokedCircle(Vec2f(v->r.p.position.X*ppi, v->r.p.position.Y*ppi), renderRad* v->r.d.size*ppi);
 	}
-	//gl::drawLine(cinder::Vec2f(v.r.vertices[0].X*ppi, v.r.vertices[0].Y*ppi), cinder::Vec2f(v.r.vertices[3].X*ppi, v.r.vertices[3].Y*ppi));
+	//gl::drawLine(cinder::Vec2f(v.r.db.vertices[0].X*ppi, v.r.db.vertices[0].Y*ppi), cinder::Vec2f(v.r.db.vertices[3].X*ppi, v.r.db.vertices[3].Y*ppi));
 	gl::color(1, 1, 1);//resets colour to white
 }
 void CimulationApp::draw() {
@@ -300,10 +301,10 @@ void CimulationApp::draw() {
 		if (s.SimRunning == s.FIELD) {
 			v.j.drawX = v.f.f.fieldEnd + 20;
 			v.j.drawY = getWindowHeight()/2;
-			v.r.reversed = true;
+			v.r.d.reversed = true;
 		}
 		else {
-			v.r.reversed = false;
+			v.r.d.reversed = false;
 			v.j.drawX = 600;
 			v.j.drawY = 500;
 			robotDebug(&v, false);
@@ -316,7 +317,7 @@ void CimulationApp::draw() {
 			drawText(round(v.r.truSpeed(3, v.j.analogY)), vec3(mousePos.X + 30, mousePos.Y + 50), vec3(1, 1, 1), 30);
 		}
 	}
-	if (s.SimRunning == s.PIDCTRL) drawText(round(v.r.PID_controller()), vec3(v.r.position.X*ppi, v.r.position.Y*ppi - 100), vec3(1, 1, 1), 30);
+	if (s.SimRunning == s.PIDCTRL) drawText(round(v.r.PID_controller()), vec3(v.r.p.position.X*ppi, v.r.p.position.Y*ppi - 100), vec3(1, 1, 1), 30);
 	if (s.SimRunning == s.TRUSPEED) {
 		s.gr.graphPlot();//draws the graph
 		s.gr.textOutput(&v);//draws the text for the graph
@@ -347,27 +348,33 @@ void CimulationApp::draw() {
 	/*****************************ROBOT***********************************/
 	glPushMatrix();
 	if (s.SimRunning == s.FIELD) {
-		gl::translate(Vec3f(v.f.f.fieldEnd - v.r.position.X*ppi, v.f.f.fieldEnd - v.r.position.Y*ppi, 0.0));//origin of rotation
+		gl::translate(Vec3f(v.f.f.fieldEnd - v.r.p.position.X*ppi, v.f.f.fieldEnd - v.r.p.position.Y*ppi, 0.0));//origin of rotation
 		v.r.fieldSpeed = true;
 	}
-	else gl::translate(Vec3f(v.r.position.X*ppi, v.r.position.Y*ppi, 0.0));//origin of rotation
-	gl::rotate(Vec3f(0, 0, -v.r.mRot-90));//something for like 3D rotation.... ugh
+	else gl::translate(Vec3f(v.r.p.position.X*ppi, v.r.p.position.Y*ppi, 0.0));//origin of rotation
+	gl::rotate(Vec3f(0, 0, -v.r.p.mRot-90));//something for like 3D rotation.... ugh
 		//claw
-		gl::color(160.0/255, 160.0/255, 160.0/255);
-		gl::drawSolidRect(Area((v.r.clawPos + v.r.size / 18)*ppi, (v.r.size*.5 + v.r.clawHeight)*ppi, ( v.r.clawPos - v.r.size /18)*ppi, ( v.r.size*.5)*ppi));
-		gl::drawSolidRect(Area((-v.r.clawPos - v.r.size / 18)*ppi, (v.r.size*.5 + v.r.clawHeight)*ppi, (-v.r.clawPos + v.r.size / 18)*ppi, (v.r.size*.5)*ppi));
+		//gl::color(160.0/255, 160.0/255, 160.0/255);GRAY
+		gl::color(222.0/225, 229.0/225, 34.0/225);
+		gl::drawSolidRect(Area((v.r.c.clawPos + v.r.d.size / 18)*ppi, (v.r.d.size*.5 + v.r.c.clawHeight)*ppi, (v.r.c.clawPos - v.r.d.size / 18)*ppi, (v.r.d.size*.5)*ppi));
+		gl::drawSolidRect(Area((-v.r.c.clawPos - v.r.d.size / 18)*ppi, (v.r.d.size*.5 + v.r.c.clawHeight)*ppi, (-v.r.c.clawPos + v.r.d.size / 18)*ppi, (v.r.d.size*.5)*ppi));
+		//mogo
+		gl::color(66.0 / 255, 135.0 / 255, 224.0 / 255);
+		gl::drawSolidRect(Area((-v.r.mg.clawPos - v.r.d.size / 18)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (-v.r.mg.clawPos + v.r.d.size / 18)*ppi, (-v.r.d.size*.5)*ppi));
+		gl::drawSolidRect(Area((v.r.mg.clawPos + v.r.d.size / 18)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (v.r.mg.clawPos - v.r.d.size / 18)*ppi, (-v.r.d.size*.5)*ppi));
+
 		//base
 		gl::color(1, 1, 1);
-		gl::draw(v.r.TankBase, Area((-(v.r.size / 2))*ppi, (-(v.r.size / 2))*ppi, ((v.r.size / 2))*ppi, ((v.r.size / 2))*ppi));
+		gl::draw(v.r.TankBase, Area((-(v.r.d.size / 2))*ppi, (-(v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi));
 	glPopMatrix();
 	/*****************************MISC**********************************/
-	drawText(v.r.mRot, vec3(600, 40), vec3(1, 1, 1), 30);
-	drawText(v.r.position.X, vec3(600, 140), vec3(1, 1, 1), 30);
-	drawText(v.r.position.Y, vec3(750, 140), vec3(1, 1, 1), 30);
-	drawText(v.r.rotVel, vec3(1000, 340), vec3(1, 1, 1), 30);
-	drawText(v.r.rotAcceleration, vec3(1000, 440), vec3(1, 1, 1), 30);
+	drawText(v.r.p.mRot, vec3(600, 40), vec3(1, 1, 1), 30);
+	drawText(v.r.p.position.X, vec3(600, 140), vec3(1, 1, 1), 30);
+	drawText(v.r.p.position.Y, vec3(750, 140), vec3(1, 1, 1), 30);
+	drawText(v.r.p.rotVel, vec3(1000, 340), vec3(1, 1, 1), 30);
+	drawText(v.r.p.rotAcceleration, vec3(1000, 440), vec3(1, 1, 1), 30);
 	drawText(v.f.stacked.size(), vec3(1000, 500), vec3(1, 1, 1), 30);
-	drawText(v.r.holding, vec3(1000, 700), vec3(1, 1, 1), 30);
+	drawText(v.r.c.holding, vec3(1000, 700), vec3(1, 1, 1), 30);
 	//drawText(v.f.HELLO, vec3(1000, 600), vec3(1, 1, 1), 30);
 	if (v.f.c[1].held) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	else 	gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));

@@ -2,15 +2,15 @@
 #define RANDOMSTUFF_H
 //random #defines and other things that are used throughout all the files
 #define ppi 7.1839
-#define PI 3.1415926283846387236983
+#define PI 3.14159262
 #define WindowWidth  1400
 #define WindowHeight  1200
 #define numCones 54
 #define coneRad 3
 #define MoGoRad 5
 #define numMoGos 8
-#define MAGNETS 1.0//e.e
-#define gAngle robit->mRot * (PI / 180)
+#define coefMag 1.0//e.e
+#define gAngle robit->p.mRot * (PI / 180)
 
 #define renderRad 1//amount of the robot's radii that are used to calculate cone distance, smaller is more optimized (but calculates for less cones)
 

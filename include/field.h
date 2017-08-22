@@ -48,7 +48,7 @@ public:
 		void collision(int index, element *e, std::set<int> &s);
 		void grabbed(robot *r, int index, int type);
 		bool held;
-		bool touchingFence;
+		bool tTop, tBott, tLeft, tRight;//booleans for if touching sides of fence
 	};
 	std::vector<element> c;
 	std::vector<element> mg;
