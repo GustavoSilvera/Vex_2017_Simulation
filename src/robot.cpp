@@ -6,10 +6,14 @@
 
 robot::robot() {
 	p.position = vec3(69.6, 69.6, 0);//initial constructor position
-	c.clawSize = coneRad;
+	c.clawSize = cRad;
 	c.clawPos = c.clawSize;
 	c.clawHeight = 2;
-	mg.clawSize = MoGoRad;
+	c.liftSpeed = 0.1;//idk
+	c.liftPos = 0;
+	c.liftUp = false;
+	c.liftDown = false;
+	mg.clawSize = MGRad;
 	mg.clawPos = mg.clawSize;
 	mg.clawHeight = 2.5;
 }//constructor 
@@ -167,6 +171,8 @@ void robot::update() {
 	robot::setVertices();
 	c.claw(d.size);
 	mg.claw(d.size);
+	if (c.liftUp && c.liftPos < c.maxHeight) { c.liftPos += c.liftSpeed; }
+	else if (c.liftDown && c.liftPos > 0) { c.liftPos -= 1.5*c.liftSpeed; }//goes faster coming down
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {

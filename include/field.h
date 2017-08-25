@@ -35,7 +35,8 @@ public:
 	struct element {
 		vec3 pos;
 		int col;//0 is yellow, 1 is red, 2 is blue 
-		int rad;//size of the object;
+		float rad;//size of the object;
+		float height;
 		void calcD2Vertices(robot *r);
 		float d2V[4];//distance to each vertice on the robot
 		float d2Robot, d2RobotEdge;

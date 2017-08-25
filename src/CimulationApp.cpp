@@ -114,6 +114,7 @@ public:
 	void keyDown(KeyEvent event);
 	void keyUp(KeyEvent event);
 	void update();
+	void drawRobot();
 	void draw();
 	vex v;
 };
@@ -170,12 +171,17 @@ void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.ctrl.RotRight = true;
 	if (event.getChar() == 'e' || event.getChar() == 'E') v.r.c.grabbing = !v.r.c.grabbing;//if want toggling, else look at a while ago
 	if (event.getChar() == 'r' || event.getChar() == 'R' ) v.r.mg.grabbing = !v.r.mg.grabbing;//if want toggling, else look at a while ago
+	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.c.liftUp = true;
+	if (event.getCode() == KeyEvent::KEY_LSHIFT) v.r.c.liftDown = true;//left shift button
 }
 void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_DOWN) v.r.ctrl.ArrowKeyDown = false;
 	if (event.getCode() == KeyEvent::KEY_UP) v.r.ctrl.ArrowKeyUp = false;
 	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.ctrl.RotRight = false;
 	if (event.getCode() == KeyEvent::KEY_LEFT) v.r.ctrl.RotLeft = false;
+	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.c.liftUp = false;
+	if (event.getCode() == KeyEvent::KEY_LSHIFT) v.r.c.liftDown = false;//left shift button
+
 }
 void CimulationApp::update() {
 	v.j.getAnalog(mousePos);
@@ -292,6 +298,30 @@ void robotDebug(vex *v, bool reversed) {
 	//gl::drawLine(cinder::Vec2f(v.r.db.vertices[0].X*ppi, v.r.db.vertices[0].Y*ppi), cinder::Vec2f(v.r.db.vertices[3].X*ppi, v.r.db.vertices[3].Y*ppi));
 	gl::color(1, 1, 1);//resets colour to white
 }
+void CimulationApp::drawRobot() {
+	/*****************************ROBOT***********************************/
+	glPushMatrix();
+	if (s.SimRunning == s.FIELD) {
+		gl::translate(Vec3f(v.f.f.fieldEnd - v.r.p.position.X*ppi, v.f.f.fieldEnd - v.r.p.position.Y*ppi, 0.0));//origin of rotation
+		v.r.fieldSpeed = true;
+	}
+	else gl::translate(Vec3f(v.r.p.position.X*ppi, v.r.p.position.Y*ppi, 0.0));//origin of rotation
+	gl::rotate(Vec3f(0, 0, -v.r.p.mRot - 90));//something for like 3D rotation.... ugh
+											  //claw
+											  //gl::color(160.0/255, 160.0/255, 160.0/255);GRAY
+	gl::color(222.0 / 225, 229.0 / 225, 34.0 / 225);
+	gl::drawSolidRect(Area((v.r.c.clawPos + v.r.d.size / 18)*ppi, (v.r.d.size*.5 + v.r.c.clawHeight)*ppi, (v.r.c.clawPos - v.r.d.size / 18)*ppi, (v.r.d.size*.5)*ppi));
+	gl::drawSolidRect(Area((-v.r.c.clawPos - v.r.d.size / 18)*ppi, (v.r.d.size*.5 + v.r.c.clawHeight)*ppi, (-v.r.c.clawPos + v.r.d.size / 18)*ppi, (v.r.d.size*.5)*ppi));
+	//mogo
+	gl::color(66.0 / 255, 135.0 / 255, 224.0 / 255);
+	gl::drawSolidRect(Area((-v.r.mg.clawPos - v.r.d.size / 18)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (-v.r.mg.clawPos + v.r.d.size / 18)*ppi, (-v.r.d.size*.5)*ppi));
+	gl::drawSolidRect(Area((v.r.mg.clawPos + v.r.d.size / 18)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (v.r.mg.clawPos - v.r.d.size / 18)*ppi, (-v.r.d.size*.5)*ppi));
+
+	//base
+	gl::color(1, 1, 1);
+	gl::draw(v.r.TankBase, Area((-(v.r.d.size / 2))*ppi, (-(v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi));
+	glPopMatrix();
+}
 void CimulationApp::draw() {
 	gl::enableAlphaBlending();//good for transparent images
 	// clear out the window with black
@@ -328,45 +358,25 @@ void CimulationApp::draw() {
 			gl::rotate(-90);//easy rotation technique
 			gl::draw(v.f.fieldBare, Area(-v.f.f.fieldSize*ppi/2, -v.f.f.fieldSize*ppi/2, v.f.f.fieldSize*ppi/2, v.f.f.fieldSize*ppi/2));
 		gl::popModelView();//finish drawing the field
+		drawRobot();
 		//drawing each individual cone. oh my
 		for (int i = 0; i < v.f.c.size(); i++) {
 			//fieldend for where the end of the field is, to subtract values because: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
-			//+-(coneRad*ppi) for sayin that the point pos.X and pos.Y are the center, and the coneRad*ppi is 3 inches RADIUS away from the center point
+			//+-(cRad*ppi) for sayin that the point pos.X and pos.Y are the center, and the cRad*ppi is 3 inches RADIUS away from the center point
 			gl::color(1, 1, 1);
-			gl::draw(v.f.coneTexture, Area((v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) - (coneRad*ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) - (coneRad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) + (coneRad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) + (coneRad * ppi)));
+			gl::draw(v.f.coneTexture, Area((v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) - (cRad*ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) - (cRad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.c[i].rad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.c[i].rad * ppi)));
 		}
 		for (int i = 0; i < v.f.mg.size(); i++) {
 			vec3 RGB;//true color value because cinder uses values from 0->1 for their colours
 			if (v.f.mg[i].col == 1)/*red mogo*/			RGB = vec3(217, 38, 38);
 			else if (v.f.mg[i].col == 2)/*blue mogo*/	RGB = vec3(0, 64, 255);
 				gl::color(RGB.X/255, RGB.Y/255, RGB.Z/255);
-			gl::draw(v.f.MobileGoal, Area((v.f.f.fieldEnd)-(v.f.mg[i].pos.X*ppi) - (MoGoRad*ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.Y*ppi) - (MoGoRad * ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.X*ppi) + (MoGoRad * ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.Y*ppi) + (MoGoRad * ppi)));
+			gl::draw(v.f.MobileGoal, Area((v.f.f.fieldEnd)-(v.f.mg[i].pos.X*ppi) - (MGRad*ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.Y*ppi) - (MGRad * ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.X*ppi) + (v.f.mg[i].rad * ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.Y*ppi) + (v.f.mg[i].rad * ppi)));
 		}
 		robotDebug(&v, true);
 		gl::color(1, 1, 1) ;
 	}
-	/*****************************ROBOT***********************************/
-	glPushMatrix();
-	if (s.SimRunning == s.FIELD) {
-		gl::translate(Vec3f(v.f.f.fieldEnd - v.r.p.position.X*ppi, v.f.f.fieldEnd - v.r.p.position.Y*ppi, 0.0));//origin of rotation
-		v.r.fieldSpeed = true;
-	}
-	else gl::translate(Vec3f(v.r.p.position.X*ppi, v.r.p.position.Y*ppi, 0.0));//origin of rotation
-	gl::rotate(Vec3f(0, 0, -v.r.p.mRot-90));//something for like 3D rotation.... ugh
-		//claw
-		//gl::color(160.0/255, 160.0/255, 160.0/255);GRAY
-		gl::color(222.0/225, 229.0/225, 34.0/225);
-		gl::drawSolidRect(Area((v.r.c.clawPos + v.r.d.size / 18)*ppi, (v.r.d.size*.5 + v.r.c.clawHeight)*ppi, (v.r.c.clawPos - v.r.d.size / 18)*ppi, (v.r.d.size*.5)*ppi));
-		gl::drawSolidRect(Area((-v.r.c.clawPos - v.r.d.size / 18)*ppi, (v.r.d.size*.5 + v.r.c.clawHeight)*ppi, (-v.r.c.clawPos + v.r.d.size / 18)*ppi, (v.r.d.size*.5)*ppi));
-		//mogo
-		gl::color(66.0 / 255, 135.0 / 255, 224.0 / 255);
-		gl::drawSolidRect(Area((-v.r.mg.clawPos - v.r.d.size / 18)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (-v.r.mg.clawPos + v.r.d.size / 18)*ppi, (-v.r.d.size*.5)*ppi));
-		gl::drawSolidRect(Area((v.r.mg.clawPos + v.r.d.size / 18)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (v.r.mg.clawPos - v.r.d.size / 18)*ppi, (-v.r.d.size*.5)*ppi));
-
-		//base
-		gl::color(1, 1, 1);
-		gl::draw(v.r.TankBase, Area((-(v.r.d.size / 2))*ppi, (-(v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi));
-	glPopMatrix();
+	else drawRobot();
 	/*****************************MISC**********************************/
 	drawText(v.r.p.mRot, vec3(600, 40), vec3(1, 1, 1), 30);
 	drawText(v.r.p.position.X, vec3(600, 140), vec3(1, 1, 1), 30);
@@ -375,8 +385,10 @@ void CimulationApp::draw() {
 	drawText(v.r.p.rotAcceleration, vec3(1000, 440), vec3(1, 1, 1), 30);
 	drawText(v.f.stacked.size(), vec3(1000, 500), vec3(1, 1, 1), 30);
 	drawText(v.r.c.holding, vec3(1000, 700), vec3(1, 1, 1), 30);
+	drawText(v.r.c.liftPos, vec3(1000, 800), vec3(1, 1, 1), 30);
+
 	//drawText(v.f.HELLO, vec3(1000, 600), vec3(1, 1, 1), 30);
-	if (v.f.c[1].held) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
+	if (v.r.c.liftUp) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	else 	gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	/*drawing closest point for the 0th (first) cone*/
 	gl::color(1, 0, 0);

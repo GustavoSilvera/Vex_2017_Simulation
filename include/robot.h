@@ -50,6 +50,10 @@ public:
 		bool grabbing = false;
 		int holding = -1;
 		void claw(float Robsize);
+		bool liftUp, liftDown;
+		float liftSpeed;
+		float liftPos;
+		double maxHeight = 50;//50 inches max height
 	};
 		intake c;
 		intake mg;

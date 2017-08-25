@@ -4,27 +4,27 @@
 
 field::element initConeConfig[numCones] = {//array for each configuration of the cone (in field.h)
 										   //{initial posision (X, Y), color (Y, R, B), radii }
-	{ { 2.9, 13.0 }, 0, coneRad },{ { 2.9, 23.2 }, 0, coneRad },{ { 2.9, 34.9 }, 0, coneRad },{ { 2.9, 46.7 }, 0, coneRad },
-	{ { 2.9, 58.4 }, 0, coneRad },{ { 2.9, 70.2 }, 0, coneRad },{ { 13.0, 2.9 }, 0, coneRad },{ { 13.0, 13.0 }, 0, coneRad },
-	{ { 13.0, 23.2 }, 0, coneRad },{ { 23.2, 2.9 }, 0, coneRad },{ { 23.2, 13.0 }, 0, coneRad },{ { 23.2, 23.2 }, 0, coneRad },
-	{ { 23.2, 34.9 }, 0, coneRad },{ { 23.2, 46.7 }, 0, coneRad },{ { 23.2, 58.4 }, 0, coneRad },{ { 23.2, 70.2 }, 0, coneRad },
-	{ { 34.9, 2.9 }, 0, coneRad },{ { 34.9, 23.2 }, 0, coneRad },{ { 46.7, 2.9 }, 0, coneRad },{ { 46.7, 23.2 }, 0, coneRad },
-	{ { 46.7, 46.7 }, 0, coneRad },{ { 46.7, 58.4 }, 0, coneRad },{ { 58.4, 2.9 }, 0, coneRad },{ { 58.4, 23.2 }, 0, coneRad },
-	{ { 58.4, 46.7 }, 0, coneRad },{ { 58.4, 70.2 }, 0, coneRad },{ { 70.2, 2.9 }, 0, coneRad },{ { 70.2, 23.2 }, 0, coneRad },
-	{ { 70.2, 58.4 }, 0, coneRad },{ { 70.2, 82.1 }, 0, coneRad },{ { 82.1, 70.2 }, 0, coneRad },{ { 82.1, 93.9 }, 0, coneRad },
-	{ { 82.1, 139.2 }, 0, coneRad },{ { 93.9, 82.1 }, 0, coneRad },{ { 93.9, 93.9 }, 0, coneRad },{ { 93.9, 117.5 }, 0, coneRad },
-	{ { 93.9, 137.8 }, 0, coneRad },{ { 105.8, 117.5 }, 0, coneRad },{ { 105.8, 137.8 }, 0, coneRad },{ { 117.5, 93.9 }, 0, coneRad },
-	{ { 117.5, 105.8 }, 0, coneRad },{ { 117.5, 117.5 }, 0, coneRad },{ { 117.5, 127.6 }, 0, coneRad },{ { 117.5, 137.8 }, 0, coneRad },
-	{ { 127.6, 117.5 }, 0, coneRad },{ { 127.6, 127.6 }, 0, coneRad },{ { 127.6, 137.8 }, 0, coneRad },{ { 137.8, 82.1 }, 0, coneRad },
-	{ { 137.8, 93.9 }, 0, coneRad },{ { 137.8, 105.8 }, 0, coneRad },{ { 137.8, 117.5 }, 0, coneRad },{ { 137.8, 127.6 }, 0, coneRad },
-	{ { 137.8, 137.8 }, 0, coneRad }
+	{ { 2.9, 13.0 }, 0, cRad, cHeight},{ { 2.9, 23.2 }, 0, cRad, cHeight},{ { 2.9, 34.9 }, 0, cRad, cHeight},{ { 2.9, 46.7 }, 0, cRad, cHeight},
+	{ { 2.9, 58.4 }, 0, cRad, cHeight},{ { 2.9, 70.2 }, 0, cRad, cHeight},{ { 13.0, 2.9 }, 0, cRad, cHeight},{ { 13.0, 13.0 }, 0, cRad, cHeight},
+	{ { 13.0, 23.2 }, 0, cRad, cHeight},{ { 23.2, 2.9 }, 0, cRad, cHeight},{ { 23.2, 13.0 }, 0, cRad, cHeight},{ { 23.2, 23.2 }, 0, cRad, cHeight},
+	{ { 23.2, 34.9 }, 0, cRad, cHeight},{ { 23.2, 46.7 }, 0, cRad, cHeight},{ { 23.2, 58.4 }, 0, cRad, cHeight},{ { 23.2, 70.2 }, 0, cRad, cHeight},
+	{ { 34.9, 2.9 }, 0, cRad, cHeight},{ { 34.9, 23.2 }, 0, cRad, cHeight},{ { 46.7, 2.9 }, 0, cRad, cHeight},{ { 46.7, 23.2 }, 0, cRad, cHeight},
+	{ { 46.7, 46.7 }, 0, cRad, cHeight},{ { 46.7, 58.4 }, 0, cRad, cHeight},{ { 58.4, 2.9 }, 0, cRad, cHeight},{ { 58.4, 23.2 }, 0, cRad, cHeight},
+	{ { 58.4, 46.7 }, 0, cRad, cHeight},{ { 58.4, 70.2 }, 0, cRad, cHeight},{ { 70.2, 2.9 }, 0, cRad, cHeight},{ { 70.2, 23.2 }, 0, cRad, cHeight},
+	{ { 70.2, 58.4 }, 0, cRad, cHeight},{ { 70.2, 82.1 }, 0, cRad, cHeight},{ { 82.1, 70.2 }, 0, cRad, cHeight},{ { 82.1, 93.9 }, 0, cRad, cHeight},
+	{ { 82.1, 139.2 }, 0, cRad, cHeight},{ { 93.9, 82.1 }, 0, cRad, cHeight},{ { 93.9, 93.9 }, 0, cRad, cHeight},{ { 93.9, 117.5 }, 0, cRad, cHeight},
+	{ { 93.9, 137.8 }, 0, cRad, cHeight},{ { 105.8, 117.5 }, 0, cRad, cHeight},{ { 105.8, 137.8 }, 0, cRad, cHeight},{ { 117.5, 93.9 }, 0, cRad, cHeight},
+	{ { 117.5, 105.8 }, 0, cRad, cHeight},{ { 117.5, 117.5 }, 0, cRad, cHeight},{ { 117.5, 127.6 }, 0, cRad, cHeight},{ { 117.5, 137.8 }, 0, cRad, cHeight},
+	{ { 127.6, 117.5 }, 0, cRad, cHeight},{ { 127.6, 127.6 }, 0, cRad, cHeight},{ { 127.6, 137.8 }, 0, cRad, cHeight},{ { 137.8, 82.1 }, 0, cRad, cHeight},
+	{ { 137.8, 93.9 }, 0, cRad, cHeight},{ { 137.8, 105.8 }, 0, cRad, cHeight},{ { 137.8, 117.5 }, 0, cRad, cHeight},{ { 137.8, 127.6 }, 0, cRad, cHeight},
+	{ { 137.8, 137.8 }, 0, cRad, cHeight}
 };
 //initial cone values for position
 field::element initMoGoConfig[numMoGos] = {//array for each configuration of the mobile goal (in field.h)
-	{ { 34.9, 13.0 }, 1 , MoGoRad },{ { 13.0, 34.9 }, 2 ,MoGoRad },
-	{ { 70.2, 46.7 }, 2 ,MoGoRad },{ { 46.7, 70.2 }, 1 ,MoGoRad },
-	{ { 93.9, 70.2 }, 2 ,MoGoRad },{ { 70.2, 93.9 }, 1 ,MoGoRad },
-	{ { 127.6, 105.8 }, 1 ,MoGoRad },{ { 105.8, 127.6 }, 2 ,MoGoRad }
+	{ { 34.9, 13.0 }, 1 ,  MGRad, mgHeight },{ { 13.0, 34.9 }, 2 , MGRad, mgHeight },
+	{ { 70.2, 46.7 }, 2 , MGRad, mgHeight },{ { 46.7, 70.2 }, 1 , MGRad, mgHeight },
+	{ { 93.9, 70.2 }, 2 , MGRad, mgHeight },{ { 70.2, 93.9 }, 1 , MGRad, mgHeight },
+	{ { 127.6, 105.8 }, 1 , MGRad, mgHeight },{ { 105.8, 127.6 }, 2 , MGRad, mgHeight }
 };
 field::element initPoleConfig[2] = {
 	{ { 93, 47.3 }, 3 , 4 },{ { 46.9, 94 }, 3 , 4 }
@@ -178,8 +178,8 @@ void field::element::collision(int index, element *e, std::set<int> &s) {
 		e->pos = e->pos + normal.times(((rad + e->rad) - distance) / distance);//push of the cones
 		/*maths
 		distance*? = overlap;
-		overlap = 2*coneRad - distance
-		therefore: ? = (2*coneRad - distance)/distance;
+		overlap = 2*cRad - distance
+		therefore: ? = (2*cRad - distance)/distance;
 		*/
 		//s.insert(index);//adds index of which cone is in the stack (being pushed)
 	}
@@ -282,17 +282,21 @@ void field::element::grabbed(robot *robit, int index, int type) {
 	float yInt2MG = slope * (0 - (robit->db.vertices[3].X + robit->mg.clawSize*cos((robit->p.mRot - 135) * PI / 180) - pos.X)) + (robit->db.vertices[3].Y + robit->mg.clawSize*sin((robit->p.mRot - 135) * PI / 180) - pos.Y);
 
 	if ((robit->c.grabbing && robit->c.holding == index + type * 100) || (robit->c.grabbing && robit->c.holding == -1)) {//holding only one entity at once
-		bool inPosition = (getSign(yInt1C) != getSign(yInt2C) && (d2Robot < 0.65*robit->d.size + rad) && (d2RobotEdge <= 1.1*rad) && inFront);
+		bool inPosition = (getSign(yInt1C) != getSign(yInt2C) /*&& (d2Robot < 0.65*robit->d.size + rad) */&& (d2RobotEdge <= 1.1*rad) && inFront);
 		if (inPosition) {
 			//robit->holding = true;//locking the entities in place
 			robit->c.holding = index + 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
 			pos.X = (robit->p.position.X) - (robit->d.size*.65 * cos(gAngle));
 			pos.Y = (robit->p.position.Y + (robit->d.size*.65 * sin(gAngle)));
 			held = true;
+			//checking if shoudl lift;(ASSUMES PERFECT PID)
+			if (robit->c.liftUp && pos.Z < robit->c.maxHeight || robit->c.liftDown && pos.Z > 0) {
+				pos.Z = robit->c.liftPos;
+			}
 		}
 	}
 	else held = false;
-	//check for mogo intake
+	//check for mogo intake (NOT LIFTING)
 	if ((robit->mg.grabbing && robit->mg.holding == index + type * 100) || (robit->mg.grabbing && robit->mg.holding == -1)) {//holding only one entity at once
 		bool inPosition = (getSign(yInt1MG) != getSign(yInt2MG) && (d2Robot < 0.65*robit->d.size + rad) && (d2RobotEdge <= 1.1*rad) && !inFront);
 		if (inPosition) {
@@ -305,20 +309,23 @@ void field::element::grabbed(robot *robit, int index, int type) {
 	}
 	else held = false;
 }
+//function for having a 'grabbed' element lock in place
 void field::FieldUpdate(robot *robit) {
 	if (!initialized) initializeField(robit);
 	f.wallPush(robit);
 	for (int i = 0; i < c.size(); i++) {
 		//type for "cone" is 0
 		int type = 0;
+		c[i].rad = 0.1*c[i].pos.Z + cRad;
 		c[i].grabbed(robit, i, type);
-		physics(i, &c[i], robit, type);
+		if(c[i].pos.Z < c[i].height) physics(i, &c[i], robit, type);//only affect objects when on ground (or low enough)
 	}
 	for (int i = 0; i < mg.size(); i++) {
 		//type for "mogo" is 1
 		int type = 1;
+		mg[i].rad = 0.1*mg[i].pos.Z + MGRad;//use better scalar than 0.1, but eventually remove this (because dont rly want to pick up mogos
 		mg[i].grabbed(robit, i, type);
-		physics(i, &mg[i], robit, type);
+		physics(i, &mg[i], robit, type);//dont affect things if being lifted into the air
 	}
 	for (int i = 0; i < pl.size(); i++) {
 		//type for stationary goal is 2

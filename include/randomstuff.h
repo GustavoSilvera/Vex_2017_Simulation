@@ -6,14 +6,17 @@
 #define WindowWidth  1400
 #define WindowHeight  1200
 #define numCones 54
-#define coneRad 3
-#define MoGoRad 5
+#define cRad 3
+#define MGRad 5
+#define cHeight 6.82
+#define mgHeight 9.6
+#define statHeight 24.64
 #define numMoGos 8
 #define coefMag 1.0//e.e
 #define gAngle robit->p.mRot * (PI / 180)
 
 #define renderRad 1//amount of the robot's radii that are used to calculate cone distance, smaller is more optimized (but calculates for less cones)
-
+//vec3 gravity = -9.8;
 inline int getSign(double value) {//returns whether a number is negative or positive.
 	if (value < 0) { return -1; }
 	else if (value > 0) { return 1; }
