@@ -14,9 +14,7 @@
 #define numMoGos 8
 #define coefMag 1.0//e.e
 #define gAngle robit->p.mRot * (PI / 180)
-
 #define renderRad 1//amount of the robot's radii that are used to calculate cone distance, smaller is more optimized (but calculates for less cones)
-//vec3 gravity = -9.8;
 inline int getSign(double value) {//returns whether a number is negative or positive.
 	if (value < 0) { return -1; }
 	else if (value > 0) { return 1; }

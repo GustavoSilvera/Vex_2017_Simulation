@@ -121,7 +121,7 @@ bool withinAngle(double angle, int lowerBound, int upperBound) {
 void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
 	//collisions from robot
 	d2Robot = dist(pos, robit->p.position);
-	if (d2Robot < renderRad * robit->d.size) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
+	if (pos.Z < height && d2Robot < renderRad * robit->d.size) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
 		calcD2Vertices(robit);//calculate all the distances
 		d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
 		bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if cone is closer to the front side
@@ -166,22 +166,26 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
 				robit->p.velocity.X = (R.X - closestPoint.X);
 				robit->p.velocity.Y = (R.Y - closestPoint.Y);
 			}
+			s.insert(index);
 		}
+		else s.erase(index);
 	}
 }
 //functions for collisions between the element and the robot
 void field::element::collision(int index, element *e, std::set<int> &s) {
 	//collisions from element->element
-	float distance = dist(pos, e->pos);
-	if (distance <= coefMag * (rad + e->rad)) {//touching
-		vec3 normal = vec3(e->pos.X - pos.X, e->pos.Y - pos.Y);
-		e->pos = e->pos + normal.times(((rad + e->rad) - distance) / distance);//push of the cones
-		/*maths
-		distance*? = overlap;
-		overlap = 2*cRad - distance
-		therefore: ? = (2*cRad - distance)/distance;
-		*/
-		//s.insert(index);//adds index of which cone is in the stack (being pushed)
+	if (e->pos.Z < e->height) {//so long as within touching distance. 
+		float distance = dist(pos, e->pos);
+		if (distance <= coefMag * (rad + e->rad)) {//touching
+			vec3 normal = vec3(e->pos.X - pos.X, e->pos.Y - pos.Y);
+			e->pos = e->pos + normal.times(((rad + e->rad) - distance) / distance);//push of the cones
+			/*maths
+			distance*? = overlap;
+			overlap = 2*cRad - distance
+			therefore: ? = (2*cRad - distance)/distance;
+			*/
+			//s.insert(index);//adds index of which cone is in the stack (being pushed)
+		}
 	}
 }
 //functions for collisions between the element and another element
@@ -282,28 +286,35 @@ void field::element::grabbed(robot *robit, int index, int type) {
 	float yInt2MG = slope * (0 - (robit->db.vertices[3].X + robit->mg.clawSize*cos((robit->p.mRot - 135) * PI / 180) - pos.X)) + (robit->db.vertices[3].Y + robit->mg.clawSize*sin((robit->p.mRot - 135) * PI / 180) - pos.Y);
 
 	if ((robit->c.grabbing && robit->c.holding == index + type * 100) || (robit->c.grabbing && robit->c.holding == -1)) {//holding only one entity at once
-		bool inPosition = (getSign(yInt1C) != getSign(yInt2C) /*&& (d2Robot < 0.65*robit->d.size + rad) */&& (d2RobotEdge <= 1.1*rad) && inFront);
+		bool inPosition = (getSign(yInt1C) != getSign(yInt2C) /*&& (d2Robot < 0.65*robit->d.size + rad) */&& (d2RobotEdge <= 1.35*rad) && inFront);
 		if (inPosition) {
 			//robit->holding = true;//locking the entities in place
 			robit->c.holding = index + 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
-			pos.X = (robit->p.position.X) - (robit->d.size*.65 * cos(gAngle));
-			pos.Y = (robit->p.position.Y + (robit->d.size*.65 * sin(gAngle)));
+			pos.X = robit->p.position.X - (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2);//works
+			pos.Y = robit->p.position.Y + (robit->d.size / 2) * sin((robit->p.mRot) * PI / 180) * sqrt(2);//works
 			held = true;
 			//checking if shoudl lift;(ASSUMES PERFECT PID)
-			if (robit->c.liftUp && pos.Z < robit->c.maxHeight || robit->c.liftDown && pos.Z > 0) {
-				pos.Z = robit->c.liftPos;
+			if(abs(robit->c.liftPos - pos.Z) < height){//makes sure lift is within grabbing distance
+				if (robit->c.liftUp && pos.Z < robit->c.maxHeight || robit->c.liftDown && pos.Z > 0) 
+					pos.Z = robit->c.liftPos;//LATER: add something to try to pickyp from center
 			}
 		}
 	}
-	else held = false;
+	else {
+		held = false;
+		if (!robit->c.grabbing && pos.Z > 0) {
+			pos.Z += -32 / 12;
+			pos.Z += -32 / 12;
+		}
+	}
 	//check for mogo intake (NOT LIFTING)
 	if ((robit->mg.grabbing && robit->mg.holding == index + type * 100) || (robit->mg.grabbing && robit->mg.holding == -1)) {//holding only one entity at once
 		bool inPosition = (getSign(yInt1MG) != getSign(yInt2MG) && (d2Robot < 0.65*robit->d.size + rad) && (d2RobotEdge <= 1.1*rad) && !inFront);
 		if (inPosition) {
 			//robit->holding = true;//locking the entities in place
 			robit->mg.holding = index + 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
-			pos.X = (robit->p.position.X) + (robit->d.size*.65 * cos(gAngle));
-			pos.Y = (robit->p.position.Y - (robit->d.size*.65 * sin(gAngle)));
+			pos.X = robit->p.position.X + (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2);
+			pos.Y = robit->p.position.Y - (robit->d.size / 2) * sin((robit->p.mRot) * PI / 180) * sqrt(2);
 			held = true;
 		}
 	}
@@ -316,7 +327,7 @@ void field::FieldUpdate(robot *robit) {
 	for (int i = 0; i < c.size(); i++) {
 		//type for "cone" is 0
 		int type = 0;
-		c[i].rad = 0.1*c[i].pos.Z + cRad;
+		c[i].rad = 0.1*c[i].pos.Z + cRad;//changes radius to enlargen when gets taller
 		c[i].grabbed(robit, i, type);
 		if(c[i].pos.Z < c[i].height) physics(i, &c[i], robit, type);//only affect objects when on ground (or low enough)
 	}
@@ -335,6 +346,7 @@ void field::FieldUpdate(robot *robit) {
 		statGoalPush(&pl[i], robit, &f);
 		physics(i, &pl[i], robit, type);
 	}
+	robit->p.friction = stacked.size();
 }
 //update task for the entire field simulation
 field::field() : initialized(false) {

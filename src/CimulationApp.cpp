@@ -172,7 +172,7 @@ void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getChar() == 'e' || event.getChar() == 'E') v.r.c.grabbing = !v.r.c.grabbing;//if want toggling, else look at a while ago
 	if (event.getChar() == 'r' || event.getChar() == 'R' ) v.r.mg.grabbing = !v.r.mg.grabbing;//if want toggling, else look at a while ago
 	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.c.liftUp = true;
-	if (event.getCode() == KeyEvent::KEY_LSHIFT) v.r.c.liftDown = true;//left shift button
+	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r.c.liftDown = true;//left Z button
 }
 void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_DOWN) v.r.ctrl.ArrowKeyDown = false;
@@ -180,7 +180,7 @@ void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.ctrl.RotRight = false;
 	if (event.getCode() == KeyEvent::KEY_LEFT) v.r.ctrl.RotLeft = false;
 	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.c.liftUp = false;
-	if (event.getCode() == KeyEvent::KEY_LSHIFT) v.r.c.liftDown = false;//left shift button
+	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r.c.liftDown = false;//left Z button
 
 }
 void CimulationApp::update() {
@@ -307,20 +307,21 @@ void CimulationApp::drawRobot() {
 	}
 	else gl::translate(Vec3f(v.r.p.position.X*ppi, v.r.p.position.Y*ppi, 0.0));//origin of rotation
 	gl::rotate(Vec3f(0, 0, -v.r.p.mRot - 90));//something for like 3D rotation.... ugh
-											  //claw
 											  //gl::color(160.0/255, 160.0/255, 160.0/255);GRAY
-	gl::color(222.0 / 225, 229.0 / 225, 34.0 / 225);
-	gl::drawSolidRect(Area((v.r.c.clawPos + v.r.d.size / 18)*ppi, (v.r.d.size*.5 + v.r.c.clawHeight)*ppi, (v.r.c.clawPos - v.r.d.size / 18)*ppi, (v.r.d.size*.5)*ppi));
-	gl::drawSolidRect(Area((-v.r.c.clawPos - v.r.d.size / 18)*ppi, (v.r.d.size*.5 + v.r.c.clawHeight)*ppi, (-v.r.c.clawPos + v.r.d.size / 18)*ppi, (v.r.d.size*.5)*ppi));
-	//mogo
-	gl::color(66.0 / 255, 135.0 / 255, 224.0 / 255);
-	gl::drawSolidRect(Area((-v.r.mg.clawPos - v.r.d.size / 18)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (-v.r.mg.clawPos + v.r.d.size / 18)*ppi, (-v.r.d.size*.5)*ppi));
-	gl::drawSolidRect(Area((v.r.mg.clawPos + v.r.d.size / 18)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (v.r.mg.clawPos - v.r.d.size / 18)*ppi, (-v.r.d.size*.5)*ppi));
-
 	//base
 	gl::color(1, 1, 1);
 	gl::draw(v.r.TankBase, Area((-(v.r.d.size / 2))*ppi, (-(v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi));
-	glPopMatrix();
+	//claw
+	gl::color(222.0 / 225, 229.0 / 225, 34.0 / 225);
+	
+	gl::drawSolidRect(Area((v.r.c.clawPos + v.r.c.clawThick)*ppi + v.r.c.liftPos, (v.r.d.size*.5 + v.r.c.clawHeight)*ppi + v.r.c.liftPos, (v.r.c.clawPos - v.r.c.clawThick)*ppi - v.r.c.liftPos, (v.r.d.size*.5)*ppi - v.r.c.liftPos));
+	gl::drawSolidRect(Area((-v.r.c.clawPos - v.r.c.clawThick)*ppi - v.r.c.liftPos, (v.r.d.size*.5 + v.r.c.clawHeight)*ppi + v.r.c.liftPos, (-v.r.c.clawPos + v.r.c.clawThick)*ppi + v.r.c.liftPos, (v.r.d.size*.5)*ppi - v.r.c.liftPos));
+	//mogo
+	gl::color(66.0 / 255, 135.0 / 255, 224.0 / 255);
+	gl::drawSolidRect(Area((-v.r.mg.clawPos - v.r.c.clawThick)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (-v.r.mg.clawPos + v.r.c.clawThick)*ppi, (-v.r.d.size*.5)*ppi));
+	gl::drawSolidRect(Area((v.r.mg.clawPos + v.r.c.clawThick)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (v.r.mg.clawPos - v.r.c.clawThick)*ppi, (-v.r.d.size*.5)*ppi));
+
+	glPopMatrix();//end of rotation code
 }
 void CimulationApp::draw() {
 	gl::enableAlphaBlending();//good for transparent images
@@ -392,9 +393,8 @@ void CimulationApp::draw() {
 	drawText(v.f.stacked.size(), vec3(1000, 500), vec3(1, 1, 1), 30);
 	drawText(v.r.c.holding, vec3(1000, 700), vec3(1, 1, 1), 30);
 	drawText(v.r.c.liftPos, vec3(1000, 800), vec3(1, 1, 1), 30);
-
 	//drawText(v.f.HELLO, vec3(1000, 600), vec3(1, 1, 1), 30);
-	if (v.r.c.liftUp) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
+	if (v.r.c.liftDown) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	/*drawing closest point for the 0th (first) cone*/
 	gl::color(1, 0, 0);
@@ -404,6 +404,5 @@ void CimulationApp::draw() {
 	buttons();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3(getWindowWidth() - 90, 30), vec3(0, 1, 0), 30);
-
 }
 CINDER_APP_NATIVE(CimulationApp, RendererGl)

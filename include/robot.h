@@ -46,6 +46,7 @@ public:
 	struct intake {
 		float clawSize;
 		float clawPos;
+		float clawThick;
 		float clawHeight;
 		bool grabbing = false;
 		int holding = -1;//index for which element is being grabbed, to draw it above all the rest. 
@@ -64,7 +65,7 @@ public:
 		vec3 acceleration = vec3(0, 0, 0);
 		float rotVel = 0;
 		float rotAcceleration = 0;
-		vec3 friction;
+		float friction = 0;
 		float amountOfFriction = 3;	//constant changing the amount of friction for the robot
 	};
 		physics p;

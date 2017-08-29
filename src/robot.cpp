@@ -8,14 +8,17 @@ robot::robot() {
 	p.position = vec3(69.6, 69.6, 0);//initial constructor position
 	c.clawSize = cRad;
 	c.clawPos = c.clawSize;
+	c.clawThick = 0.5;
 	c.clawHeight = 2;
 	c.liftSpeed = 0.1;//idk
 	c.liftPos = 0;
 	c.liftUp = false;
 	c.liftDown = false;
 	mg.clawSize = MGRad;
+	mg.clawThick = d.size / 18;
 	mg.clawPos = mg.clawSize;
 	mg.clawHeight = 2.5;
+	mg.liftPos = 0;
 }//constructor 
 
 float limitSmall(float noLessThan, float value) {//not really working anyways. idk
@@ -158,7 +161,8 @@ void robot::intake::claw(float RobSize) {
 	if (grabbing == false) holding = -1;//reset index
 }
 void robot::update() {
-	p.acceleration = p.acceleration + p.friction.times(-1);
+	p.acceleration.X -= 0.5 * p.friction;
+	p.acceleration.Y -= 0.5 * p.friction;
 	p.velocity = p.velocity + p.acceleration.times(1.0/60.0);
 	if (fieldSpeed) {//weird issue with how the robot is being drawn in the field update with the origin on the bottom right rather than top left
 		p.position.X -= p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
@@ -172,7 +176,9 @@ void robot::update() {
 	p.mRot += p.rotVel;
 	p.mRot = ((p.mRot / 360) - (long)(p.mRot / 360)) * 360;//only within 360° and -360° (takes the decimal portion and discards the whole number)
 	robot::setVertices();
+	c.clawSize = cRad + c.liftPos/60;
 	c.claw(d.size);
+	mg.clawSize = MGRad + mg.liftPos / 60;
 	mg.claw(d.size);
 	if (c.liftUp && c.liftPos < c.maxHeight) { c.liftPos += c.liftSpeed; }
 	else if (c.liftDown && c.liftPos > 0) { c.liftPos -= 1.5*c.liftSpeed; }//goes faster coming down
