@@ -359,13 +359,6 @@ void CimulationApp::draw() {
 			gl::draw(v.f.fieldBare, Area(-v.f.f.fieldSize*ppi/2, -v.f.f.fieldSize*ppi/2, v.f.f.fieldSize*ppi/2, v.f.f.fieldSize*ppi/2));
 		gl::popModelView();//finish drawing the field
 		drawRobot();
-		//drawing each individual cone. oh my
-		for (int i = 0; i < v.f.c.size(); i++) {
-			//fieldend for where the end of the field is, to subtract values because: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
-			//+-(cRad*ppi) for sayin that the point pos.X and pos.Y are the center, and the cRad*ppi is 3 inches RADIUS away from the center point
-			gl::color(1, 1, 1);
-			gl::draw(v.f.coneTexture, Area((v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) - (cRad*ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) - (cRad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.c[i].rad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.c[i].rad * ppi)));
-		}
 		for (int i = 0; i < v.f.mg.size(); i++) {
 			vec3 RGB;//true color value because cinder uses values from 0->1 for their colours
 			if (v.f.mg[i].col == 1)/*red mogo*/			RGB = vec3(217, 38, 38);
@@ -373,6 +366,19 @@ void CimulationApp::draw() {
 				gl::color(RGB.X/255, RGB.Y/255, RGB.Z/255);
 			gl::draw(v.f.MobileGoal, Area((v.f.f.fieldEnd)-(v.f.mg[i].pos.X*ppi) - (MGRad*ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.Y*ppi) - (MGRad * ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.X*ppi) + (v.f.mg[i].rad * ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.Y*ppi) + (v.f.mg[i].rad * ppi)));
 		}
+		//drawing each individual cone. oh my
+		for (int i = 0; i < v.f.c.size(); i++) {
+			//fieldend for where the end of the field is, to subtract values because: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
+			//+-(cRad*ppi) for sayin' that the point pos.X and pos.Y are the center, and the cRad*ppi is 3 inches RADIUS away from the center point
+			gl::color(1, 1, 1);
+			if (i != v.r.c.holding)	gl::draw(v.f.coneTexture, Area((v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) - (cRad*ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) - (cRad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.c[i].rad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.c[i].rad * ppi)));
+		}
+		if(v.r.c.holding != -1) //if actually holding something (the index exists [!= -1])
+			gl::draw(v.f.coneTexture, Area(
+				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) - (cRad*ppi), 
+				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) - (cRad * ppi), 
+				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) + (v.f.c[v.r.c.holding].rad * ppi), 
+				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) + (v.f.c[v.r.c.holding].rad * ppi)));
 		robotDebug(&v, true);
 		gl::color(1, 1, 1) ;
 	}
@@ -389,7 +395,7 @@ void CimulationApp::draw() {
 
 	//drawText(v.f.HELLO, vec3(1000, 600), vec3(1, 1, 1), 30);
 	if (v.r.c.liftUp) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
-	else 	gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
+	else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	/*drawing closest point for the 0th (first) cone*/
 	gl::color(1, 0, 0);
 	//gl::drawStrokedCircle(Vec2f(v.f.f.fieldEnd - v.f.pl[0].pos.X*ppi, v.f.f.fieldEnd - v.f.pl[0].pos.Y*ppi), 4*ppi);
