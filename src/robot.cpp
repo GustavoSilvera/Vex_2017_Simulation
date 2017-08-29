@@ -127,25 +127,28 @@ float robot::PID_controller() {//accelerates and decelerates robot based on loca
 void robot::setVertices() {
 	//gross i know, but its for calculating each vertice of the robot based off its current angle;
 	//math behind is based off basic trig and 45 45 90° triangle analytic geometry
+	
+	double cosDist = (d.size / 2) * cos((p.mRot - 135) * PI / 180) * sqrt(2);
+	double sinDist = (d.size / 2) * sin((p.mRot - 135) * PI / 180) * sqrt(2);
 	if (!d.reversed) {
-		db.vertices[0].X = (p.position.X - ((d.size / 2) * (sqrt(2)) * cos((p.mRot - 135) * PI / 180)));
-		db.vertices[0].Y = (p.position.Y + ((d.size / 2) * (sqrt(2)) * sin((p.mRot - 135)* PI / 180)));
-		db.vertices[1].X = (p.position.X + (-1 * ((d.size / 2) * (sqrt(2)) * cos(180 - (p.mRot + 7.62) * PI / 180))));
-		db.vertices[1].Y = (p.position.Y + (-1 * ((d.size / 2) * (sqrt(2)) * sin(180 - (p.mRot + 7.62)* PI / 180))));
-		db.vertices[2].X = (p.position.X + ((d.size / 2) * (sqrt(2)) * cos((p.mRot - 135) * PI / 180)));
-		db.vertices[2].Y = (p.position.Y - ((d.size / 2) * (sqrt(2)) * sin((p.mRot - 135)* PI / 180)));
-		db.vertices[3].X = (p.position.X - (-1 * ((d.size / 2) * (sqrt(2)) * cos(180 - (p.mRot + 7.62) * PI / 180))));
-		db.vertices[3].Y = (p.position.Y - (-1 * ((d.size / 2) * (sqrt(2)) * sin(180 - (p.mRot + 7.62)* PI / 180))));
+		db.vertices[0].X = p.position.X - cosDist;
+		db.vertices[0].Y = p.position.Y + sinDist;
+		db.vertices[1].X = p.position.X - sinDist;//flipped sin and cos
+		db.vertices[1].Y = p.position.Y - cosDist;
+		db.vertices[2].X = p.position.X + cosDist;
+		db.vertices[2].Y = p.position.Y - sinDist;
+		db.vertices[3].X = p.position.X + sinDist;//flipped sin and cos
+		db.vertices[3].Y = p.position.Y + cosDist;
 	}
 	else {//because when drawing with new vertice, entire robot gets rotated and so do all its vertices
-		db.vertices[2].X = (p.position.X - ((d.size / 2) * (sqrt(2)) * cos((p.mRot - 135) * PI / 180)));
-		db.vertices[2].Y = (p.position.Y + ((d.size / 2) * (sqrt(2)) * sin((p.mRot - 135)* PI / 180)));
-		db.vertices[3].X = (p.position.X + (-1 * ((d.size / 2) * (sqrt(2)) * cos(180 - (p.mRot + 7.62) * PI / 180))));
-		db.vertices[3].Y = (p.position.Y + (-1 * ((d.size / 2) * (sqrt(2)) * sin(180 - (p.mRot + 7.62)* PI / 180))));
-		db.vertices[0].X = (p.position.X + ((d.size / 2) * (sqrt(2)) * cos((p.mRot - 135) * PI / 180)));
-		db.vertices[0].Y = (p.position.Y - ((d.size / 2) * (sqrt(2)) * sin((p.mRot - 135)* PI / 180)));
-		db.vertices[1].X = (p.position.X - (-1 * ((d.size / 2) * (sqrt(2)) * cos(180 - (p.mRot + 7.62) * PI / 180))));
-		db.vertices[1].Y = (p.position.Y - (-1 * ((d.size / 2) * (sqrt(2)) * sin(180 - (p.mRot + 7.62)* PI / 180))));
+		db.vertices[2].X = p.position.X - cosDist;
+		db.vertices[2].Y = p.position.Y + sinDist;
+		db.vertices[3].X = p.position.X - sinDist;//flipped sin and cos
+		db.vertices[3].Y = p.position.Y - cosDist;
+		db.vertices[0].X = p.position.X + cosDist;
+		db.vertices[0].Y = p.position.Y - sinDist;
+		db.vertices[1].X = p.position.X + sinDist;//flipped sin and cos
+		db.vertices[1].Y = p.position.Y + cosDist;
 	}
 }
 

@@ -241,10 +241,10 @@ void buttons() {//function for drawing the buttons
 }
 void robotDebug(vex *v, bool reversed) {
 	gl::color(1, 0, 0);
-	/*for (int i = 0; i < 4; i++) {//simplified version of drawing the vertices
-		if (reversed) gl::drawSolidCircle(Vec2f(v.f.f.fieldEnd - ppi * v->r.db.vertices[i].X, v.f.f.fieldEnd - ppi * v->r.db.vertices[i].Y), 5);
-		else gl::drawSolidCircle(Vec2f(ppi * v->r.db.vertices[i].X, ppi * v->r.db.vertices[i].Y), 5);
-	}*/
+	for (int i = 0; i < 4; i++) {//simplified version of drawing the vertices
+		if (reversed) gl::drawSolidCircle(Vec2f(v->f.f.fieldEnd - ppi * v->r.db.vertices[i].X, v->f.f.fieldEnd - ppi * v->r.db.vertices[i].Y), 5 + i);
+		else gl::drawSolidCircle(Vec2f(ppi * v->r.db.vertices[i].X, ppi * v->r.db.vertices[i].Y), 5 + i);
+	}
 	if (reversed) {
 		//vertice rectangles
 		gl::drawStrokedRect(Area(v->f.f.fieldEnd - v->r.db.vertices[0].X*ppi, v->f.f.fieldEnd - v->r.db.vertices[0].Y*ppi, v->f.f.fieldEnd - v->r.db.vertices[1].X*ppi, v->f.f.fieldEnd - v->r.db.vertices[1].Y*ppi));
