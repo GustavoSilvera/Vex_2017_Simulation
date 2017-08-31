@@ -390,7 +390,8 @@ void CimulationApp::draw() {
 	drawText(v.r.p.position.Y, vec3(750, 140), vec3(1, 1, 1), 30);
 	drawText(v.r.p.acceleration.X, vec3(1000, 340), vec3(1, 1, 1), 30);
 	drawText(v.r.p.acceleration.Y, vec3(1000, 440), vec3(1, 1, 1), 30);
-	drawText(v.f.stacked.size(), vec3(1000, 500), vec3(1, 1, 1), 30);
+	drawText(v.r.p.frictionC, vec3(1000, 500), vec3(1, 1, 1), 30);
+	drawText(v.r.p.frictionM, vec3(1050, 500), vec3(1, 1, 1), 30);
 	drawText(v.r.c.holding, vec3(1000, 700), vec3(1, 1, 1), 30);
 	drawText(v.r.c.liftPos, vec3(1000, 800), vec3(1, 1, 1), 30);
 	//drawText(v.f.HELLO, vec3(1000, 600), vec3(1, 1, 1), 30);

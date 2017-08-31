@@ -15,7 +15,8 @@ class field {
 public:
 	field();
 
-	std::set<int> stacked;
+	std::set<int> pushMoGo;
+	std::set<int> pushCones;
 
 	void FieldUpdate(robot *r);
 	void initializeField(robot *r);
@@ -45,8 +46,8 @@ public:
 		vec3 closestPoint;
 		void fencePush(fence *f);
 		float d2E[2];//0 is d2 top, 1 is d2left, 
-		void robotColl(int index, robot *r, std::set<int> &s);
-		void collision(int index, element *e, std::set<int> &s);
+		void robotColl(int index, robot *r, std::set<int> &pushCone, std::set<int> &pushMoGo, int type);
+		void collision(int index, element *e);
 		void grabbed(robot *r, int index, int type);
 		bool held;
 		bool tTop, tBott, tLeft, tRight;//booleans for if touching sides of fence

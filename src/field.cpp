@@ -118,7 +118,7 @@ bool withinAngle(double angle, int lowerBound, int upperBound) {
 	return (angle < upperBound - thresh && angle > lowerBound + thresh) || (angle + 180 < upperBound - thresh && angle + 180 > lowerBound + thresh || (angle + 360 < upperBound - thresh && angle + 360 > lowerBound + thresh));
 	//checks both the positive and "negative" angle
 }
-void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
+void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone, std::set<int> &pushMoGo, int type) {
 	//collisions from robot
 	d2Robot = dist(pos, robit->p.position);
 	if (pos.Z < height && d2Robot < renderRad * robit->d.size) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
@@ -166,13 +166,20 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
 				robit->p.velocity.X = (R.X - closestPoint.X);
 				robit->p.velocity.Y = (R.Y - closestPoint.Y);
 			}
-			s.insert(index);
+			if (index + type * 100 <= numCones) {//if the type it's touching is a cone
+				pushCone.insert(index);
+			}
+			else {
+				pushMoGo.insert(index);
+			}
 		}
-		else if(d2closestPoint >=rad * 1.05) s.erase(index);
+		else if(d2closestPoint >=rad * 1.05) 
+			if (index + type * 100 <= numCones) pushCone.erase(index);
+			else pushMoGo.erase(index);
 	}
 }
 //functions for collisions between the element and the robot
-void field::element::collision(int index, element *e, std::set<int> &s) {
+void field::element::collision(int index, element *e) {
 	//collisions from element->element
 	if (e->pos.Z < e->height) {//so long as within touching distance. 
 		float distance = dist(pos, e->pos);
@@ -192,19 +199,19 @@ void field::element::collision(int index, element *e, std::set<int> &s) {
 void field::physics(int index, element *e, robot *robit, int type) {
 	for (int k = 0; k < c.size(); k++) {
 		e->fencePush(&f);//pushes the cone from the fence if touching
-		e->robotColl(index, robit, stacked);
-		if (k != index) e->collision(index, &c[k], stacked);
-		else if (type != 0) e->collision(index, &c[k], stacked);
+		e->robotColl(index, robit, pushCones, pushMoGo, type);
+		if (k != index) e->collision(index, &c[k]);
+		else if (type != 0) e->collision(index, &c[k]);
 	}
 	for (int m = 0; m < mg.size(); m++) {
 		e->fencePush(&f);//pushes the cone from the fence if touching
-		e->robotColl(index, robit, stacked);
-		if (m != index) e->collision(index, &mg[m], stacked);
-		else if (type != 1) e->collision(index, &mg[m], stacked);
+		e->robotColl(index, robit, pushCones, pushMoGo, type);
+		if (m != index) e->collision(index, &mg[m]);
+		else if (type != 1) e->collision(index, &mg[m]);
 	}
 	for (int p = 0; p < pl.size(); p++) {
-		if (index != p) e->collision(index, &pl[p], stacked);
-		else if (type != 2) e->collision(index, &pl[p], stacked);
+		if (index != p) e->collision(index, &pl[p]);
+		else if (type != 2) e->collision(index, &pl[p]);
 	}
 }
 //function for calling all the collision functions together for el->el and el->robot
@@ -215,8 +222,8 @@ void field::fence::wallPush(robot *robit) {
 		d2E[1] = fieldSize - robit->db.vertices[i].X;//distance to far left
 		if (robit->db.vertices[i].X <= (depth)) {//checking right side
 			robit->p.position.X += (depth)-robit->db.vertices[i].X;
-			if (withinAngle(robit->p.mRot, 0, 90) || withinAngle(robit->p.mRot, 180, 270))  robit->p.mRot -= robit->p.velocity.X * cos(gAngle);
-			else if (withinAngle(robit->p.mRot, 270, 360) || withinAngle(robit->p.mRot, 90, 180)) robit->p.mRot += robit->p.velocity.X * cos(gAngle);
+			if (withinAngle(robit->p.mRot, 0, 90) || withinAngle(robit->p.mRot, 180, 270))  robit->p.mRot += robit->p.velocity.X * cos(gAngle);
+			else if (withinAngle(robit->p.mRot, 270, 360) || withinAngle(robit->p.mRot, 90, 180)) robit->p.mRot -= robit->p.velocity.X * cos(gAngle);
 		}
 		else if (d2E[1] <= (depth)) {//checking left side
 			robit->p.position.X -= (depth)-d2E[1];
@@ -230,8 +237,8 @@ void field::fence::wallPush(robot *robit) {
 		}
 		else if (robit->db.vertices[i].Y <= (depth)) {//checking bottom side
 			robit->p.position.Y += (depth)-robit->db.vertices[i].Y;
-			if (withinAngle(robit->p.mRot, 270, 360) || withinAngle(robit->p.mRot, 90, 180))  robit->p.mRot += robit->p.velocity.Y * sin(gAngle);
-			else if (withinAngle(robit->p.mRot, 180, 270) || withinAngle(robit->p.mRot, 0, 90)) robit->p.mRot -= robit->p.velocity.Y * sin(gAngle);
+			if (withinAngle(robit->p.mRot, 270, 360) || withinAngle(robit->p.mRot, 90, 180))  robit->p.mRot -= robit->p.velocity.Y * sin(gAngle);
+			else if (withinAngle(robit->p.mRot, 180, 270) || withinAngle(robit->p.mRot, 0, 90)) robit->p.mRot += robit->p.velocity.Y * sin(gAngle);
 		}
 	}
 }
@@ -347,7 +354,8 @@ void field::FieldUpdate(robot *robit) {
 		statGoalPush(&pl[i], robit, &f);
 		physics(i, &pl[i], robit, type);
 	}
-	robit->p.friction = stacked.size();
+	robit->p.frictionC = pushCones.size();
+	robit->p.frictionM = pushMoGo.size();
 }
 //update task for the entire field simulation
 field::field() : initialized(false) {

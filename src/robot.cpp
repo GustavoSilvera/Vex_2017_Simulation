@@ -161,8 +161,10 @@ void robot::intake::claw(float RobSize, int type) {
 	if (grabbing == false) holding = -1 - type*100;//reset index (TO EITHER -1 (for cones) or -100 (for MOGOS))
 }
 void robot::update() {
-	p.acceleration.X += getSign(p.acceleration.X) * 0.5 * p.friction;//slows down acceleration when encountering friction
-	p.acceleration.Y += getSign(p.acceleration.Y) * 0.5 * p.friction;
+	p.acceleration.X += getSign(p.acceleration.X) * coneWeight * p.frictionC 
+		+ getSign(p.acceleration.X) * moGoWeight * p.frictionM;//slows down acceleration when encountering friction
+	p.acceleration.Y += getSign(p.acceleration.Y) * coneWeight * p.frictionC
+		+ getSign(p.acceleration.Y) * moGoWeight * p.frictionM;
 	p.velocity = p.velocity + p.acceleration.times(1.0/60.0);
 	if (fieldSpeed) {//weird issue with how the robot is being drawn in the field update with the origin on the bottom right rather than top left
 		p.position.X -= p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
