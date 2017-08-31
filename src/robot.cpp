@@ -31,8 +31,8 @@ void robot::forwards(float power) {
 	//konstants that should be changed later
 	float rateOfChange = 45;//constant changing the amount of initial change the acceleration goes through? maibe
 	//calculate acceleration taking friction into account
-	float Xaccel = 2 * (power / rateOfChange) - (p.amountOfFriction*p.velocity.X);
-	float Yaccel = 2 * (power / rateOfChange) - (p.amountOfFriction*p.velocity.Y);
+	float Xaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.X);
+	float Yaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.Y);
 	//limiting acceleration to 0.01, no need for further acceleration rly
 	if(abs(Xaccel) > 0.01) p.acceleration.X = Xaccel;
 	else p.acceleration.X = 0;
@@ -155,14 +155,14 @@ void robot::setVertices() {
 	}
 }
 
-void robot::intake::claw(float RobSize) {
+void robot::intake::claw(float RobSize, int type) {
 	if (grabbing) { if (clawPos > RobSize / 18) clawPos -= 0.5; }//animation for claw close
 	else { if (clawPos < clawSize) clawPos += 0.5; }//animation for claw open
-	if (grabbing == false) holding = -1;//reset index
+	if (grabbing == false) holding = -1 - type*100;//reset index (TO EITHER -1 (for cones) or -100 (for MOGOS))
 }
 void robot::update() {
-	p.acceleration.X -= 0.5 * p.friction;
-	p.acceleration.Y -= 0.5 * p.friction;
+	p.acceleration.X += getSign(p.acceleration.X) * 0.5 * p.friction;//slows down acceleration when encountering friction
+	p.acceleration.Y += getSign(p.acceleration.Y) * 0.5 * p.friction;
 	p.velocity = p.velocity + p.acceleration.times(1.0/60.0);
 	if (fieldSpeed) {//weird issue with how the robot is being drawn in the field update with the origin on the bottom right rather than top left
 		p.position.X -= p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
@@ -177,9 +177,9 @@ void robot::update() {
 	p.mRot = ((p.mRot / 360) - (long)(p.mRot / 360)) * 360;//only within 360° and -360° (takes the decimal portion and discards the whole number)
 	robot::setVertices();
 	c.clawSize = cRad + c.liftPos/60;
-	c.claw(d.size);
+	c.claw(d.size, 0);
 	mg.clawSize = MGRad + mg.liftPos / 60;
-	mg.claw(d.size);
+	mg.claw(d.size, 1);
 	if (c.liftUp && c.liftPos < c.maxHeight) { c.liftPos += c.liftSpeed; }
 	else if (c.liftDown && c.liftPos > 0) { c.liftPos -= 1.5*c.liftSpeed; }//goes faster coming down
 }

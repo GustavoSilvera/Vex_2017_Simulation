@@ -50,7 +50,7 @@ public:
 		float clawHeight;
 		bool grabbing = false;
 		int holding = -1;//index for which element is being grabbed, to draw it above all the rest. 
-		void claw(float Robsize);
+		void claw(float Robsize, int type);
 		bool liftUp, liftDown;
 		float liftSpeed;
 		float liftPos;

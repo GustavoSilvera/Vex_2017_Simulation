@@ -374,7 +374,7 @@ void CimulationApp::draw() {
 			gl::color(1, 1, 1);
 			if (i != v.r.c.holding)	gl::draw(v.f.coneTexture, Area((v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) - (cRad*ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) - (cRad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.c[i].rad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.c[i].rad * ppi)));
 		}
-		if(v.r.c.holding != -1) //if actually holding something (the index exists [!= -1])
+		if(v.r.c.holding != -1 && v.r.c.holding < numCones) //if actually holding something (the index exists [!= -1])
 			gl::draw(v.f.coneTexture, Area(
 				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) - (cRad*ppi), 
 				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) - (cRad * ppi), 
@@ -388,8 +388,8 @@ void CimulationApp::draw() {
 	drawText(v.r.p.mRot, vec3(600, 40), vec3(1, 1, 1), 30);
 	drawText(v.r.p.position.X, vec3(600, 140), vec3(1, 1, 1), 30);
 	drawText(v.r.p.position.Y, vec3(750, 140), vec3(1, 1, 1), 30);
-	drawText(v.r.p.rotVel, vec3(1000, 340), vec3(1, 1, 1), 30);
-	drawText(v.r.p.rotAcceleration, vec3(1000, 440), vec3(1, 1, 1), 30);
+	drawText(v.r.p.acceleration.X, vec3(1000, 340), vec3(1, 1, 1), 30);
+	drawText(v.r.p.acceleration.Y, vec3(1000, 440), vec3(1, 1, 1), 30);
 	drawText(v.f.stacked.size(), vec3(1000, 500), vec3(1, 1, 1), 30);
 	drawText(v.r.c.holding, vec3(1000, 700), vec3(1, 1, 1), 30);
 	drawText(v.r.c.liftPos, vec3(1000, 800), vec3(1, 1, 1), 30);

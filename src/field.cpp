@@ -168,7 +168,7 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &s) {
 			}
 			s.insert(index);
 		}
-		else s.erase(index);
+		else if(d2closestPoint >=rad * 1.05) s.erase(index);
 	}
 }
 //functions for collisions between the element and the robot
@@ -281,11 +281,8 @@ void field::element::grabbed(robot *robit, int index, int type) {
 	bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if cone is closer to the front side
 	float yInt1C = slope * (0 - (robit->db.vertices[0].X + robit->c.clawSize*cos((robit->p.mRot - 135) * PI / 180) - pos.X)) + (robit->db.vertices[0].Y + robit->c.clawSize*sin((robit->p.mRot - 135) * PI / 180) - pos.Y);
 	float yInt2C = slope * (0 - (robit->db.vertices[1].X - robit->c.clawSize*cos((robit->p.mRot - 135) * PI / 180) - pos.X)) + (robit->db.vertices[1].Y - robit->c.clawSize*sin((robit->p.mRot - 135) * PI / 180) - pos.Y);
-	//yint for mogos
-	float yInt1MG = slope * (0 - (robit->db.vertices[2].X - robit->mg.clawSize*cos((robit->p.mRot - 135) * PI / 180) - pos.X)) + (robit->db.vertices[2].Y - robit->mg.clawSize*sin((robit->p.mRot - 135) * PI / 180) - pos.Y);
-	float yInt2MG = slope * (0 - (robit->db.vertices[3].X + robit->mg.clawSize*cos((robit->p.mRot - 135) * PI / 180) - pos.X)) + (robit->db.vertices[3].Y + robit->mg.clawSize*sin((robit->p.mRot - 135) * PI / 180) - pos.Y);
 
-	if ((robit->c.grabbing && robit->c.holding == index + type * 100) || (robit->c.grabbing && robit->c.holding == -1)) {//holding only one entity at once
+	if (index < numCones && (robit->c.grabbing && robit->c.holding == index) || (robit->c.grabbing && robit->c.holding == -1)) {//holding only one CONE at once (uses INDEX rather than INDEX with mg modification) ANS INDEX IS ONLY -1
 		bool inPosition = (getSign(yInt1C) != getSign(yInt2C) /*&& (d2Robot < 0.65*robit->d.size + rad) */&& (d2RobotEdge <= 1.35*rad) && inFront);
 		if (inPosition) {
 			//robit->holding = true;//locking the entities in place
@@ -306,19 +303,23 @@ void field::element::grabbed(robot *robit, int index, int type) {
 			pos.Z += -32 / 12;
 			pos.Z += -32 / 12;
 		}
-	}
-	//check for mogo intake (NOT LIFTING)
-	if ((robit->mg.grabbing && robit->mg.holding == index + type * 100) || (robit->mg.grabbing && robit->mg.holding == -1)) {//holding only one entity at once
-		bool inPosition = (getSign(yInt1MG) != getSign(yInt2MG) && (d2Robot < 0.65*robit->d.size + rad) && (d2RobotEdge <= 1.1*rad) && !inFront);
-		if (inPosition) {
-			//robit->holding = true;//locking the entities in place
-			robit->mg.holding = index + 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
-			pos.X = robit->p.position.X + (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2);
-			pos.Y = robit->p.position.Y - (robit->d.size / 2) * sin((robit->p.mRot) * PI / 180) * sqrt(2);
-			held = true;
+		//check for mogo intake (NOT LIFTING)
+		//yint for mogos
+		float yInt1MG = slope * (0 - (robit->db.vertices[2].X - robit->mg.clawSize*cos((robit->p.mRot - 135) * PI / 180) - pos.X)) + (robit->db.vertices[2].Y - robit->mg.clawSize*sin((robit->p.mRot - 135) * PI / 180) - pos.Y);
+		float yInt2MG = slope * (0 - (robit->db.vertices[3].X + robit->mg.clawSize*cos((robit->p.mRot - 135) * PI / 180) - pos.X)) + (robit->db.vertices[3].Y + robit->mg.clawSize*sin((robit->p.mRot - 135) * PI / 180) - pos.Y);
+
+		if ((robit->mg.grabbing && robit->mg.holding == index + 100) || (robit->mg.grabbing && robit->mg.holding == -100)) {//holding only one MOGO at once (uses INDEX with mg modification rather than just INDEX ) AND INDEX IS ONLY -100
+			bool inPosition = (getSign(yInt1MG) != getSign(yInt2MG) && (d2Robot < 0.65*robit->d.size + rad) && (d2RobotEdge <= 1.1*rad) && !inFront);
+			if (inPosition) {
+				//robit->holding = true;//locking the entities in place
+				robit->mg.holding = index + 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
+				pos.X = robit->p.position.X + (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2);
+				pos.Y = robit->p.position.Y - (robit->d.size / 2) * sin((robit->p.mRot) * PI / 180) * sqrt(2);
+				held = true;
+			}
 		}
+		else held = false;
 	}
-	else held = false;
 }
 //function for having a 'grabbed' element lock in place
 void field::FieldUpdate(robot *robit) {
