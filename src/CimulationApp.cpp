@@ -395,6 +395,9 @@ void CimulationApp::draw() {
 	drawText(v.r.c.holding, vec3(1000, 700), vec3(1, 1, 1), 30);
 	drawText(v.r.c.liftPos, vec3(1000, 800), vec3(1, 1, 1), 30);
 	//drawText(v.f.HELLO, vec3(1000, 600), vec3(1, 1, 1), 30);
+	gl::drawSolidCircle(
+		Vec2f(ppi * (v.r.p.position.X - (v.r.d.size / 2) * cos((v.r.p.mRot) * PI / 180) * sqrt(2)),
+		ppi * (v.r.p.position.Y + (v.r.d.size / 2) * sin((v.r.p.mRot) * PI / 180) * sqrt(2))), 5);
 	if (v.r.c.liftDown) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	/*drawing closest point for the 0th (first) cone*/
