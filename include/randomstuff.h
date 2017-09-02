@@ -3,7 +3,7 @@
 //random #defines and other things that are used throughout all the files
 #define ppi 7.1839
 #define PI 3.14159262
-#define WindowWidth  1400
+#define WindowWidth  1600
 #define WindowHeight  1200
 #define numCones 54
 #define cRad 3

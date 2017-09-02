@@ -192,8 +192,8 @@ void robot::update() {
 	robot::setVertices();
 	c.claw(d.size, 0);
 	mg.claw(d.size, 1);
-	if (c.liftUp && c.liftPos < c.maxHeight) { c.liftPos += 1.5*c.liftSpeed; }
-	else if (c.liftDown && c.liftPos > 0) { c.liftPos -= 5.5*c.liftSpeed; }//goes faster coming down
+	if (c.liftUp && c.liftPos < c.maxHeight) { c.liftPos += 4.5*c.liftSpeed; }
+	else if (c.liftDown && c.liftPos > 0) { c.liftPos -= 8.5*c.liftSpeed; }//goes faster coming down
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {

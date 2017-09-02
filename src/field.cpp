@@ -289,12 +289,15 @@ void field::element::grabbed(robot *robit, int index, int type) {
 	//float yInt1C = slope * (0 - (robit->db.vertices[0].X + robit->c.clawSize*cos((robit->p.mRot - 135) * PI / 180) - pos.X)) + (robit->db.vertices[0].Y + robit->c.clawSize*sin((robit->p.mRot - 135) * PI / 180) - pos.Y);
 	//float yInt2C = slope * (0 - (robit->db.vertices[1].X - robit->c.clawSize*cos((robit->p.mRot - 135) * PI / 180) - pos.X)) + (robit->db.vertices[1].Y - robit->c.clawSize*sin((robit->p.mRot - 135) * PI / 180) - pos.Y);
 	index = index + type * 100;
+	bool inPositionFront = (
+		abs(pos.X - robit->p.position.X + (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2)) < 1.5 &&
+		abs(pos.Y - robit->p.position.Y - (robit->d.size / 2) * sin((robit->p.mRot) * PI / 180) * sqrt(2)) < 1.5);
+	bool inPositionBack = (
+		abs(pos.X - robit->p.position.X - (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2)) < MGRad &&
+		abs(pos.Y - robit->p.position.Y + (robit->d.size / 2) * sin((robit->p.mRot) * PI / 180) * sqrt(2)) < MGRad);
 	if (index < numCones && (robit->c.grabbing && robit->c.holding == index) || (robit->c.grabbing && robit->c.holding == -1)) {//holding only one CONE at once (uses INDEX rather than INDEX with mg modification) ANS INDEX IS ONLY -1
 		//bool inPosition = (getSign(yInt1C) != getSign(yInt2C) /*&& (d2Robot < 0.65*robit->d.size + rad) */&& (d2RobotEdge <= 1.35*rad) && inFront);
-		bool inPosition = (
-			abs(pos.X - robit->p.position.X + (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2)) < 1.5 && 
-			abs(pos.Y - robit->p.position.Y - (robit->d.size / 2) * sin((robit->p.mRot) * PI / 180) * sqrt(2)) < 1.5);
-		if (inPosition) {
+		if (inPositionFront) {
 			//robit->holding = true;//locking the entities in place
 			robit->c.holding = index; //+ 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
 			pos.X = robit->p.position.X - (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2);//works
@@ -309,10 +312,7 @@ void field::element::grabbed(robot *robit, int index, int type) {
 	}
 	else if ((robit->mg.grabbing && robit->mg.holding == index) || (robit->mg.grabbing && robit->mg.holding == -101)) {//holding only one MOGO at once (uses INDEX with mg modification rather than just INDEX ) AND INDEX IS ONLY -100
 		//bool inPosition = (getSign(yInt1MG) != getSign(yInt2MG) && (d2Robot < 0.65*robit->d.size + rad) && (d2RobotEdge <= 1.1*rad) && !inFront);
-		bool inPosition = (
-			abs(pos.X - robit->p.position.X - (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2)) < MGRad &&
-			abs(pos.Y - robit->p.position.Y + (robit->d.size / 2) * sin((robit->p.mRot) * PI / 180) * sqrt(2)) < MGRad);
-		if (inPosition) {
+		if (inPositionBack) {
 			//robit->holding = true;//locking the entities in place
 			robit->mg.holding = index;// +100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
 			pos.X = robit->p.position.X + (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2);
@@ -320,17 +320,10 @@ void field::element::grabbed(robot *robit, int index, int type) {
 			held = true;
 		}
 	}
-	else {
-		held = false;
-		if (!robit->c.grabbing && pos.Z > 0) {
-			pos.Z += -32 / 12;
-			pos.Z += -32 / 12;
-		}
-		//check for mogo intake (NOT LIFTING)
-		//yint for mogos
-		//float yInt1MG = slope * (0 - (robit->db.vertices[2].X - robit->mg.clawSize*cos((robit->p.mRot - 135) * PI / 180) - pos.X)) + (robit->db.vertices[2].Y - robit->mg.clawSize*sin((robit->p.mRot - 135) * PI / 180) - pos.Y);
-		//float yInt2MG = slope * (0 - (robit->db.vertices[3].X + robit->mg.clawSize*cos((robit->p.mRot - 135) * PI / 180) - pos.X)) + (robit->db.vertices[3].Y + robit->mg.clawSize*sin((robit->p.mRot - 135) * PI / 180) - pos.Y);
-
+	else held = false;
+	if (!robit->c.grabbing && pos.Z > 0 || ((!inPositionFront && !inPositionBack) && pos.Z > 0)) {
+		pos.Z += -32 / 12;
+		pos.Z += -32 / 12;
 	}
 }
 //function for having a 'grabbed' element lock in place
@@ -347,7 +340,7 @@ void field::FieldUpdate(robot *robit) {
 	for (int i = 0; i < mg.size(); i++) {
 		//type for "mogo" is 1
 		int type = 1;
-		mg[i].rad = 0.1*mg[i].pos.Z + MGRad;//use better scalar than 0.1, but eventually remove this (because dont rly want to pick up mogos
+		//mg[i].rad = 0.1*mg[i].pos.Z + MGRad;//use better scalar than 0.1, but eventually remove this (because dont rly want to pick up mogos
 		mg[i].grabbed(robit, i, type);
 		physics(i, &mg[i], robit, type);//dont affect things if being lifted into the air
 	}

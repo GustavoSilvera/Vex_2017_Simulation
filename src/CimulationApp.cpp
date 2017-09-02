@@ -342,7 +342,7 @@ void CimulationApp::draw() {
 			v.r.d.reversed = false;
 			v.j.drawX = 600;
 			v.j.drawY = 500;
-			robotDebug(&v, false);
+			//robotDebug(&v, false);
 		}
 		gl::drawStrokedCircle(Vec2f(v.j.drawX+v.j.drawSize, v.j.drawY+v.j.drawSize), v.j.drawSize);//circle at (800px, vec3(1, 1, 1), 300px) with radius 127px
 		gl::drawStrokedRect(Area(v.j.drawX, v.j.drawY, v.j.drawX + 2*v.j.drawSize, v.j.drawY + 2*v.j.drawSize));
@@ -376,20 +376,25 @@ void CimulationApp::draw() {
 			//fieldend for where the end of the field is, to subtract values because: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
 			//+-(cRad*ppi) for sayin' that the point pos.X and pos.Y are the center, and the cRad*ppi is 3 inches RADIUS away from the center point
 			gl::color(1, 1, 1);
-			if (i != v.r.c.holding)	gl::draw(v.f.coneTexture, Area((v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) - (cRad*ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) - (cRad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.c[i].rad * ppi), (v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.c[i].rad * ppi)));
+			if (i != v.r.c.holding)	gl::draw(v.f.coneTexture, Area(
+				(v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) - (v.f.c[i].rad*ppi), 
+				(v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) - (v.f.c[i].rad * ppi), 
+				(v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.c[i].rad * ppi), 
+				(v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.c[i].rad * ppi)));
 		}
 		if(v.r.c.holding != -1 && v.r.c.holding < numCones) //if actually holding something (the index exists [!= -1])
 			gl::draw(v.f.coneTexture, Area(
-				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) - (cRad*ppi), 
-				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) - (cRad * ppi), 
+				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) - (v.f.c[v.r.c.holding].rad * ppi),
+				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) - (v.f.c[v.r.c.holding].rad * ppi),
 				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) + (v.f.c[v.r.c.holding].rad * ppi), 
 				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) + (v.f.c[v.r.c.holding].rad * ppi)));
-		robotDebug(&v, true);
+		//robotDebug(&v, true);
 		gl::color(1, 1, 1) ;
 	}
 	else drawRobot();
 	/*****************************MISC**********************************/
-	drawText(v.r.p.mRot, vec3(600, 40), vec3(1, 1, 1), 30);
+	gl::drawString("Angle", Vec2f(1130, 40), Color(1, 1, 1), Font("Arial", 30));
+	drawText(v.r.p.mRot, vec3(1200, 40), vec3(1, 1, 1), 30);
 	drawText(v.r.p.position.X, vec3(600, 140), vec3(1, 1, 1), 30);
 	drawText(v.r.p.position.Y, vec3(750, 140), vec3(1, 1, 1), 30);
 	drawText(v.r.p.acceleration.X, vec3(1000, 340), vec3(1, 1, 1), 30);
@@ -399,13 +404,11 @@ void CimulationApp::draw() {
 	drawText(v.r.c.holding, vec3(1000, 700), vec3(1, 1, 1), 30);
 	drawText(v.r.c.liftPos, vec3(1000, 800), vec3(1, 1, 1), 30);
 	//drawText(v.f.HELLO, vec3(1000, 600), vec3(1, 1, 1), 30);
-	gl::drawSolidCircle(
-		Vec2f(ppi * (v.r.p.position.X - (v.r.d.size / 2) * cos((v.r.p.mRot) * PI / 180) * sqrt(2)),
-		ppi * (v.r.p.position.Y + (v.r.d.size / 2) * sin((v.r.p.mRot) * PI / 180) * sqrt(2))), 5);
+	gl::color(1, 0, 0);
+	gl::drawSolidCircle(Vec2f(v.f.f.fieldEnd - ppi * (v.f.c[39].pos.X), v.f.f.fieldEnd - ppi * (v.f.c[39].pos.Y)), 5);
 	if (v.r.c.liftDown) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	/*drawing closest point for the 0th (first) cone*/
-	gl::color(1, 0, 0);
 	//gl::drawStrokedCircle(Vec2f(v.f.f.fieldEnd - v.f.pl[0].pos.X*ppi, v.f.f.fieldEnd - v.f.pl[0].pos.Y*ppi), 4*ppi);
 	gl::color(1, 1, 1);
 	//USER INTERFACE
