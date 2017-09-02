@@ -7,9 +7,11 @@
 robot::robot() {
 	p.position = vec3(69.6, 69.6, 0);//initial constructor position
 	c.clawSize = cRad;
+	c.baseSize = d.size / 18;
 	c.clawPos = c.clawSize;
 	c.clawThick = 0.5;
 	c.clawHeight = 2;
+	c.clawSpeed = 0.5;
 	c.liftSpeed = 0.1;//idk
 	c.liftPos = 0;
 	c.liftUp = false;
@@ -18,6 +20,7 @@ robot::robot() {
 	mg.clawThick = d.size / 18;
 	mg.clawPos = mg.clawSize;
 	mg.clawHeight = 2.5;
+	mg.clawSpeed = 0.5;
 	mg.liftPos = 0;
 }//constructor 
 
@@ -156,10 +159,19 @@ void robot::setVertices() {
 }
 
 void robot::intake::claw(float RobSize, int type) {
-	if (grabbing) { if (clawPos > RobSize / 18) clawPos -= 0.5; }//animation for claw close
-	else { if (clawPos < clawSize) clawPos += 0.5; }//animation for claw open
+	//janky animations for claw 
+	clawSize = 0.1*liftPos + cRad;
+	baseSize = 0.05*liftPos + RobSize / 18;
+	clawHeight = 0.07*liftPos + 2;
+	clawThick= 0.01*liftPos + 0.5;
+	clawSpeed = 0.051*liftPos + 0.5;
+
+	if (grabbing) { if (clawPos > RobSize / 18) clawPos -= clawSpeed; }//animation for claw close
+	else { if (clawPos < clawSize) clawPos += clawSpeed; }//animation for claw open
 	if (grabbing == false) holding = -1 - type*100;//reset index (TO EITHER -1 (for cones) or -100 (for MOGOS))
+	if (liftDown  && liftPos > 0 && clawPos > clawSize) clawPos -= clawSpeed;
 }
+
 void robot::update() {
 	p.acceleration.X += getSign(p.acceleration.X) * coneWeight * p.frictionC 
 		+ getSign(p.acceleration.X) * moGoWeight * p.frictionM;//slows down acceleration when encountering friction
@@ -178,12 +190,10 @@ void robot::update() {
 	p.mRot += p.rotVel;
 	p.mRot = ((p.mRot / 360) - (long)(p.mRot / 360)) * 360;//only within 360° and -360° (takes the decimal portion and discards the whole number)
 	robot::setVertices();
-	c.clawSize = cRad + c.liftPos/60;
 	c.claw(d.size, 0);
-	mg.clawSize = MGRad + mg.liftPos / 60;
 	mg.claw(d.size, 1);
-	if (c.liftUp && c.liftPos < c.maxHeight) { c.liftPos += c.liftSpeed; }
-	else if (c.liftDown && c.liftPos > 0) { c.liftPos -= 1.5*c.liftSpeed; }//goes faster coming down
+	if (c.liftUp && c.liftPos < c.maxHeight) { c.liftPos += 1.5*c.liftSpeed; }
+	else if (c.liftDown && c.liftPos > 0) { c.liftPos -= 5.5*c.liftSpeed; }//goes faster coming down
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {

@@ -45,9 +45,11 @@ public:
 	//claw
 	struct intake {
 		float clawSize;
+		float baseSize;//base of the claw
 		float clawPos;
 		float clawThick;
 		float clawHeight;
+		float clawSpeed;
 		bool grabbing = false;
 		int holding = -1;//index for which element is being grabbed, to draw it above all the rest. 
 		void claw(float Robsize, int type);
@@ -84,6 +86,7 @@ public:
 		controls ctrl;
 	//other stuffs
 	ci::gl::Texture TankBase;
+	ci::gl::Texture CChanel;
 	volatile maintainPosition PID;
 	struct position current;
 	float encoder1 = 0;//simulating vex encoder

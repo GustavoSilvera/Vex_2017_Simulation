@@ -114,6 +114,7 @@ public:
 	void keyDown(KeyEvent event);
 	void keyUp(KeyEvent event);
 	void update();
+	void drawClaw();
 	void drawRobot();
 	void draw();
 	vex v;
@@ -122,6 +123,7 @@ void CimulationApp::setup() {
 	srand(time(NULL));
 	gl::enableVerticalSync();
 	v.r.TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
+	v.r.CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
 	v.f.fieldBare = gl::Texture(loadImage(loadAsset("InTheZoneFieldBare.jpg")));
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
@@ -298,8 +300,14 @@ void robotDebug(vex *v, bool reversed) {
 	//gl::drawLine(cinder::Vec2f(v.r.db.vertices[0].X*ppi, v.r.db.vertices[0].Y*ppi), cinder::Vec2f(v.r.db.vertices[3].X*ppi, v.r.db.vertices[3].Y*ppi));
 	gl::color(1, 1, 1);//resets colour to white
 }
+void CimulationApp::drawClaw() {
+	gl::draw(v.r.CChanel, Area((v.r.c.clawSize)*ppi, (v.r.d.size*.5 + v.r.c.baseSize)*ppi, (-v.r.c.clawSize)*ppi, (v.r.d.size*.5)*ppi));
+	gl::color(222.0 / 225, 229.0 / 225, 34.0 / 225);
+	gl::drawSolidRect(Area(Vec2d((v.r.c.clawPos + v.r.c.clawThick)*ppi, (v.r.d.size*.5 + v.r.c.clawHeight + v.r.c.baseSize)*ppi), Vec2d((v.r.c.clawPos - v.r.c.clawThick)*ppi, (v.r.d.size*.5 + v.r.c.baseSize)*ppi)));
+	gl::drawSolidRect(Area(Vec2d((-v.r.c.clawPos - v.r.c.clawThick)*ppi, (v.r.d.size*.5 + v.r.c.clawHeight + v.r.c.baseSize)*ppi), Vec2d((-v.r.c.clawPos + v.r.c.clawThick)*ppi, (v.r.d.size*.5 + v.r.c.baseSize)*ppi)));
+	gl::color(1, 1, 1);//reset colour
+}
 void CimulationApp::drawRobot() {
-	/*****************************ROBOT***********************************/
 	glPushMatrix();
 	if (s.SimRunning == s.FIELD) {
 		gl::translate(Vec3f(v.f.f.fieldEnd - v.r.p.position.X*ppi, v.f.f.fieldEnd - v.r.p.position.Y*ppi, 0.0));//origin of rotation
@@ -307,16 +315,12 @@ void CimulationApp::drawRobot() {
 	}
 	else gl::translate(Vec3f(v.r.p.position.X*ppi, v.r.p.position.Y*ppi, 0.0));//origin of rotation
 	gl::rotate(Vec3f(0, 0, -v.r.p.mRot - 90));//something for like 3D rotation.... ugh
-											  //gl::color(160.0/255, 160.0/255, 160.0/255);GRAY
+	//gl::color(160.0/255, 160.0/255, 160.0/255);GRAY
 	//base
 	gl::color(1, 1, 1);
 	gl::draw(v.r.TankBase, Area((-(v.r.d.size / 2))*ppi, (-(v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi));
-	//claw
-	gl::color(222.0 / 225, 229.0 / 225, 34.0 / 225);
-	
-	gl::drawSolidRect(Area((v.r.c.clawPos + v.r.c.clawThick)*ppi + v.r.c.liftPos, (v.r.d.size*.5 + v.r.c.clawHeight)*ppi + v.r.c.liftPos, (v.r.c.clawPos - v.r.c.clawThick)*ppi - v.r.c.liftPos, (v.r.d.size*.5)*ppi - v.r.c.liftPos));
-	gl::drawSolidRect(Area((-v.r.c.clawPos - v.r.c.clawThick)*ppi - v.r.c.liftPos, (v.r.d.size*.5 + v.r.c.clawHeight)*ppi + v.r.c.liftPos, (-v.r.c.clawPos + v.r.c.clawThick)*ppi + v.r.c.liftPos, (v.r.d.size*.5)*ppi - v.r.c.liftPos));
 	//mogo
+	drawClaw();
 	gl::color(66.0 / 255, 135.0 / 255, 224.0 / 255);
 	gl::drawSolidRect(Area((-v.r.mg.clawPos - v.r.c.clawThick)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (-v.r.mg.clawPos + v.r.c.clawThick)*ppi, (-v.r.d.size*.5)*ppi));
 	gl::drawSolidRect(Area((v.r.mg.clawPos + v.r.c.clawThick)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (v.r.mg.clawPos - v.r.c.clawThick)*ppi, (-v.r.d.size*.5)*ppi));

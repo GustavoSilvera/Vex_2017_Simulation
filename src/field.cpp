@@ -292,8 +292,8 @@ void field::element::grabbed(robot *robit, int index, int type) {
 	if (index < numCones && (robit->c.grabbing && robit->c.holding == index) || (robit->c.grabbing && robit->c.holding == -1)) {//holding only one CONE at once (uses INDEX rather than INDEX with mg modification) ANS INDEX IS ONLY -1
 		//bool inPosition = (getSign(yInt1C) != getSign(yInt2C) /*&& (d2Robot < 0.65*robit->d.size + rad) */&& (d2RobotEdge <= 1.35*rad) && inFront);
 		bool inPosition = (
-			abs(pos.X - robit->p.position.X + (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2)) < 1 && 
-			abs(pos.Y - robit->p.position.Y - (robit->d.size / 2) * sin((robit->p.mRot) * PI / 180) * sqrt(2)) < 1);
+			abs(pos.X - robit->p.position.X + (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2)) < 1.5 && 
+			abs(pos.Y - robit->p.position.Y - (robit->d.size / 2) * sin((robit->p.mRot) * PI / 180) * sqrt(2)) < 1.5);
 		if (inPosition) {
 			//robit->holding = true;//locking the entities in place
 			robit->c.holding = index; //+ 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
