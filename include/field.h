@@ -6,7 +6,6 @@
 #include "randomstuff.h"
 
 #include <vector>
-#include <list>
 #include <set>
 
 //declares the class for the robot and all the data that goes with it.

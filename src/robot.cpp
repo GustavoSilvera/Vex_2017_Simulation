@@ -221,6 +221,7 @@ void robot::NavigationUpdate() {
 	calculatePos();
 }
 
-void robot::TruSpeedUpdate() {
-	PID.isRunning = false;
-}
+/*	p.acceleration.X = p.acceleration.X = p.acceleration.Y = 0; 0;
+	p.velocity.X = p.velocity.Y = 0;
+	p.mRot = 0;
+	p.position.Y = 69.6;*/

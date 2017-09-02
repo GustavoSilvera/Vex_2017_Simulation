@@ -8,7 +8,11 @@
 //my own headers
 #include "joystick.h"
 #include "field.h"
+#include "PID.h"
+#include "nav.h"
+#include "TruSpeed.h"
 #include "robot.h"
+
 #include "vec3.h"
 #include "randomstuff.h"
 
@@ -17,24 +21,19 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-static const int maxDots = 250;//maximum amount of graph particles for the truspeed sim
 vec3 startPos;
 vec3 mousePos;
 class vex {
 public:
 	robot r;
+	tSpeed tS;
 	field f;
 	joystick j;
-	vex() : r() {}
+
+	vex() : tS(&r, &j) {}
 };
-inline void drawText(double text, vec3 pos, vec3 colour, int size) {//simplified way of printing variables as text to the display
-	stringstream dummyText;
-	string PRINT;
-	dummyText << text;
-	dummyText >> PRINT;
-	gl::drawString(PRINT, Vec2f(pos.X, pos.Y), Color(colour.X, colour.Y, colour.Z), Font("Arial", size));
-}
 //begin
+int tX = 1200;
 struct simulation {
 	bool mouseClicked = false;
 	int hovering = 1;//which button is being hovered over. if any
@@ -45,64 +44,6 @@ struct simulation {
 		FIELD
 	};
 	SimulationType SimRunning = NAVIGATION;//in accordance to which simulation is running, 1 is PID, 2 is NAV, 3 is truspeed... etc
-	struct graph {
-		//graph for speed of the speed of the wheels based off position
-		//for graph moving
-		double RYpos[maxDots];
-		double BYpos[maxDots];
-		//issue: yaxix length not scaling well with particles
-		int YAxLength = 300, XAxLength = 500;
-		int drawX = 800, drawY = 80;
-		int midpoint = ((YAxLength) / 2) + drawY;//midpoint of the graph, if the graph starts 20 points down.tY;
-		void graphPlot(){
-			//axis:
-			gl::drawSolidRect(Rectf(drawX, drawY, drawX+2, drawY + YAxLength));
-			gl::drawSolidRect(Rectf(drawX, midpoint - 1, drawX + XAxLength, midpoint + 1));
-			gl::drawString("127", Vec2f(drawX-30, drawY), Color(1, 1, 1), Font("Arial", 20));
-			gl::drawString("-127", Vec2f(drawX-35, YAxLength + drawY + 20), Color(1, 1, 1), Font("Arial", 20));
-			gl::drawString("0", Vec2f(drawX-15, midpoint), Color(1, 1, 1), Font("Arial", 20));
-			//lines:
-			gl::color(Color(1, 0, 0)); // blue
-			for (int i = 0; i < maxDots; i++) {
-				int dotX = drawX + i * (XAxLength) / maxDots;//makes the little intervals for the X axis line
-				int dotY = RYpos[i];
-				gl::drawSolidRect(Area(dotX + 1, dotY - 1, dotX - 1, dotY + 1));
-			}
-			gl::color(Color(0, 253, 255)); // light blue
-			for (int i = 0; i < maxDots; i++) {
-				int dotX = drawX + i * (XAxLength) / maxDots;//makes the little intervals for the X axis line
-				int dotY = BYpos[i];
-				gl::drawSolidRect(Area(dotX + 1, dotY - 1, dotX - 1, dotY + 1));
-			}
-			gl::color(Color::white());//resets the colour 
-		}
-		void textOutput(vex *v) {
-			//title
-			//Defining red line
-			gl::drawString("X: ", Vec2f(drawX + 40, drawY-15), Color(1, 1, 1), Font("Arial", 20));
-			gl::color(Color(1, 0, 0)); // light blue
-			gl::drawSolidRect(Rectf(drawX+60, drawY-18, drawX+70, drawY-2));
-			//defining blue line
-			gl::drawString("Y: ", Vec2f(drawX+90, drawY-15), Color(1, 1, 1), Font("Arial", 20));
-			gl::color(Color(0, 253, 255)); // light blue
-			gl::drawSolidRect(Rectf(drawX+110, drawY-18, drawX+120, drawY-2));
-			gl::color(Color::white());//resets the colour
-				  //other information:
-			 //actual X
-			gl::drawString("*Actual X:", Vec2f(drawX+30, YAxLength + drawY + 10), Color(1, 1, 1), Font("Arial", 25));
-			drawText(v->j.analogX, vec3(drawX + 130, YAxLength + drawY + 10), vec3(1, 1, 1), 25);
-			//modified X
-			gl::drawString("-->", Vec2f(drawX+170, YAxLength + drawY + 10), Color(1, 1, 1), Font("Arial", 25));
-			drawText(round(v->r.truSpeed(3, v->j.analogX)), vec3(drawX + 210, YAxLength + drawY + 10), vec3(1, 1, 1), 25);
-			//actual Y
-			gl::drawString("Actual Y:", Vec2f(drawX+30, YAxLength + drawY + 30), Color(1, 1, 1), Font("Arial", 25));
-			drawText(v->j.analogY, vec3(drawX + 130, YAxLength + drawY + 30), vec3(1, 1, 1), 25);
-			//modified X
-			gl::drawString("-->", Vec2f(drawX+170, YAxLength + drawY + 30), Color(1, 1, 1), Font("Arial", 25));
-			drawText(round(v->r.truSpeed(3, v->j.analogY)), vec3(drawX + 210, YAxLength + drawY + 30), vec3(1, 1, 1), 25);
-		}
-	};
-	struct graph gr;
 };
 simulation s;
 class CimulationApp : public AppNative {
@@ -137,11 +78,6 @@ void CimulationApp::setup() {
 	v.r.PID.isRunning = false;
 	v.r.PID.requestedValue = v.r.p.position.X*ppi;
 
-	//for graph
-	for (int i = 0; i < maxDots; i++) {
-		s.gr.RYpos[i] = s.gr.midpoint;
-		s.gr.BYpos[i] = s.gr.midpoint;
-	}
 }
 //cinder::functions
 void CimulationApp::mouseDown(MouseEvent event) {
@@ -156,24 +92,18 @@ void CimulationApp::mouseMove(MouseEvent event) {
 	mousePos.Y = event.getY();
 	if (v.j.withinAnalogRange(mousePos)) {
 		if (s.SimRunning == s.TRUSPEED) {
-			for (int i = 0; i < (maxDots - 1); i++) {//red line /*XPOS*/
-				s.gr.RYpos[i] = s.gr.RYpos[i + 1];
-			}
-			s.gr.RYpos[maxDots - 1] = (v.r.truSpeed(3, (mousePos.X - (v.j.drawX + v.j.drawSize))) / (s.gr.YAxLength*0.003)) + s.gr.midpoint;
-			for (int i = 0; i < (maxDots - 1); i++) {//blue line /*YPOS*/
-				s.gr.BYpos[i] = s.gr.BYpos[i + 1];
-			}
-			s.gr.BYpos[maxDots - 1] = (v.r.truSpeed(3, (mousePos.Y - (v.j.drawY + v.j.drawSize))) / (s.gr.YAxLength*0.003)) + s.gr.midpoint;
+			v.tS.activate(&v.r, &v.j, mousePos.X, mousePos.Y);
 		}
 	}
 }
+
 void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_UP)	v.r.ctrl.ArrowKeyUp = true;
 	if (event.getCode() == KeyEvent::KEY_DOWN)	v.r.ctrl.ArrowKeyDown = true;
 	if (event.getCode() == KeyEvent::KEY_LEFT)	v.r.ctrl.RotLeft = true;
 	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.ctrl.RotRight = true;
 	if (event.getChar() == 'e' || event.getChar() == 'E') v.r.c.grabbing = !v.r.c.grabbing;//if want toggling, else look at a while ago
-	if (event.getChar() == 'r' || event.getChar() == 'R' ) v.r.mg.grabbing = !v.r.mg.grabbing;//if want toggling, else look at a while ago
+	if (event.getChar() == 'r' || event.getChar() == 'R') v.r.mg.grabbing = !v.r.mg.grabbing;//if want toggling, else look at a while ago
 	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.c.liftUp = true;
 	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r.c.liftDown = true;//left Z button
 }
@@ -194,17 +124,19 @@ void CimulationApp::update() {
 		v.r.NavigationUpdate();
 		v.r.moveAround(v.j.analogX, v.j.analogY);
 		v.f.initialized = false;//only initialize the field elements when running FIELD
-			break;
+		break;
 	case simulation::PIDCTRL:
 		v.r.PIDControlUpdate();
 		v.f.initialized = false;//only initialize the field elements when running FIELD
 		break;
 	case simulation::TRUSPEED:
-		v.r.TruSpeedUpdate();
-		v.r.moveAround(v.j.analogX, v.j.analogY);
+		tX = 1400;
+		v.tS.TruSpeedUpdate(&v.r);
+		//v.r.moveAround(v.j.analogX, v.j.analogY);STAYS STATIONARY
 		v.f.initialized = false;//only initialize the field elements when running FIELD
 		break;
 	case simulation::FIELD:
+		tX = 1200;
 		v.f.FieldUpdate(&v.r);
 		v.r.moveAround(v.j.analogX, v.j.analogY);
 		break;
@@ -214,8 +146,8 @@ void CimulationApp::update() {
 //for buttons
 void clicky(int AMOUNT_BUTTON) {//function for clicking the buttons
 	for (int i = 0; i < AMOUNT_BUTTON; i++) {//for each button in the array 
-		if (mousePos.X > 100 * (i + 1) - (50) + (25 * i) && 
-			mousePos.X < 100 * (i + 1) + (50) + (25 * i) && 
+		if (mousePos.X > 100 * (i + 1) - (50) + (25 * i) &&
+			mousePos.X < 100 * (i + 1) + (50) + (25 * i) &&
 			mousePos.Y > 25 && mousePos.Y < 75) {//within boundaries for each button based off their index
 			s.hovering = i;
 			if (s.mouseClicked) {
@@ -243,22 +175,23 @@ void buttons() {//function for drawing the buttons
 	}
 }
 void CimulationApp::textDraw() {//function for drawing the buttons
-	#define rows 11//number of buttons
-	int tY[rows], tX = 1200, dInBtw = 50;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
+#define rows 11//number of buttons
+	int tY[rows], dInBtw = 50;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
+	//tX = 1200;
 	string STRING;
 	float DATA;
 	for (int i = 0; i < rows; i++) {
-		if		(i == 0) { STRING = "Angle:"; DATA = v.r.p.mRot; }
+		if (i == 0) { STRING = "Angle:"; DATA = v.r.p.mRot; }
 		else if (i == 1) { STRING = "X Pos:"; DATA = v.r.p.position.X; }
 		else if (i == 2) { STRING = "Y Pos:"; DATA = v.r.p.position.Y; }
 		else if (i == 3) { STRING = "X-Vel:"; DATA = v.r.p.velocity.X; }
 		else if (i == 4) { STRING = "Y-Vel:"; DATA = v.r.p.velocity.X; }
 		else if (i == 5) { STRING = "X-Acc:"; DATA = v.r.p.acceleration.X; }//same as y accel
-		else if (i == 6) { STRING = "Y-Acc:"; DATA = v.r.p.acceleration.Y; }//same as y accel
+		else if (i == 6) { STRING = "Y-Acc:"; DATA = v.r.p.acceleration.Y; }//same as X accel
 		else if (i == 7) { STRING = "R-Vel:"; DATA = v.r.p.rotVel; }
 		else if (i == 8) { STRING = "R-Acc:"; DATA = v.r.p.rotAcceleration; }
 		else if (i == 9) { STRING = "L-Pos:"; DATA = v.r.c.liftPos; }
-		else if (i == 10){ STRING = "L-Acc:"; DATA = v.r.p.rotAcceleration; }
+		else if (i == 10) { STRING = "L-Acc:"; DATA = v.r.p.rotAcceleration; }
 
 		tY[0] = 0;//initialize first button
 		tY[i] = (i + 1) * dInBtw;//increment x position for each button based off index
@@ -340,8 +273,8 @@ void CimulationApp::drawRobot() {
 	}
 	else gl::translate(Vec3f(v.r.p.position.X*ppi, v.r.p.position.Y*ppi, 0.0));//origin of rotation
 	gl::rotate(Vec3f(0, 0, -v.r.p.mRot - 90));//something for like 3D rotation.... ugh
-	//gl::color(160.0/255, 160.0/255, 160.0/255);GRAY
-	//base
+											  //gl::color(160.0/255, 160.0/255, 160.0/255);GRAY
+											  //base
 	gl::color(1, 1, 1);
 	gl::draw(v.r.TankBase, Area((-(v.r.d.size / 2))*ppi, (-(v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi));
 	//mogo
@@ -354,13 +287,13 @@ void CimulationApp::drawRobot() {
 }
 void CimulationApp::draw() {
 	gl::enableAlphaBlending();//good for transparent images
-	// clear out the window with black
+							  // clear out the window with black
 	gl::clear(Color(0, 0, 0));
 	//joystick analog drawing
 	if (s.SimRunning == s.NAVIGATION || s.SimRunning == s.TRUSPEED || s.SimRunning == s.FIELD) {//only for navigation and truspeed sim
 		if (s.SimRunning == s.FIELD) {
 			v.j.drawX = v.f.f.fieldEnd + 20;
-			v.j.drawY = getWindowHeight()/2;
+			v.j.drawY = getWindowHeight() / 2;
 			v.r.d.reversed = true;
 		}
 		else {
@@ -369,8 +302,8 @@ void CimulationApp::draw() {
 			v.j.drawY = 500;
 			robotDebug(&v, false);
 		}
-		gl::drawStrokedCircle(Vec2f(v.j.drawX+v.j.drawSize, v.j.drawY+v.j.drawSize), v.j.drawSize);//circle at (800px, vec3(1, 1, 1), 300px) with radius 127px
-		gl::drawStrokedRect(Area(v.j.drawX, v.j.drawY, v.j.drawX + 2*v.j.drawSize, v.j.drawY + 2*v.j.drawSize));
+		gl::drawStrokedCircle(Vec2f(v.j.drawX + v.j.drawSize, v.j.drawY + v.j.drawSize), v.j.drawSize);//circle at (800px, vec3(1, 1, 1), 300px) with radius 127px
+		gl::drawStrokedRect(Area(v.j.drawX, v.j.drawY, v.j.drawX + 2 * v.j.drawSize, v.j.drawY + 2 * v.j.drawSize));
 
 		if (v.j.withinAnalogRange(mousePos)) {//defined in joystick.h, basically if within the drawing of the boundaries
 			drawText(round(v.r.truSpeed(3, v.j.analogX)), vec3(mousePos.X - 30, mousePos.Y + 50), vec3(1, 1, 1), 30);
@@ -379,22 +312,22 @@ void CimulationApp::draw() {
 	}
 	if (s.SimRunning == s.PIDCTRL) drawText(round(v.r.PID_controller()), vec3(v.r.p.position.X*ppi, v.r.p.position.Y*ppi - 100), vec3(1, 1, 1), 30);
 	if (s.SimRunning == s.TRUSPEED) {
-		s.gr.graphPlot();//draws the graph
-		s.gr.textOutput(&v);//draws the text for the graph
+		v.tS.graphPlot();//draws the graph
+		v.tS.textOutput(&v.r, &v.j);//draws the text for the graph
 	}
 	if (s.SimRunning == s.FIELD) {//when field button is pressed
 		gl::pushModelView();//for drawing the field, had to be rotated based off source
-			gl::translate(Vec3f(v.f.f.centre.X, v.f.f.centre.X, 0.0));//origin of rotation
-			gl::rotate(-90);//easy rotation technique
-			gl::draw(v.f.fieldBare, Area(-v.f.f.fieldSize*ppi/2, -v.f.f.fieldSize*ppi/2, v.f.f.fieldSize*ppi/2, v.f.f.fieldSize*ppi/2));
+		gl::translate(Vec3f(v.f.f.centre.X, v.f.f.centre.X, 0.0));//origin of rotation
+		gl::rotate(-90);//easy rotation technique
+		gl::draw(v.f.fieldBare, Area(-v.f.f.fieldSize*ppi / 2, -v.f.f.fieldSize*ppi / 2, v.f.f.fieldSize*ppi / 2, v.f.f.fieldSize*ppi / 2));
 		gl::popModelView();//finish drawing the field
 		drawRobot();
 		for (int i = 0; i < v.f.mg.size(); i++) {
 			vec3 RGB;//true color value because cinder uses values from 0->1 for their colours
 			if (v.f.mg[i].col == 1)/*red mogo*/			RGB = vec3(217, 38, 38);
 			else if (v.f.mg[i].col == 2)/*blue mogo*/	RGB = vec3(0, 64, 255);
-				gl::color(RGB.X/255, RGB.Y/255, RGB.Z/255);
-			gl::draw(v.f.MobileGoal, Area((v.f.f.fieldEnd)-(v.f.mg[i].pos.X*ppi) - (MGRad*ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.Y*ppi) - (MGRad * ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.X*ppi) + (v.f.mg[i].rad * ppi), (v.f.f.fieldEnd)-(v.f.mg[i].pos.Y*ppi) + (v.f.mg[i].rad * ppi)));
+			gl::color(RGB.X / 255, RGB.Y / 255, RGB.Z / 255);
+			gl::draw(v.f.MobileGoal, Area((v.f.f.fieldEnd) - (v.f.mg[i].pos.X*ppi) - (MGRad*ppi), (v.f.f.fieldEnd) - (v.f.mg[i].pos.Y*ppi) - (MGRad * ppi), (v.f.f.fieldEnd) - (v.f.mg[i].pos.X*ppi) + (v.f.mg[i].rad * ppi), (v.f.f.fieldEnd) - (v.f.mg[i].pos.Y*ppi) + (v.f.mg[i].rad * ppi)));
 		}
 		//drawing each individual cone. oh my
 		for (int i = 0; i < v.f.c.size(); i++) {
@@ -402,19 +335,19 @@ void CimulationApp::draw() {
 			//+-(cRad*ppi) for sayin' that the point pos.X and pos.Y are the center, and the cRad*ppi is 3 inches RADIUS away from the center point
 			gl::color(1, 1, 1);
 			if (i != v.r.c.holding)	gl::draw(v.f.coneTexture, Area(
-				(v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) - (v.f.c[i].rad*ppi), 
-				(v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) - (v.f.c[i].rad * ppi), 
-				(v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.c[i].rad * ppi), 
+				(v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) - (v.f.c[i].rad*ppi),
+				(v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) - (v.f.c[i].rad * ppi),
+				(v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.c[i].rad * ppi),
 				(v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.c[i].rad * ppi)));
 		}
-		if(v.r.c.holding != -1 && v.r.c.holding < numCones) //if actually holding something (the index exists [!= -1])
+		if (v.r.c.holding != -1 && v.r.c.holding < numCones) //if actually holding something (the index exists [!= -1])
 			gl::draw(v.f.coneTexture, Area(
-				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) - (v.f.c[v.r.c.holding].rad * ppi),
+			(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) - (v.f.c[v.r.c.holding].rad * ppi),
 				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) - (v.f.c[v.r.c.holding].rad * ppi),
-				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) + (v.f.c[v.r.c.holding].rad * ppi), 
+				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) + (v.f.c[v.r.c.holding].rad * ppi),
 				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) + (v.f.c[v.r.c.holding].rad * ppi)));
 		robotDebug(&v, true);
-		gl::color(1, 1, 1) ;
+		gl::color(1, 1, 1);
 	}
 	else drawRobot();
 

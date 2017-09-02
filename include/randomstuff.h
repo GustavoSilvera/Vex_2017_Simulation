@@ -1,5 +1,17 @@
 #if !defined(RANDOMSTUFF_H)
 #define RANDOMSTUFF_H
+
+#include "cinder/app/AppNative.h"
+
+#include "cinder/gl/gl.h"
+#include "cinder/ImageIo.h"
+#include "cinder/gl/Texture.h"
+#include "cinder/Vector.h"
+#include "cinder/Text.h"
+#include "cinder/Font.h"
+#include <string>
+
+
 //random #defines and other things that are used throughout all the files
 #define ppi 7.1839
 #define PI 3.14159262
@@ -25,6 +37,13 @@ inline int getSign(double value) {//returns whether a number is negative or posi
 inline float sqr(double value) {
 	return value*value;
 }
+inline void drawText(double text, vec3 pos, vec3 colour, int size) {//simplified way of printing variables as text to the display
+	std::stringstream dummyText;
+	std::string PRINT;
+	dummyText << text;
+	dummyText >> PRINT;
+	ci::gl::drawString(PRINT, ci::Vec2f(pos.X, pos.Y), ci::Color(colour.X, colour.Y, colour.Z), ci::Font("Arial", size));
+}
 inline float dist(vec3 A, vec3 B) {
 	return sqrt(sqr(A.X - B.X) + sqr(A.Y - B.Y));
 }
@@ -33,7 +52,6 @@ inline float SortSmallest3(float v1, float v2, float v3) {
 	if (v2 < smallest) smallest = v2;//resets to v2 if its smaller than v1
 	if (v3 < smallest) smallest = v3;//resets to v3 if its smaller than v1
 	return smallest;
-	
 }
 inline float SortSmallest(float v1, float v2, float v3, float v4) {//finds smallest of the list provided
 	float smallest = v1;//initially assumes v1 is the smallest
@@ -61,4 +79,4 @@ inline int sortSmallVER(float v1, float v2, float v3, float v4) {
 	else if (smallestD2V == v4) return 3;
 }
 
-#endif
+#endif  // RANDOMSTUFF_H

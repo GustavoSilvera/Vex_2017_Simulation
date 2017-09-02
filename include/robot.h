@@ -19,7 +19,6 @@ public:
 	void setVertices();
 	void NavigationUpdate();
 	void PIDControlUpdate();
-	void TruSpeedUpdate();
 	struct maintainPosition {
 		bool isRunning;
 		int threshold;

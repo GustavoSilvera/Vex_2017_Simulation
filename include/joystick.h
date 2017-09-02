@@ -1,3 +1,6 @@
+#ifndef JOYSTICK_H
+#define JOYSTICK_H
+
 #include "vec3.h"
 #include "randomstuff.h"
 //declares the joystick class and all the data that goes with it. 
@@ -13,3 +16,4 @@ public:
 	//makes image with top left cornet at (700, 300), with a size of 127
 };
 
+#endif // JOYSTICK_H
