@@ -114,6 +114,7 @@ public:
 	void keyDown(KeyEvent event);
 	void keyUp(KeyEvent event);
 	void update();
+	void textDraw();
 	void drawClaw();
 	void drawRobot();
 	void draw();
@@ -224,7 +225,7 @@ void clicky(int AMOUNT_BUTTON) {//function for clicking the buttons
 	}
 }
 void buttons() {//function for drawing the buttons
-	#define BUTTON_AMOUNT 4//number of buttons
+#define BUTTON_AMOUNT 4//number of buttons
 	int bX[BUTTON_AMOUNT], bY = 50, dInBtw = 25;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
 	for (int i = 0; i < BUTTON_AMOUNT; i++) {
 		bX[0] = 0;//initialize first button
@@ -232,13 +233,37 @@ void buttons() {//function for drawing the buttons
 		if (i == s.SimRunning) { gl::color(0, 1, 0); }//if the button's index is equal to whichever button's index is being hovered over
 		else if (i == s.hovering) { gl::color(1, 0, 0); }//if the button's index is equal to whichever button's index is being hovered over
 		else { gl::color(1, 1, 1); }
-		gl::drawStrokedRect(Area(bX[i] - 50 + dInBtw*i, bY - 25, bX[i] + 50 + dInBtw*i, bY + 25));
+		gl::drawStrokedRoundedRect(Area(bX[i] - 50 + dInBtw*i, bY - 25, bX[i] + 50 + dInBtw*i, bY + 25), 5);//ROUNDED rectangle with corner rad of 7
 		gl::color(1, 1, 1);//resets colour 
 		if (i == 0)gl::drawString("PID", Vec2f(bX[i] - 20, bY - 12.5), Color(1, 1, 1), Font("Arial", 25));
 		else if (i == 1)gl::drawString("NAV", Vec2f(bX[i] - 18 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 25));
 		else if (i == 2)gl::drawString("TRUSpeed", Vec2f(bX[i] - 49 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 25));
 		else if (i == 3)gl::drawString("Auton", Vec2f(bX[i] - 35 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 29));
 		clicky(BUTTON_AMOUNT);//function for if a button is being hovered of pressed
+	}
+}
+void CimulationApp::textDraw() {//function for drawing the buttons
+	#define rows 11//number of buttons
+	int tY[rows], tX = 1200, dInBtw = 50;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
+	string STRING;
+	float DATA;
+	for (int i = 0; i < rows; i++) {
+		if		(i == 0) { STRING = "Angle:"; DATA = v.r.p.mRot; }
+		else if (i == 1) { STRING = "X Pos:"; DATA = v.r.p.position.X; }
+		else if (i == 2) { STRING = "Y Pos:"; DATA = v.r.p.position.Y; }
+		else if (i == 3) { STRING = "X-Vel:"; DATA = v.r.p.velocity.X; }
+		else if (i == 4) { STRING = "Y-Vel:"; DATA = v.r.p.velocity.X; }
+		else if (i == 5) { STRING = "X-Acc:"; DATA = v.r.p.acceleration.X; }//same as y accel
+		else if (i == 6) { STRING = "Y-Acc:"; DATA = v.r.p.acceleration.Y; }//same as y accel
+		else if (i == 7) { STRING = "R-Vel:"; DATA = v.r.p.rotVel; }
+		else if (i == 8) { STRING = "R-Acc:"; DATA = v.r.p.rotAcceleration; }
+		else if (i == 9) { STRING = "L-Pos:"; DATA = v.r.c.liftPos; }
+		else if (i == 10){ STRING = "L-Acc:"; DATA = v.r.p.rotAcceleration; }
+
+		tY[0] = 0;//initialize first button
+		tY[i] = (i + 1) * dInBtw;//increment x position for each button based off index
+		gl::drawString(STRING, Vec2f(tX - 70, tY[i]), Color(1, 1, 1), Font("Arial", 30));
+		drawText(DATA, vec3(tX, tY[i]), vec3(1, 1, 1), 30);
 	}
 }
 void robotDebug(vex *v, bool reversed) {
@@ -342,7 +367,7 @@ void CimulationApp::draw() {
 			v.r.d.reversed = false;
 			v.j.drawX = 600;
 			v.j.drawY = 500;
-			//robotDebug(&v, false);
+			robotDebug(&v, false);
 		}
 		gl::drawStrokedCircle(Vec2f(v.j.drawX+v.j.drawSize, v.j.drawY+v.j.drawSize), v.j.drawSize);//circle at (800px, vec3(1, 1, 1), 300px) with radius 127px
 		gl::drawStrokedRect(Area(v.j.drawX, v.j.drawY, v.j.drawX + 2*v.j.drawSize, v.j.drawY + 2*v.j.drawSize));
@@ -388,32 +413,20 @@ void CimulationApp::draw() {
 				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) - (v.f.c[v.r.c.holding].rad * ppi),
 				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) + (v.f.c[v.r.c.holding].rad * ppi), 
 				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) + (v.f.c[v.r.c.holding].rad * ppi)));
-		//robotDebug(&v, true);
+		robotDebug(&v, true);
 		gl::color(1, 1, 1) ;
 	}
 	else drawRobot();
-	/*****************************MISC**********************************/
-	gl::drawString("Angle", Vec2f(1130, 40), Color(1, 1, 1), Font("Arial", 30));
-	drawText(v.r.p.mRot, vec3(1200, 40), vec3(1, 1, 1), 30);
-	drawText(v.r.p.position.X, vec3(600, 140), vec3(1, 1, 1), 30);
-	drawText(v.r.p.position.Y, vec3(750, 140), vec3(1, 1, 1), 30);
-	drawText(v.r.p.acceleration.X, vec3(1000, 340), vec3(1, 1, 1), 30);
-	drawText(v.r.p.acceleration.Y, vec3(1000, 440), vec3(1, 1, 1), 30);
-	drawText(v.r.p.frictionC, vec3(1000, 500), vec3(1, 1, 1), 30);
-	drawText(v.r.p.frictionM, vec3(1050, 500), vec3(1, 1, 1), 30);
-	drawText(v.r.c.holding, vec3(1000, 700), vec3(1, 1, 1), 30);
-	drawText(v.r.c.liftPos, vec3(1000, 800), vec3(1, 1, 1), 30);
-	//drawText(v.f.HELLO, vec3(1000, 600), vec3(1, 1, 1), 30);
+
 	gl::color(1, 0, 0);
 	gl::drawSolidCircle(Vec2f(v.f.f.fieldEnd - ppi * (v.f.c[39].pos.X), v.f.f.fieldEnd - ppi * (v.f.c[39].pos.Y)), 5);
 	if (v.r.c.liftDown) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
-	/*drawing closest point for the 0th (first) cone*/
-	//gl::drawStrokedCircle(Vec2f(v.f.f.fieldEnd - v.f.pl[0].pos.X*ppi, v.f.f.fieldEnd - v.f.pl[0].pos.Y*ppi), 4*ppi);
 	gl::color(1, 1, 1);
 	//USER INTERFACE
 	buttons();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3(getWindowWidth() - 90, 30), vec3(0, 1, 0), 30);
+	textDraw();
 }
 CINDER_APP_NATIVE(CimulationApp, RendererGl)
