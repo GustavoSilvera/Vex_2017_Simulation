@@ -155,9 +155,3 @@ void robot::moveAround(float jAnalogX, float jAnalogY) {
 	else if (abs(jAnalogX) > 10) rotate(-jAnalogX);//checking analog drawing
 	else rotate(0);//welp, no rotation
 }
-
-
-/*	p.acceleration.X = p.acceleration.X = p.acceleration.Y = 0; 0;
-	p.velocity.X = p.velocity.Y = 0;
-	p.mRot = 0;
-	p.position.Y = 69.6;*/

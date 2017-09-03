@@ -12,11 +12,9 @@ public:
 	void forwards(float  power);
 	void rotate(float power);
 	float truSpeed(int degree, float value);
-	void calculatePos();
 	void update();
 	void moveAround(float jAnalogX, float jAnalogY);
 	void setVertices();
-	void NavigationUpdate();
 	struct position {
 		double Xpos, Ypos, deg;
 	};

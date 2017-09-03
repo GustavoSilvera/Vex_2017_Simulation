@@ -1,5 +1,7 @@
 #include "PID.h"
+#include <string>
 
+using namespace ci;
 PID::PID(robot *r) {
 	pid.isRunning = true;
 	isInit = false;
@@ -19,7 +21,29 @@ void PID::initialize(robot *r) {
 	isInit = true;
 }
 void PID::textOutput(robot *r) {
-
+	static const int columns = 5;
+	int tX[columns], dInBtw = 185;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
+							  //tX = 1200;
+	int tY = 900;
+	std::string STRING;
+	float DATA;
+	for (int i = 0; i < columns; i++) {
+		if (i == 0) { STRING = "Req:"; DATA = pid.requestedValue / ppi; }
+		else if (i == 1) { STRING = "Error:"; DATA = pid.error; }
+		else if (i == 2) { STRING = "Deriv:"; DATA = pid.derivative; }
+		else if (i == 3) { STRING = "Intgrl:"; DATA = pid.integral; }
+		else if (i == 4) { STRING = "Full:"; DATA = controller(r); }
+		
+		tX[0] = 0;//initialize first button
+		tX[i] = (i + 1) * dInBtw;//increment x position for each button based off index
+		gl::drawString(STRING, Vec2f(tX[i] - 70, tY), Color(1, 1, 1), Font("Arial", 30));
+		drawText(DATA, vec3(tX[i], tY), vec3(1, 1, 1), 30);
+	}
+	gl::color(1, 0, 0);
+	drawText(controller(r) / (127 * ppi), vec3(r->p.position.X*ppi, 200), vec3(1, 1, 1), 30);
+	gl::drawLine(cinder::Vec2f(r->p.position.X*ppi, 300), Vec2f(pid.requestedValue, 300));
+	
+	gl::color(1, 1, 1);
 }
 float PID::controller(robot *r) {
 	float kP = 1;//remove later
@@ -58,9 +82,7 @@ float PID::controller(robot *r) {
 void PID::PIDUpdate(robot *r) {
 	if (!isInit) initialize(r);//checks if not initialized
 	pid.isRunning = true;
-	r->p.velocity.X = -controller(r) / 127;
+	r->p.acceleration.X = -controller(r)/(127);
 	r->p.mRot = 0;
 	r->p.position.Y = 69.6;
-	textOutput(r);
 }
-//	if (s.SimRunning == s.PIDCTRL) drawText(round(v.r.PID_controller()), vec3(v.r.p.position.X*ppi, v.r.p.position.Y*ppi - 100), vec3(1, 1, 1), 30);

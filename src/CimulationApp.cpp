@@ -324,6 +324,9 @@ void CimulationApp::draw() {
 			drawText(round(v.r.truSpeed(3, v.j.analogY)), vec3(mousePos.X + 30, mousePos.Y + 50), vec3(1, 1, 1), 30);
 		}
 	}
+	if (s.SimRunning == s.PIDCTRL) {
+		v.pid.textOutput(&v.r);
+	}
 	if (s.SimRunning == s.TRUSPEED) {
 		v.tS.graphPlot();//draws the graph
 		v.tS.textOutput(&v.r, &v.j);//draws the text for the graph
