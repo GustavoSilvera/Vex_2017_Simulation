@@ -2,6 +2,7 @@
 
 //declares and defines the field class and functions
 
+//constructor
 field::element initConeConfig[numCones] = {//array for each configuration of the cone (in field.h)
 										   //{initial posision (X, Y), color (Y, R, B), radii }
 	{ { 2.9, 13.0 }, 0, cRad, cHeight},{ { 2.9, 23.2 }, 0, cRad, cHeight},{ { 2.9, 34.9 }, 0, cRad, cHeight},{ { 2.9, 46.7 }, 0, cRad, cHeight},
@@ -30,15 +31,21 @@ field::element initPoleConfig[2] = {
 	{ { 93, 47.3 }, 3 , 4 },{ { 46.9, 94 }, 3 , 4 }
 };
 
+field::field() : initialized(false) {
+	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
+	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
+	pl.assign(&initPoleConfig[0], &initPoleConfig[2]);
+	isInit = false;
+}
 //initial mogo values for position and colour
-void field::initializeField(robot *robit) {
+void field::initialize(robot *robit) {
 	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
 	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
 	pl.assign(&initPoleConfig[0], &initPoleConfig[2]);
 	robit->p.position.X = 100;
 	robit->p.position.Y = 35;
 	robit->p.mRot = 45;
-	initialized = true;//so that this only gets called ONCE when the field tab is running
+	isInit = true;//so that this only gets called ONCE when the field tab is running
 }
 //initialized everything for the field, such as cone and mogo values, and robot posision
 float calcD2Edge(float a, float b, robot *robit) {
@@ -328,7 +335,7 @@ void field::element::grabbed(robot *robit, int index, int type) {
 }
 //function for having a 'grabbed' element lock in place
 void field::FieldUpdate(robot *robit) {
-	if (!initialized) initializeField(robit);
+	if (!isInit) initialize(robit);
 	f.wallPush(robit);
 	for (int i = 0; i < c.size(); i++) {
 		//type for "cone" is 0
@@ -356,9 +363,3 @@ void field::FieldUpdate(robot *robit) {
 	robit->p.frictionM = pushMoGo.size();
 }
 //update task for the entire field simulation
-field::field() : initialized(false) {
-	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
-	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
-	pl.assign(&initPoleConfig[0], &initPoleConfig[2]);
-}
-//constructor

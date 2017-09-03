@@ -13,20 +13,10 @@ public:
 	void rotate(float power);
 	float truSpeed(int degree, float value);
 	void calculatePos();
-	float PID_controller();
 	void update();
 	void moveAround(float jAnalogX, float jAnalogY);
 	void setVertices();
 	void NavigationUpdate();
-	void PIDControlUpdate();
-	struct maintainPosition {
-		bool isRunning;
-		int threshold;
-		float error, integral, derivative, lastError;
-		float currentPos;
-		float requestedValue;
-		//, kI, kD;
-	};
 	struct position {
 		double Xpos, Ypos, deg;
 	};
@@ -86,7 +76,6 @@ public:
 	//other stuffs
 	ci::gl::Texture TankBase;
 	ci::gl::Texture CChanel;
-	volatile maintainPosition PID;
 	struct position current;
 	float encoder1 = 0;//simulating vex encoder
 	float encoderLast = 0;//last encoder value after a rotation

@@ -78,58 +78,6 @@ float robot::truSpeed(int degree, float value) {//see here for reference https:/
 	}
 }
 
-void robot::calculatePos() {
-	if (p.rotVel == 0) {//not rotating
-		//float Magnitude = ((changeInDist) * 4 * PI) / (360);//function for adding the change in inches to current posiiton
-		current.deg = p.mRot;
-		current.Xpos += cos(current.deg*(PI / 180))*(encoder1 - encoderLast);//cosine of angle times magnitude RADIANS(vector trig)//NOT WORKING
-		current.Ypos -= sin(current.deg*(PI / 180))*(encoder1 - encoderLast);//sine of angle times magnitude RADIANS(vector trig)//NOT WORKING
-		encoderLast = encoder1;
-	}
-}
-
-float robot::PID_controller() {//accelerates and decelerates robot based on location and goal. 
-	float kP = 1;//remove later
-	float kI = 5;//remove later
-	float kD = 1.0;//remove later
-				   // If we are using an encoder then clear it
-	PID.lastError = 0;
-	PID.integral = 0;
-
-	if (PID.isRunning) {
-		//PID.currentPos = current.Ypos;// * sensorScale;idk if i need this, probs not.
-		if (abs(p.position.X*ppi - PID.requestedValue) > 0.001) {
-			PID.error = p.position.X*ppi - PID.requestedValue;//calculate error
-		}
-		else PID.error = 0;
-		if (kI != 0) {
-			if (abs(PID.error) < 50) {
-				PID.integral += PID.error;//used for averaging the integral amount, later in motor power divided by 25
-			}
-			else {
-				PID.integral = 0;
-			}
-		}
-		else {
-			PID.integral = 0;
-		}
-		// calculate the derivative
-		PID.derivative = PID.error - PID.lastError;
-		PID.lastError = PID.error;
-		// calculate drive (in this case, just for the robot)
-		return(((kP * PID.error) + (PID.integral / kI) + (kD * PID.derivative)));
-	}
-	else {
-		// clear all
-		PID.error = 0;
-		PID.lastError = 0;
-		PID.integral = 0;
-		PID.derivative = 0;
-		return(0);
-		// Run at 50Hz
-	}
-}
-
 void robot::setVertices() {
 	//gross i know, but its for calculating each vertice of the robot based off its current angle;
 	//math behind is based off basic trig and 45 45 90° triangle analytic geometry
@@ -208,18 +156,6 @@ void robot::moveAround(float jAnalogX, float jAnalogY) {
 	else rotate(0);//welp, no rotation
 }
 
-void robot::PIDControlUpdate() {
-	PID.isRunning = true;
-	p.acceleration.X = 0;
-	p.velocity.X = -PID_controller()/127;
-	p.mRot = 0;
-	p.position.Y = 69.6;
-}
-
-void robot::NavigationUpdate() {
-	PID.isRunning = false;
-	calculatePos();
-}
 
 /*	p.acceleration.X = p.acceleration.X = p.acceleration.Y = 0; 0;
 	p.velocity.X = p.velocity.Y = 0;

@@ -4,9 +4,11 @@ using namespace ci;
 using namespace std;
 //declares and defines the field class and functions
 tSpeed::tSpeed(robot *r, joystick *j) {
-	r->p.acceleration.X = r->p.acceleration.X = r->p.acceleration.Y = 0;
+	isInit = false;
+	r->p.acceleration.X = r->p.acceleration.Y = 0;
 	r->p.velocity.X = r->p.velocity.Y = 0;
 	r->p.mRot = 0;
+	r->p.rotAcceleration = 0;
 	r->p.position.Y = 69.6;
 	gr.YAxLength = 300;
 	gr.XAxLength = 500;
@@ -18,11 +20,23 @@ tSpeed::tSpeed(robot *r, joystick *j) {
 		gr.BYpos[i] = gr.midpoint;
 	}
 }
-
-void tSpeed::TruSpeedUpdate(robot *robit) {
-	robit->PID.isRunning = false;
-	robit->p.velocity.X = 0;
-	robit->p.velocity.Y = 0;
+void tSpeed::initialize(robot *r) {
+	r->p.acceleration.X = r->p.acceleration.Y = 0;
+	r->p.velocity.X = r->p.velocity.Y = 0;
+	r->p.rotAcceleration = 0;
+	r->p.mRot = 0;
+	r->p.position.Y = 69.6;
+	gr.YAxLength = 300;
+	gr.XAxLength = 500;
+	gr.drawX = 800;
+	gr.drawY = 80;
+	gr.midpoint = ((gr.YAxLength) / 2) + gr.drawY;
+	for (int i = 0; i < maxDots; i++) {
+		gr.RYpos[i] = gr.midpoint;
+		gr.BYpos[i] = gr.midpoint;
+	}
+	isInit = true;
+	
 }
 void tSpeed::activate(robot *r, joystick *j, double mX, double mY) {
 	for (int i = 0; i < (maxDots - 1); i++) {//red line /*XPOS*/
@@ -84,3 +98,8 @@ void tSpeed::textOutput(robot *r, joystick *j) {
 	drawText(round(r->truSpeed(3, j->analogY)), vec3(gr.drawX + 210, gr.YAxLength + gr.drawY + 30), vec3(1, 1, 1), 25);
 }
 
+void tSpeed::TruSpeedUpdate(robot *robit) {
+	if(!isInit) initialize(robit);
+	robit->p.velocity.X = 0;
+	robit->p.velocity.Y = 0;
+}

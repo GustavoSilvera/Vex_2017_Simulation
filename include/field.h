@@ -18,8 +18,8 @@ public:
 	std::set<int> pushCones;
 
 	void FieldUpdate(robot *r);
-	void initializeField(robot *r);
-
+	void initialize(robot *r);
+	bool isInit;
 	struct fence {
 		float fieldSize = 141.05;// 140.5 + 2 * (1.27);wall thickness accounted for
 		vec3 centre = vec3(606, 606);//in pixels

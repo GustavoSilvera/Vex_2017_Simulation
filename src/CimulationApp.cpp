@@ -27,10 +27,12 @@ class vex {
 public:
 	robot r;
 	tSpeed tS;
+	PID pid;
+	nav n;
 	field f;
 	joystick j;
 
-	vex() : tS(&r, &j) {}
+	vex() : tS(&r, &j), pid(&r), n(&r){}
 };
 //begin
 int tX = 1200;
@@ -75,14 +77,11 @@ void CimulationApp::setup() {
 	v.r.current.deg = 0;
 	v.r.encoder1 = 0;
 	v.r.encoderLast = 0;
-	v.r.PID.isRunning = false;
-	v.r.PID.requestedValue = v.r.p.position.X*ppi;
-
 }
 //cinder::functions
 void CimulationApp::mouseDown(MouseEvent event) {
 	if (event.isLeft())	s.mouseClicked = true;
-	if (s.SimRunning == s.PIDCTRL) v.r.PID.requestedValue = event.getX();
+	if (s.SimRunning == s.PIDCTRL) v.pid.pid.requestedValue = event.getX();//gets whats needed for PID to activate
 }
 void CimulationApp::mouseUp(MouseEvent event) {
 	if (event.isLeft())	s.mouseClicked = false;
@@ -96,7 +95,6 @@ void CimulationApp::mouseMove(MouseEvent event) {
 		}
 	}
 }
-
 void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_UP)	v.r.ctrl.ArrowKeyUp = true;
 	if (event.getCode() == KeyEvent::KEY_DOWN)	v.r.ctrl.ArrowKeyDown = true;
@@ -121,23 +119,39 @@ void CimulationApp::update() {
 	v.r.update();//calls robot update function
 	switch (s.SimRunning) {
 	case simulation::NAVIGATION:
-		v.r.NavigationUpdate();
+		tX = 1200;
+		v.pid.isInit = false;
+		v.f.isInit = false;
+		v.tS.isInit = false;
+		v.n.isInit = true;
 		v.r.moveAround(v.j.analogX, v.j.analogY);
-		v.f.initialized = false;//only initialize the field elements when running FIELD
+		v.pid.pid.isRunning = false;
 		break;
 	case simulation::PIDCTRL:
-		v.r.PIDControlUpdate();
-		v.f.initialized = false;//only initialize the field elements when running FIELD
+		tX = 1200;
+		v.pid.isInit = true;
+		v.f.isInit = false;
+		v.tS.isInit = false;
+		v.n.isInit = false;
+		v.pid.PIDUpdate(&v.r);
 		break;
 	case simulation::TRUSPEED:
 		tX = 1400;
+		v.pid.isInit = false;
+		v.f.isInit = false;
+		v.tS.isInit = true;
+		v.n.isInit = false;
 		v.tS.TruSpeedUpdate(&v.r);
-		//v.r.moveAround(v.j.analogX, v.j.analogY);STAYS STATIONARY
-		v.f.initialized = false;//only initialize the field elements when running FIELD
+		v.pid.pid.isRunning = false;
 		break;
 	case simulation::FIELD:
 		tX = 1200;
+		v.pid.isInit = false;
+		v.f.isInit = true;
+		v.tS.isInit = false;
+		v.n.isInit = false;
 		v.f.FieldUpdate(&v.r);
+		v.pid.pid.isRunning = false; 
 		v.r.moveAround(v.j.analogX, v.j.analogY);
 		break;
 	}
@@ -157,7 +171,7 @@ void clicky(int AMOUNT_BUTTON) {//function for clicking the buttons
 	}
 }
 void buttons() {//function for drawing the buttons
-#define BUTTON_AMOUNT 4//number of buttons
+	#define BUTTON_AMOUNT 4//number of buttons
 	int bX[BUTTON_AMOUNT], bY = 50, dInBtw = 25;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
 	for (int i = 0; i < BUTTON_AMOUNT; i++) {
 		bX[0] = 0;//initialize first button
@@ -175,7 +189,7 @@ void buttons() {//function for drawing the buttons
 	}
 }
 void CimulationApp::textDraw() {//function for drawing the buttons
-#define rows 11//number of buttons
+	static const int rows = 11;
 	int tY[rows], dInBtw = 50;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
 	//tX = 1200;
 	string STRING;
@@ -191,7 +205,7 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 		else if (i == 7) { STRING = "R-Vel:"; DATA = v.r.p.rotVel; }
 		else if (i == 8) { STRING = "R-Acc:"; DATA = v.r.p.rotAcceleration; }
 		else if (i == 9) { STRING = "L-Pos:"; DATA = v.r.c.liftPos; }
-		else if (i == 10) { STRING = "L-Acc:"; DATA = v.r.p.rotAcceleration; }
+		else if (i == 10){ STRING = "L-Acc:"; DATA = v.r.p.rotAcceleration; }
 
 		tY[0] = 0;//initialize first button
 		tY[i] = (i + 1) * dInBtw;//increment x position for each button based off index
@@ -310,7 +324,6 @@ void CimulationApp::draw() {
 			drawText(round(v.r.truSpeed(3, v.j.analogY)), vec3(mousePos.X + 30, mousePos.Y + 50), vec3(1, 1, 1), 30);
 		}
 	}
-	if (s.SimRunning == s.PIDCTRL) drawText(round(v.r.PID_controller()), vec3(v.r.p.position.X*ppi, v.r.p.position.Y*ppi - 100), vec3(1, 1, 1), 30);
 	if (s.SimRunning == s.TRUSPEED) {
 		v.tS.graphPlot();//draws the graph
 		v.tS.textOutput(&v.r, &v.j);//draws the text for the graph
