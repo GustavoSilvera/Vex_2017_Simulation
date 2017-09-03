@@ -10,6 +10,14 @@ PID::PID(robot *r) {
 	r->p.mRot = 0;
 	r->p.position.Y = 69.6;
 	pid.requestedValue = 69.6;
+	gr.YAxLength = 250;
+	gr.XAxLength = 1000;
+	gr.drawX = 200;
+	gr.drawY = 700;
+	gr.midpoint = ((gr.YAxLength) / 2) + gr.drawY;
+	for (int i = 0; i < maxDots; i++) {
+		gr.posY[i] = gr.midpoint;
+	}
 }
 void PID::initialize(robot *r) {
 	pid.isRunning = true;
@@ -24,7 +32,7 @@ void PID::textOutput(robot *r) {
 	static const int columns = 5;
 	int tX[columns], dInBtw = 185;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
 							  //tX = 1200;
-	int tY = 900;
+	int tY = 100;
 	std::string STRING;
 	float DATA;
 	for (int i = 0; i < columns; i++) {
@@ -40,10 +48,43 @@ void PID::textOutput(robot *r) {
 		drawText(DATA, vec3(tX[i], tY), vec3(1, 1, 1), 30);
 	}
 	gl::color(1, 0, 0);
+	int linePos = 400;
 	drawText(controller(r) / (127 * ppi), vec3(r->p.position.X*ppi, 200), vec3(1, 1, 1), 30);
-	gl::drawLine(cinder::Vec2f(r->p.position.X*ppi, 300), Vec2f(pid.requestedValue, 300));
-	
+	gl::drawLine(cinder::Vec2f(r->p.position.X*ppi, linePos), Vec2f(pid.requestedValue, linePos));
+	gl::drawLine(cinder::Vec2f(r->p.position.X*ppi, linePos+10), Vec2f(r->p.position.X*ppi, linePos - 10));//lil end ticks
+	gl::drawLine(cinder::Vec2f(pid.requestedValue, linePos + 10), Vec2f(pid.requestedValue, linePos - 10));//lil end ticks
+
 	gl::color(1, 1, 1);
+}
+void PID::graphPlot() {
+	//axis:
+	gl::drawSolidRect(Rectf(gr.drawX, gr.drawY, gr.drawX + 2, gr.drawY + gr.YAxLength));
+	gl::drawSolidRect(Rectf(gr.drawX, gr.midpoint - 1, gr.drawX + gr.XAxLength, gr.midpoint + 1));
+	gl::drawString("127", Vec2f(gr.drawX - 30, gr.drawY), Color(1, 1, 1), Font("Arial", 20));
+	gl::drawString("-127", Vec2f(gr.drawX - 35, gr.YAxLength + gr.drawY + 20), Color(1, 1, 1), Font("Arial", 20));
+	gl::drawString("0", Vec2f(gr.drawX - 15, gr.midpoint), Color(1, 1, 1), Font("Arial", 20));
+	//lines:
+	int dSize = 2;
+	gl::color(Color(0, 253, 255)); // light blue
+	for (int i = 0; i < maxDots; i++) {
+		int dotX = gr.drawX + i * (gr.XAxLength) / maxDots;//makes the little intervals for the X axis line
+		int dotY = gr.posY[i];
+		gl::drawSolidCircle(Vec2f(dotX, dotY), dSize);
+	}
+	gl::color(Color(1, 0, 0)); // red
+	for (int i = 0; i < maxDots; i++) {
+		int dotX = gr.drawX + i * (gr.XAxLength) / maxDots;//makes the little intervals for the X axis line
+		int dotY = gr.posY2[i];
+		gl::drawSolidCircle(Vec2f(dotX, dotY), dSize);
+	}
+	gl::color(Color(255.0/256.0, 255.0/256.0, 0)); // yellow
+	for (int i = 0; i < maxDots; i++) {
+		int dotX = gr.drawX + i * (gr.XAxLength) / maxDots;//makes the little intervals for the X axis line
+		int dotY = gr.posY3[i];
+		gl::drawSolidCircle(Vec2f(dotX, dotY), dSize);
+	}
+	gl::color(Color::white());//resets the colour 
+
 }
 float PID::controller(robot *r) {
 	float kP = 1;//remove later
@@ -65,7 +106,7 @@ float PID::controller(robot *r) {
 		}
 		else pid.integral = 0;
 		// calculate the derivative
-		pid.derivative = pid.error - pid.lastError;
+		pid.derivative = 2*(pid.error - pid.lastError);
 		pid.lastError = pid.error;
 		// calculate drive (in this case, just for the robot)
 		return(((kP * pid.error) + (pid.integral / kI) + (kD * pid.derivative)));
@@ -85,4 +126,18 @@ void PID::PIDUpdate(robot *r) {
 	r->p.acceleration.X = -controller(r)/(127);
 	r->p.mRot = 0;
 	r->p.position.Y = 69.6;
+	float scale = 0.1;
+	for (int i = 0; i < (maxDots - 1); i++) {//blue line CONTROLLER
+		gr.posY[i] = gr.posY[i + 1];
+	}
+	gr.posY[maxDots - 1] = (controller(r)*scale) + gr.midpoint;
+	for (int i = 0; i < (maxDots - 1); i++) {//red line ERROR P
+		gr.posY2[i] = gr.posY2[i + 1];
+	}
+	gr.posY2[maxDots - 1] = (pid.error*scale) + gr.midpoint;
+	for (int i = 0; i < (maxDots - 1); i++) {//yellow line INTEGRAL
+		gr.posY3[i] = gr.posY3[i + 1];
+	}
+	gr.posY3[maxDots - 1] = (pid.derivative*scale) + gr.midpoint;
 }
+

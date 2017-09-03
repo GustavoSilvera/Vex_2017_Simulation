@@ -326,6 +326,7 @@ void CimulationApp::draw() {
 	}
 	if (s.SimRunning == s.PIDCTRL) {
 		v.pid.textOutput(&v.r);
+		v.pid.graphPlot();
 	}
 	if (s.SimRunning == s.TRUSPEED) {
 		v.tS.graphPlot();//draws the graph
