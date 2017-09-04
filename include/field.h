@@ -1,4 +1,5 @@
 #include "cinder/gl/gl.h"
+#include "cinder/ImageIo.h"
 #include "cinder/gl/Texture.h"
 
 #include "vec3.h"
@@ -64,4 +65,5 @@ public:
 	bool initialized;//if the field bare texture is visible or not. 
 	int HELLO;
 	int pushingCones = 0;
+	bool fieldInit;
 };

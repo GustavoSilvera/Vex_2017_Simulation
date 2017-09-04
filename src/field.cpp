@@ -32,13 +32,7 @@ field::element initPoleConfig[2] = {
 };
 
 field::field(robot *robit) : isInit(true) {
-	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
-	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
-	pl.assign(&initPoleConfig[0], &initPoleConfig[2]);
-	isInit = true;
-	robit->p.position.X = 100;
-	robit->p.position.Y = 35;
-	robit->p.mRot = 45;
+	field::initialize(robit);
 }
 //initial mogo values for position and colour
 void field::initialize(robot *robit) {
@@ -49,6 +43,7 @@ void field::initialize(robot *robit) {
 	robit->p.position.X = 100;
 	robit->p.position.Y = 35;
 	robit->p.mRot = 45;
+	fieldInit = false;
 	isInit = true;//so that this only gets called ONCE when the field tab is running
 }
 //initialized everything for the field, such as cone and mogo values, and robot posision

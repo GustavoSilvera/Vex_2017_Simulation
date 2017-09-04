@@ -2,6 +2,8 @@
 #include <string>
 
 using namespace ci;
+const int PID::maxDots;
+
 PID::PID(robot *r) {
 	pid.isRunning = true;
 	isInit = false;
@@ -16,7 +18,10 @@ PID::PID(robot *r) {
 	gr.drawY = 700;
 	gr.midpoint = ((gr.YAxLength) / 2) + gr.drawY;
 	for (int i = 0; i < maxDots; i++) {
-		gr.posY[i] = gr.midpoint;
+		gr.ControllerY[i] = gr.midpoint;
+		gr.ErrorY[i] = gr.midpoint;
+		gr.DerivativeY[i] = gr.midpoint;
+		gr.posX[i] = gr.drawX + i * (gr.XAxLength) / maxDots;
 	}
 	pidVel = true;
 }
@@ -59,30 +64,28 @@ void PID::textOutput(robot *r) {
 }
 void PID::graphPlot() {
 	//axis:
-	gl::drawSolidRect(Rectf(gr.drawX, gr.drawY, gr.drawX + 2, gr.drawY + gr.YAxLength));
+	/*gl::drawSolidRect(Rectf(gr.drawX, gr.drawY, gr.drawX + 2, gr.drawY + gr.YAxLength));
 	gl::drawSolidRect(Rectf(gr.drawX, gr.midpoint - 1, gr.drawX + gr.XAxLength, gr.midpoint + 1));
 	gl::drawString("127", Vec2f(gr.drawX - 30, gr.drawY), Color(1, 1, 1), Font("Arial", 20));
 	gl::drawString("-127", Vec2f(gr.drawX - 35, gr.YAxLength + gr.drawY + 20), Color(1, 1, 1), Font("Arial", 20));
 	gl::drawString("0", Vec2f(gr.drawX - 15, gr.midpoint), Color(1, 1, 1), Font("Arial", 20));
 	//lines:
+	*/
 	int dSize = 2;
 	gl::color(Color(0, 253, 255)); // light blue
 	for (int i = 0; i < maxDots; i++) {
-		int dotX = gr.drawX + i * (gr.XAxLength) / maxDots;//makes the little intervals for the X axis line
-		int dotY = gr.posY[i];
-		gl::drawSolidCircle(Vec2f(dotX, dotY), dSize);
+		gl::drawSolidCircle(Vec2f(gr.posX[i], gr.ControllerY[i]), dSize);
+		if (i != maxDots - 1)gl::drawLine(Vec2f(gr.posX[i], gr.ControllerY[i]), Vec2f(gr.posX[i + 1], gr.ControllerY[i + 1]));
 	}
 	gl::color(Color(1, 0, 0)); // red
 	for (int i = 0; i < maxDots; i++) {
-		int dotX = gr.drawX + i * (gr.XAxLength) / maxDots;//makes the little intervals for the X axis line
-		int dotY = gr.posY2[i];
-		gl::drawSolidCircle(Vec2f(dotX, dotY), dSize);
+		gl::drawSolidCircle(Vec2f(gr.posX[i], gr.ErrorY[i]), dSize);
+		if (i != maxDots - 1)gl::drawLine(Vec2f(gr.posX[i], gr.ErrorY[i]), Vec2f(gr.posX[i + 1], gr.ErrorY[i + 1]));
 	}
 	gl::color(Color(255.0/256.0, 255.0/256.0, 0)); // yellow
 	for (int i = 0; i < maxDots; i++) {
-		int dotX = gr.drawX + i * (gr.XAxLength) / maxDots;//makes the little intervals for the X axis line
-		int dotY = gr.posY3[i];
-		gl::drawSolidCircle(Vec2f(dotX, dotY), dSize);
+		gl::drawSolidCircle(Vec2f(gr.posX[i], gr.DerivativeY[i]), dSize);
+		if (i != maxDots - 1)gl::drawLine(Vec2f(gr.posX[i], gr.DerivativeY[i]), Vec2f(gr.posX[i + 1], gr.DerivativeY[i + 1]));
 	}
 	gl::color(Color::white());//resets the colour 
 
@@ -139,16 +142,16 @@ void PID::PIDUpdate(robot *r) {
 	r->p.position.Y = 69.6;
 	float scale = 0.1;
 	for (int i = 0; i < (maxDots - 1); i++) {//blue line CONTROLLER
-		gr.posY[i] = gr.posY[i + 1];
+		gr.ControllerY[i] = gr.ControllerY[i + 1];
 	}
-	gr.posY[maxDots - 1] = (controller(r)*scale) + gr.midpoint;
+	gr.ControllerY[maxDots - 1] = (controller(r)*scale) + gr.midpoint;
 	for (int i = 0; i < (maxDots - 1); i++) {//red line ERROR P
-		gr.posY2[i] = gr.posY2[i + 1];
+		gr.ErrorY[i] = gr.ErrorY[i + 1];
 	}
-	gr.posY2[maxDots - 1] = (pid.error*scale) + gr.midpoint;
-	for (int i = 0; i < (maxDots - 1); i++) {//yellow line INTEGRAL
-		gr.posY3[i] = gr.posY3[i + 1];
+	gr.ErrorY[maxDots - 1] = (pid.error*scale) + gr.midpoint;
+	for (int i = 0; i < (maxDots - 1); i++) {//yellow line Derivative
+		gr.DerivativeY[i] = gr.DerivativeY[i + 1];
 	}
-	gr.posY3[maxDots - 1] = (pid.derivative*scale) + gr.midpoint;
+	gr.DerivativeY[maxDots - 1] = (pid.derivative*scale) + gr.midpoint;
 }
 

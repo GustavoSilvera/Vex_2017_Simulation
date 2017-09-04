@@ -9,25 +9,28 @@
 #include "robot.h"
 #include "randomstuff.h"
 
+#include <deque>
 #include <vector>
 #include <string>
 
-
 class tSpeed {
 public:
-	tSpeed(robot *r, joystick *j);
-	static const int maxDots = 200;//maximum amount of graph particles for the truspeed sim
+	tSpeed(robot *r);
+	static const int maxDots = 115;//maximum amount of graph particles for the truspeed sim
 	bool isInit;
 	void initialize(robot *r);
 	void textOutput(robot *r, joystick *j);
 	void TruSpeedUpdate(robot *r);
-	void activate(robot *r, joystick *j, double mX, double mY);
+	void activate(robot *r, joystick *j);
 	void graphPlot();
 	struct graph {
 		//graph for speed of the speed of the wheels based off position
 		//for graph moving
-		double RYpos[maxDots];
-		double BYpos[maxDots];
+		int posX[maxDots];
+		std::deque<int> RYpos;//red line (XPOSITION)
+		std::deque<int> BYpos;//blue line (YPOSTION)
+		std::deque<int> GYpos;//green line (NO-TS-X)
+		std::deque<int> YYpos;//yelow line (No-TS-Y)
 		//issue: yaxis length not scaling well with particles
 		int YAxLength, XAxLength;
 		int drawX, drawY;

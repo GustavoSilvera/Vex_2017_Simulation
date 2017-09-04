@@ -16,7 +16,7 @@ class PID {
 public:
 	PID(robot *r);
 	bool isInit;
-	static const int maxDots = 150;//maximum amount of graph particles for the truspeed sim
+	static const int maxDots = 50;//maximum amount of graph particles for the truspeed sim
 	struct maintainPosition {
 		bool isRunning;
 		int threshold;
@@ -26,9 +26,10 @@ public:
 		//, kI, kD;
 	};
 	struct graph {
-		int posY[maxDots];
-		int posY2[maxDots];
-		int posY3[maxDots];
+		int ControllerY[maxDots];
+		int ErrorY[maxDots];
+		int DerivativeY[maxDots];
+		int posX[maxDots];
 		int YAxLength, XAxLength;
 		int drawX, drawY;
 		int midpoint;//midpoint of the graph, if the graph starts 20 points down.tY;

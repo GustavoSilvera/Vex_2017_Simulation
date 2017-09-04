@@ -32,7 +32,7 @@ public:
 	field f;
 	joystick j;
 
-	vex() : tS(&r, &j), pid(&r), n(&r), f(&r){}
+	vex() : tS(&r), pid(&r), n(&r), f(&r){}
 };
 //begin
 int tX = 1200;
@@ -77,6 +77,7 @@ void CimulationApp::setup() {
 	v.r.current.deg = 0;
 	v.r.encoder1 = 0;
 	v.r.encoderLast = 0;
+	
 }
 //cinder::functions
 void CimulationApp::mouseDown(MouseEvent event) {
@@ -91,7 +92,7 @@ void CimulationApp::mouseMove(MouseEvent event) {
 	mousePos.Y = event.getY();
 	if (v.j.withinAnalogRange(mousePos)) {
 		if (s.SimRunning == s.TRUSPEED) {
-			v.tS.activate(&v.r, &v.j, mousePos.X, mousePos.Y);
+			v.tS.activate(&v.r, &v.j);
 		}
 	}
 }
@@ -123,6 +124,9 @@ void CimulationApp::update() {
 	switch (s.SimRunning) {
 	case simulation::NAVIGATION:
 		tX = 1200;
+		v.j.drawX = 300;
+		v.j.drawY = 300;
+		v.j.drawSize = 150;
 		v.pid.isInit = false;
 		v.f.isInit = false;
 		v.tS.isInit = false;
@@ -132,6 +136,9 @@ void CimulationApp::update() {
 		break;
 	case simulation::PIDCTRL:
 		tX = 1200;
+		v.j.drawX = 600;
+		v.j.drawY = 500;
+		v.j.drawSize = 150;
 		v.pid.isInit = true;
 		v.f.isInit = false;
 		v.tS.isInit = false;
@@ -140,6 +147,9 @@ void CimulationApp::update() {
 		break;
 	case simulation::TRUSPEED:
 		tX = 1400;
+		v.j.drawX = 300;
+		v.j.drawY = 300;
+		v.j.drawSize = 300;
 		v.pid.isInit = false;
 		v.f.isInit = false;
 		v.tS.isInit = true;
@@ -149,6 +159,9 @@ void CimulationApp::update() {
 		break;
 	case simulation::FIELD:
 		tX = 1200;
+		v.j.drawX = v.f.f.fieldSize + 100;
+		v.j.drawY = 500;
+		v.j.drawSize = 150;
 		v.pid.isInit = false;
 		v.f.isInit = true;
 		v.tS.isInit = false;
@@ -191,7 +204,8 @@ void buttons() {//function for drawing the buttons
 		clicky(BUTTON_AMOUNT);//function for if a button is being hovered of pressed
 	}
 }
-void CimulationApp::textDraw() {//function for drawing the buttons
+void CimulationApp::textDraw() {//function for drawing the buttons 
+	//(	WARNING: RESOURCE HOG!!!!!!!!!!!)
 	static const int rows = 11;
 	int tY[rows], dInBtw = 50;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
 	//tX = 1200;
@@ -302,10 +316,23 @@ void CimulationApp::drawRobot() {
 
 	glPopMatrix();//end of rotation code
 }
+void drawJoystick(robot *r, joystick *j) {
+	gl::drawStrokedCircle(Vec2f(j->drawX + j->drawSize, j->drawY + j->drawSize), j->drawSize);//circle at (800px, vec3(1, 1, 1), 300px) with radius 127px
+	gl::drawStrokedRect(Area(j->drawX, j->drawY, j->drawX + 2 * j->drawSize, j->drawY + 2 * j->drawSize));
+	if (j->withinAnalogRange(mousePos)) {//defined in joystick.h, basically if within the drawing of the boundaries
+		drawText(round(r->truSpeed(3, j->analogX)), vec3(mousePos.X - 30, mousePos.Y + 50), vec3(1, 1, 1), 30);
+		drawText(round(r->truSpeed(3, j->analogY)), vec3(mousePos.X + 30, mousePos.Y + 50), vec3(1, 1, 1), 30);
+	}
+}
 void CimulationApp::draw() {
 	gl::enableAlphaBlending();//good for transparent images
-							  // clear out the window with black
 	gl::clear(Color(0, 0, 0));
+	/*glEnable(GL_DEPTH_TEST);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDepthMask(GL_TRUE);
+	glDepthFunc(GL_LEQUAL);
+	glDepthRange(0.0f, 1.0f);
+	glClearDepth(1.0f);*/
 	//joystick analog drawing
 	if (s.SimRunning == s.NAVIGATION || s.SimRunning == s.TRUSPEED || s.SimRunning == s.FIELD) {//only for navigation and truspeed sim
 		if (s.SimRunning == s.FIELD) {
@@ -317,15 +344,9 @@ void CimulationApp::draw() {
 			v.r.d.reversed = false;
 			v.j.drawX = 600;
 			v.j.drawY = 500;
-			robotDebug(&v, false);
+			//robotDebug(&v, false);
 		}
-		gl::drawStrokedCircle(Vec2f(v.j.drawX + v.j.drawSize, v.j.drawY + v.j.drawSize), v.j.drawSize);//circle at (800px, vec3(1, 1, 1), 300px) with radius 127px
-		gl::drawStrokedRect(Area(v.j.drawX, v.j.drawY, v.j.drawX + 2 * v.j.drawSize, v.j.drawY + 2 * v.j.drawSize));
-
-		if (v.j.withinAnalogRange(mousePos)) {//defined in joystick.h, basically if within the drawing of the boundaries
-			drawText(round(v.r.truSpeed(3, v.j.analogX)), vec3(mousePos.X - 30, mousePos.Y + 50), vec3(1, 1, 1), 30);
-			drawText(round(v.r.truSpeed(3, v.j.analogY)), vec3(mousePos.X + 30, mousePos.Y + 50), vec3(1, 1, 1), 30);
-		}
+		drawJoystick(&v.r, &v.j);
 	}
 	if (s.SimRunning == s.PIDCTRL) {
 		v.pid.textOutput(&v.r);
@@ -336,11 +357,11 @@ void CimulationApp::draw() {
 		v.tS.textOutput(&v.r, &v.j);//draws the text for the graph
 	}
 	if (s.SimRunning == s.FIELD) {//when field button is pressed
-		gl::pushModelView();//for drawing the field, had to be rotated based off source
-		gl::translate(Vec3f(v.f.f.centre.X, v.f.f.centre.X, 0.0));//origin of rotation
-		gl::rotate(-90);//easy rotation technique
-		gl::draw(v.f.fieldBare, Area(-v.f.f.fieldSize*ppi / 2, -v.f.f.fieldSize*ppi / 2, v.f.f.fieldSize*ppi / 2, v.f.f.fieldSize*ppi / 2));
-		gl::popModelView();//finish drawing the field
+		ci::gl::pushModelView();//for drawing the field, had to be rotated based off source
+		ci::gl::translate(ci::Vec3f(v.f.f.centre.X, v.f.f.centre.X, 0.0));//origin of rotation
+		ci::gl::rotate(-90);//easy rotation technique
+		ci::gl::draw(v.f.fieldBare, ci::Area(-1 * v.f.f.fieldSize*ppi / 2, -v.f.f.fieldSize*ppi / 2, v.f.f.fieldSize*ppi / 2, v.f.f.fieldSize*ppi / 2));
+		ci::gl::popModelView();//finish drawing the field
 		drawRobot();
 		for (int i = 0; i < v.f.mg.size(); i++) {
 			vec3 RGB;//true color value because cinder uses values from 0->1 for their colours
@@ -366,7 +387,7 @@ void CimulationApp::draw() {
 				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) - (v.f.c[v.r.c.holding].rad * ppi),
 				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) + (v.f.c[v.r.c.holding].rad * ppi),
 				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) + (v.f.c[v.r.c.holding].rad * ppi)));
-		robotDebug(&v, true);
+		//robotDebug(&v, true);
 		gl::color(1, 1, 1);
 	}
 	else drawRobot();
@@ -380,6 +401,6 @@ void CimulationApp::draw() {
 	buttons();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3(getWindowWidth() - 90, 30), vec3(0, 1, 0), 30);
-	textDraw();
+	if(s.SimRunning != s.TRUSPEED) textDraw();//dont run on truspeed sim, unnecessary
 }
 CINDER_APP_NATIVE(CimulationApp, RendererGl)
