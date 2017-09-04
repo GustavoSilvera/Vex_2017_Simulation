@@ -12,6 +12,7 @@ public:
 	void forwards(float  power);
 	void rotate(float power);
 	float truSpeed(int degree, float value);
+	void reset();
 	void update();
 	void moveAround(float jAnalogX, float jAnalogY);
 	void setVertices();

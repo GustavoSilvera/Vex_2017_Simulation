@@ -1,7 +1,7 @@
 #include "nav.h"
 
 nav::nav(robot *r) {
-	isInit = true;
+	isInit = false;
 }
 void nav::initialize(robot *r) {
 	r->p.acceleration.X = r->p.acceleration.X = 0; 

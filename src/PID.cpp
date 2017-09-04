@@ -22,8 +22,7 @@ PID::PID(robot *r) {
 }
 void PID::initialize(robot *r) {
 	pid.isRunning = true;
-	r->p.acceleration.X = 0;
-	r->p.velocity.X = r->p.velocity.Y = 0;
+	r->reset();
 	r->p.mRot = 0;
 	r->p.position.Y = 69.6;
 	pid.requestedValue = 69.6;
@@ -88,6 +87,14 @@ void PID::graphPlot() {
 	gl::color(Color::white());//resets the colour 
 
 }
+void PID::reset(robot *r) {
+	r->p.acceleration.X = 0;
+	r->p.velocity.X = r->p.velocity.Y = 0;
+	r->p.mRot = 0;
+	r->p.position.Y = 69.6;
+	r->p.position.X = 69.6;
+	pid.requestedValue = 69.6*ppi;
+}
 float PID::controller(robot *r) {
 	float kP = 1;//remove later
 	float kI = 5;//remove later
@@ -111,7 +118,7 @@ float PID::controller(robot *r) {
 		pid.derivative = 2*(pid.error - pid.lastError);
 		pid.lastError = pid.error;
 		// calculate drive (in this case, just for the robot)
-		return(((kP * pid.error) + (pid.integral / kI) + (kD * pid.derivative)));
+		return(getSign(pid.error)*abs((kP * pid.error) + (pid.integral / kI) + (kD * pid.derivative)));
 	}
 	else {
 		// clear all
@@ -125,8 +132,8 @@ float PID::controller(robot *r) {
 void PID::PIDUpdate(robot *r) {
 	if (!isInit) initialize(r);//checks if not initialized
 	pid.isRunning = true;
-	if(pidVel)r->p.velocity.X = -controller(r) / (127);
-	else r->p.acceleration.X = -controller(r) / (127);
+	if(pidVel)r->p.velocity.X = controller(r) / (127);
+	else r->p.acceleration.X = controller(r) / (127);
 
 	r->p.mRot = 0;
 	r->p.position.Y = 69.6;

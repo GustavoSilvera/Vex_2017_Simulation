@@ -32,7 +32,7 @@ public:
 	field f;
 	joystick j;
 
-	vex() : tS(&r, &j), pid(&r), n(&r){}
+	vex() : tS(&r, &j), pid(&r), n(&r), f(&r){}
 };
 //begin
 int tX = 1200;
@@ -45,7 +45,7 @@ struct simulation {
 		TRUSPEED,
 		FIELD
 	};
-	SimulationType SimRunning = NAVIGATION;//in accordance to which simulation is running, 1 is PID, 2 is NAV, 3 is truspeed... etc
+	SimulationType SimRunning = FIELD;//in accordance to which simulation is running, 1 is PID, 2 is NAV, 3 is truspeed... etc
 };
 simulation s;
 class CimulationApp : public AppNative {
@@ -104,7 +104,8 @@ void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getChar() == 'r' || event.getChar() == 'R') v.r.mg.grabbing = !v.r.mg.grabbing;//if want toggling, else look at a while ago
 	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.c.liftUp = true;
 	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r.c.liftDown = true;//left Z button
-	if (event.getChar() == 'p' || event.getChar() == 'P') v.pid.pidVel = !v.pid.pidVel;//left Z button
+	if (event.getChar() == 'p' || event.getChar() == 'P') v.pid.pidVel = !v.pid.pidVel;//right P button
+	if (event.getChar() == 'o' || event.getChar() == 'O') v.pid.reset(&v.r);
 
 }
 void CimulationApp::keyUp(KeyEvent event) {

@@ -77,7 +77,12 @@ float robot::truSpeed(int degree, float value) {//see here for reference https:/
 		return (exponented) / (divisor);
 	}
 }
-
+void robot::reset() {
+	p.acceleration.X = 0;
+	p.acceleration.Y = 0;
+	p.velocity.X = 0;
+	p.velocity.Y = 0;
+}
 void robot::setVertices() {
 	//gross i know, but its for calculating each vertice of the robot based off its current angle;
 	//math behind is based off basic trig and 45 45 90° triangle analytic geometry

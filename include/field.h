@@ -12,7 +12,7 @@
 //LOOKIE HERE: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
 class field {
 public:
-	field();
+	field(robot *robit);
 
 	std::set<int> pushMoGo;
 	std::set<int> pushCones;

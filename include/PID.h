@@ -38,6 +38,7 @@ public:
 	volatile maintainPosition pid;
 	void textOutput(robot *r);
 	void graphPlot();
+	void reset(robot *r);
 	float controller(robot *r);//actual PID function
 	void PIDUpdate(robot *r);
 	bool pidVel;
