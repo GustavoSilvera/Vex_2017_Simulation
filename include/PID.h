@@ -40,6 +40,6 @@ public:
 	void graphPlot();
 	float controller(robot *r);//actual PID function
 	void PIDUpdate(robot *r);
-
+	bool pidVel;
 };
 #endif

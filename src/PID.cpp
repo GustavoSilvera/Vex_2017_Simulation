@@ -18,6 +18,7 @@ PID::PID(robot *r) {
 	for (int i = 0; i < maxDots; i++) {
 		gr.posY[i] = gr.midpoint;
 	}
+	pidVel = true;
 }
 void PID::initialize(robot *r) {
 	pid.isRunning = true;
@@ -27,6 +28,7 @@ void PID::initialize(robot *r) {
 	r->p.position.Y = 69.6;
 	pid.requestedValue = 69.6;
 	isInit = true;
+	pidVel = true;
 }
 void PID::textOutput(robot *r) {
 	static const int columns = 5;
@@ -123,7 +125,9 @@ float PID::controller(robot *r) {
 void PID::PIDUpdate(robot *r) {
 	if (!isInit) initialize(r);//checks if not initialized
 	pid.isRunning = true;
-	r->p.acceleration.X = -controller(r)/(127);
+	if(pidVel)r->p.velocity.X = -controller(r) / (127);
+	else r->p.acceleration.X = -controller(r) / (127);
+
 	r->p.mRot = 0;
 	r->p.position.Y = 69.6;
 	float scale = 0.1;
