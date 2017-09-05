@@ -49,7 +49,7 @@ void field::initialize(robot *robit) {
 //initialized everything for the field, such as cone and mogo values, and robot posision
 float calcD2Edge(float a, float b, robot *robit) {
 	//EXPLANATION HERE:
-	float C1 = ((((sqr(a) - sqr(b)) / robit->d.size) + robit->d.size) / 2);
+	float C1 = (((sqr(a) - sqr(b)) / robit->d.size) + robit->d.size) / 2;
 	return sqrt(abs(sqr(a) - sqr(C1)));
 }
 //calculate distance to edge of robot
@@ -327,7 +327,9 @@ void field::element::grabbed(robot *robit, int index, int type) {
 		}
 	}
 	else held = false;
-	if (!robit->c.grabbing && pos.Z > 0 || ((!inPositionFront && !inPositionBack) && pos.Z > 0)) {
+	//checking if being dropped
+	if (!robit->c.grabbing && pos.Z > 0 || ((!inPositionFront && !inPositionBack) && pos.Z > 0)) {//bring dropped
+		//ADD SOMETHING TO SAY IF DROPPED ON STAT GOAL OF MOGO, THEN **STACK** IT ATOP
 		pos.Z += -32 / 12;
 		pos.Z += -32 / 12;
 	}

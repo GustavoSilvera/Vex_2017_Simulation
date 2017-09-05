@@ -90,9 +90,11 @@ void CimulationApp::mouseUp(MouseEvent event) {
 void CimulationApp::mouseMove(MouseEvent event) {
 	mousePos.X = event.getX();
 	mousePos.Y = event.getY();
-	if (v.j.withinAnalogRange(mousePos)) {
-		if (s.SimRunning == s.TRUSPEED) {
-			v.tS.activate(&v.r, &v.j);
+	if (mousePos.X >= v.j.drawX) {//optimization check, rather than going through withinanalogrange everytime
+		if (v.j.withinAnalogRange(mousePos)) {
+			if (s.SimRunning == s.TRUSPEED) {
+				v.tS.activate(&v.r, &v.j);
+			}
 		}
 	}
 }

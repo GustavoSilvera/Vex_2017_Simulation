@@ -32,7 +32,7 @@ float limitSmall(float noLessThan, float value) {//not really working anyways. i
 
 void robot::forwards(float power) {
 	//konstants that should be changed later
-	float rateOfChange = 45;//constant changing the amount of initial change the acceleration goes through? maibe
+	float rateOfChange = 75;//constant changing the amount of initial change the acceleration goes through? maibe
 	//calculate acceleration taking friction into account
 	float Xaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.X);
 	float Yaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.Y);
