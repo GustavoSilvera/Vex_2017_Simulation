@@ -47,9 +47,11 @@ public:
 		void fencePush(fence *f);
 		float d2E[2];//0 is d2 top, 1 is d2left, 
 		void robotColl(int index, robot *r, std::set<int> &pushCone, std::set<int> &pushMoGo, int type);
-		void collision(int index, element *e);
-		void grabbed(robot *r, int index, int type);
+		void collision(element *e);
+		void ConeGrabbed(robot *r, int index, element *pl1, element *pl2);
+		void MoGoGrabbed(robot *r, int index);//DEFAULTED FOR MOGOS ONLY
 		bool held;
+		bool stacked;//when stacked on mogo or stationary goals
 		bool tTop, tBott, tLeft, tRight;//booleans for if touching sides of fence
 	};
 	std::vector<element> c;
