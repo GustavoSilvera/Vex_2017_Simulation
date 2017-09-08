@@ -51,7 +51,6 @@ public:
 		void ConeGrabbed(robot *r, int index, element *pl1, element *pl2);
 		void MoGoGrabbed(robot *r, int index);//DEFAULTED FOR MOGOS ONLY
 		bool held;
-		bool stacked;//when stacked on mogo or stationary goals
 		bool tTop, tBott, tLeft, tRight;//booleans for if touching sides of fence
 	};
 	std::vector<element> c;

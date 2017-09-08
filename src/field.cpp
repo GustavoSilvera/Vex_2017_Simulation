@@ -198,12 +198,11 @@ void field::element::collision(element *e) {//collisions from element->element
 		*/
 	}
 }
-
 //functions for collisions between the element and another element
 void field::physics(int index, element *e, robot *robit, int type) {
 	if (e->pos.Z <= c[1].height) {//assuming general mogo height when on ground (dosent interact with grounded objects)
 		for (int k = 0; k < c.size(); k++) {
-			if ((!c[k].held && !c[k].stacked) || c[k].pos.Z < e->height) {
+			if (c[k].pos.Z < e->height){//!(c[k].held && c[k].pos.Z > e->height) || c[k].pos.Z < e->height) {
 				e->fencePush(&f);//pushes the cone from the fence if touching
 				e->robotColl(index, robit, pushCones, pushMoGo, type);
 				if (k != index) e->collision(&c[k]);
@@ -308,7 +307,7 @@ void field::element::ConeGrabbed(robot *robit, int index, element *pl1, element 
 		abs(pos.X - robit->p.position.X + (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2)) < clawRange &&
 		abs(pos.Y - robit->p.position.Y - (robit->d.size / 2) * sin((robit->p.mRot) * PI / 180) * sqrt(2)) < clawRange);
 	if (index < numCones && (robit->c.grabbing && robit->c.holding == index) || (robit->c.grabbing && robit->c.holding == -1)) {//holding only one CONE at once (uses INDEX rather than INDEX with mg modification) ANS INDEX IS ONLY -1
-		if (inPositionFront) {
+		if (inPositionFront && abs(pos.Z - robit->c.liftPos) < height) {
 			//robit->holding = true;//locking the entities in place
 			robit->c.holding = index; //+ 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
 			pos.X = robit->p.position.X - (robit->d.size / 2) * cos((robit->p.mRot) * PI / 180) * sqrt(2);//works
@@ -325,20 +324,15 @@ void field::element::ConeGrabbed(robot *robit, int index, element *pl1, element 
 	//checking if being dropped
 	if (!robit->c.grabbing) {
 		if (dist(pos, pl1->pos) < rad || dist(pos, pl2->pos) < rad) {//if falling on stat 
-			if (pos.Z > pl1->height+3) {//pole 1 height is same as pole2
+			if (pos.Z > pl1->height + 3) {//pole 1 height is same as pole2
 				pos.Z += -32 / 12;
-				stacked = true;
 			}
 			else {
-				stacked = true;
 				pos.Z += 0;
 			}
 		}
-		else {//just fallin'
-			if (!robit->c.grabbing && pos.Z > 0 || (!inPositionFront) && pos.Z > 0) {
-				pos.Z += -32 / 12;
-				stacked = false;
-			}
+		else if (!robit->c.grabbing && pos.Z > 0 || (!inPositionFront && robit->c.grabbing)) {
+			pos.Z += -32 / 12;
 		}
 	}
 }
