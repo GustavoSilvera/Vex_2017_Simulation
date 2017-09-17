@@ -43,6 +43,10 @@ void field::initialize(robot *robit) {
 	robit->p.position.X = 100;
 	robit->p.position.Y = 35;
 	robit->p.mRot = 45;
+	for (int i = 0; i < c.size(); i++) {
+		c[i].landed = true;
+		c[i].held = false;
+	}
 	fieldInit = false;
 	isInit = true;//so that this only gets called ONCE when the field tab is running
 }
@@ -200,7 +204,7 @@ void field::element::collision(element *e) {//collisions from element->element
 }
 //functions for collisions between the element and another element
 void field::physics(int index, element *e, robot *robit, int type) {
-	if (e->pos.Z <= c[1].height) {//assuming general mogo height when on ground (dosent interact with grounded objects)
+	if (e->pos.Z <= c[1].height) {//assuming general cone height when on ground (dosent interact with grounded objects)
 		for (int k = 0; k < c.size(); k++) {
 			if (c[k].pos.Z < e->height){//!(c[k].held && c[k].pos.Z > e->height) || c[k].pos.Z < e->height) {
 				e->fencePush(&f);//pushes the cone from the fence if touching
@@ -315,24 +319,33 @@ void field::element::ConeGrabbed(robot *robit, int index, element *pl1, element 
 			held = true;
 			//checking if shoudl lift;(ASSUMES PERFECT PID)
 			if (abs(robit->c.liftPos - pos.Z) < height) {//makes sure lift is within grabbing distance
-				if (robit->c.liftUp && pos.Z < robit->c.maxHeight || robit->c.liftDown && pos.Z > 0)
+				if (robit->c.liftUp && pos.Z < robit->c.maxHeight || robit->c.liftDown && pos.Z > 0){
 					pos.Z = robit->c.liftPos;//LATER: add something to try to pickyp from center
+					landed = false;
+				}
 			}
 		}
 	}
+	else if (pos.Z > -1 && pos.Z < 1) landed = true;
 	else held = false;
 	//checking if being dropped
-	if (!robit->c.grabbing) {
-		if (dist(pos, pl1->pos) < rad || dist(pos, pl2->pos) < rad) {//if falling on stat 
-			if (pos.Z > pl1->height + 3) {//pole 1 height is same as pole2
+	if ((!robit->c.grabbing && pos.Z > 0) || (!inPositionFront && robit->c.grabbing && pos.Z > 0)) {
+		if(!landed) landed = falling(robit, pl1, landed);
+		if(!landed) landed = falling(robit, pl2, landed);
+	}
+}
+bool field::element::falling(robot *robit, element *obj, bool hasLanded) {
+	if (!hasLanded) {
+		if (dist(pos, obj->pos) < rad) {//if falling on stat 
+			if (pos.Z > obj->height + 4){//had to increase very high, because updates the grabvity effect before sets hadlanded to true
 				pos.Z += -32 / 12;
+				return false;
 			}
-			else {
-				pos.Z += 0;
-			}
+			else return true;//actually lands
 		}
-		else if (!robit->c.grabbing && pos.Z > 0 || (!inPositionFront && robit->c.grabbing)) {
+		else {
 			pos.Z += -32 / 12;
+			return false;
 		}
 	}
 }
