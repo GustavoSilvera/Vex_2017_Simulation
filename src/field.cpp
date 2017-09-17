@@ -28,7 +28,7 @@ field::element initMoGoConfig[numMoGos] = {//array for each configuration of the
 	{ { 127.6, 105.8 }, 1 , MGRad, mgHeight },{ { 105.8, 127.6 }, 2 , MGRad, mgHeight }
 };
 field::element initPoleConfig[2] = {
-	{ { 93, 47.3 }, 3 , 4, 24.64},{ { 46.9, 94 }, 3 , 4, 24.64}
+	{ { 93, 47.3 }, 3 , 4, 24},{ { 46.9, 94 }, 3 , 4, 24}
 };
 
 field::field(robot *robit) : isInit(true) {
@@ -337,7 +337,7 @@ void field::element::ConeGrabbed(robot *robit, int index, element *pl1, element 
 bool field::element::falling(robot *robit, element *obj, bool hasLanded) {
 	if (!hasLanded) {
 		if (dist(pos, obj->pos) < rad) {//if falling on stat 
-			if (pos.Z > obj->height + 4){//had to increase very high, because updates the grabvity effect before sets hadlanded to true
+			if (pos.Z > obj->height + 3){//had to increase very high, because updates the grabvity effect before sets hadlanded to true
 				pos.Z += -32 / 12;
 				return false;
 			}
