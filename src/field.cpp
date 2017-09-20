@@ -329,19 +329,23 @@ void field::element::ConeGrabbed(robot *robit, int index, element *pl1, element 
 	else if (pos.Z > -1 && pos.Z < 1) landed = true;
 	else held = false;
 	//checking if being dropped
-	if ((!robit->c.grabbing && pos.Z > 0) || (!inPositionFront && robit->c.grabbing && pos.Z > 0)) {
+	/*if ((!robit->c.grabbing && pos.Z > 0) || (!inPositionFront && robit->c.grabbing && pos.Z > 0)) {
 		if(!landed) landed = falling(robit, pl1, landed);
 		if(!landed) landed = falling(robit, pl2, landed);
-	}
+	}*/
 }
 bool field::element::falling(robot *robit, element *obj, bool hasLanded) {
-	if (!hasLanded) {
+	if (!hasLanded && pos.Z > 0) {
 		if (dist(pos, obj->pos) < rad) {//if falling on stat 
 			if (pos.Z > obj->height + 3){//had to increase very high, because updates the grabvity effect before sets hadlanded to true
 				pos.Z += -32 / 12;
 				return false;
 			}
-			else return true;//actually lands
+			else { 
+				pos.X += dist(pos, obj->pos);
+				pos.Y += dist(pos, obj->pos);
+				return true;
+			}//actually lands
 		}
 		else {
 			pos.Z += -32 / 12;
@@ -376,6 +380,9 @@ void field::FieldUpdate(robot *robit) {
 		c[i].rad = 0.1*c[i].pos.Z + cRad;//changes radius to enlargen when gets taller
 		c[i].ConeGrabbed(robit, i, &pl[0], &pl[1]);
 		if(c[i].pos.Z < c[i].height) physics(i, &c[i], robit, type);//only affect objects when on ground (or low enough)
+		for (int mog = 0; mog < mg.size(); mog++) {
+			if (!c[i].landed && !robit->c.grabbing) c[i].landed = c[i].falling(robit, &mg[mog], c[i].landed);
+		}
 		//else if (c[i].pos.Z < pl[0].pos.Z) { c[i].collision(&pl[0]); c[i].collision(&pl[1]); }
 	}
 	for (int i = 0; i < mg.size(); i++) {
