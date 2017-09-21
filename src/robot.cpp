@@ -24,12 +24,6 @@ robot::robot() {
 	mg.liftPos = 0;
 }//constructor 
 
-float limitSmall(float noLessThan, float value) {//not really working anyways. idk
-	if (abs(value) >= noLessThan)
-		return value;
-	else return getSign(value)* noLessThan;
-}
-
 void robot::forwards(float power) {
 	//konstants that should be changed later
 	float rateOfChange = 60;//constant changing the amount of initial change the acceleration goes through? maibe

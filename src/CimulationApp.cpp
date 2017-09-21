@@ -395,9 +395,11 @@ void CimulationApp::draw() {
 	else drawRobot();
 
 	gl::color(1, 0, 0);
-	gl::drawSolidCircle(Vec2f(v.f.f.fieldEnd - ppi * (v.f.c[39].pos.X), v.f.f.fieldEnd - ppi * (v.f.c[39].pos.Y)), 5);
-	if (v.f.c[39].landed) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
-	else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
+	//gl::drawSolidCircle(Vec2f(v.f.f.fieldEnd - ppi * (v.f.c[39].pos.X), v.f.f.fieldEnd - ppi * (v.f.c[39].pos.Y)), 5);
+	//if (v.f.c[39].landed) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
+	//else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
+	//drawText(dist(v.f.c[39].pos, v.f.mg[4].pos), vec3(1000, 660), vec3(1, 1, 1), 30);
+
 	gl::color(1, 1, 1);
 	//USER INTERFACE
 	buttons();

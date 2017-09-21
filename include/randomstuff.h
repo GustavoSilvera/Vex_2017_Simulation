@@ -29,20 +29,25 @@
 #define coefMag 1.0//e.e
 #define gAngle robit->p.mRot * (PI / 180)
 #define renderRad 1//amount of the robot's radii that are used to calculate cone distance, smaller is more optimized (but calculates for less cones)
-inline int getSign(double value) {//returns whether a number is negative or positive.
+inline int getSign(float value) {//returns whether a number is negative or positive.
 	if (value < 0) { return -1; }
 	else if (value > 0) { return 1; }
 	else { return 0; }
 }
-inline float sqr(double value) {
+inline float sqr(float value) {
 	return value*value;
 }
-inline void drawText(double text, vec3 pos, vec3 colour, int size) {//simplified way of printing variables as text to the display
+inline void drawText(float text, vec3 pos, vec3 colour, int size) {//simplified way of printing variables as text to the display
 	std::stringstream dummyText;
 	std::string PRINT;
 	dummyText << text;
 	dummyText >> PRINT;
 	ci::gl::drawString(PRINT, ci::Vec2f(pos.X, pos.Y), ci::Color(colour.X, colour.Y, colour.Z), ci::Font("Arial", size));
+}
+inline float limitSmall(float noLessThan, float value) {//not really working anyways. idk
+	if (abs(value) >= noLessThan)
+		return value;
+	else return getSign(value)* noLessThan;
 }
 inline float dist(vec3 A, vec3 B) {
 	return sqrt(sqr(A.X - B.X) + sqr(A.Y - B.Y));

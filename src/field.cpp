@@ -46,6 +46,7 @@ void field::initialize(robot *robit) {
 	for (int i = 0; i < c.size(); i++) {
 		c[i].landed = true;
 		c[i].held = false;
+		c[i].fellOn = -1;
 	}
 	fieldInit = false;
 	isInit = true;//so that this only gets called ONCE when the field tab is running
@@ -206,7 +207,7 @@ void field::element::collision(element *e) {//collisions from element->element
 void field::physics(int index, element *e, robot *robit, int type) {
 	if (e->pos.Z <= c[1].height) {//assuming general cone height when on ground (dosent interact with grounded objects)
 		for (int k = 0; k < c.size(); k++) {
-			if (c[k].pos.Z < e->height){//!(c[k].held && c[k].pos.Z > e->height) || c[k].pos.Z < e->height) {
+			if (c[k].pos.Z < e->height && c[k].landed){//had to add the landed, because the gravity would push it down further
 				e->fencePush(&f);//pushes the cone from the fence if touching
 				e->robotColl(index, robit, pushCones, pushMoGo, type);
 				if (k != index) e->collision(&c[k]);
@@ -216,8 +217,8 @@ void field::physics(int index, element *e, robot *robit, int type) {
 	}
 	if (e->pos.Z <= mg[1].height) {//assuming general mogo height when on ground (dosent interact with grounded objects)
 		for (int m = 0; m < mg.size(); m++) {
-			if (!mg[m].held || mg[m].pos.Z < e->height) {
-				e->fencePush(&f);//pushes the cone from the fence if touching
+			if (mg[m].pos.Z < e->height) {//makes sure is within height of physics mattering
+				e->fencePush(&f);//pushes the mogo from the fence if touching
 				e->robotColl(index, robit, pushCones, pushMoGo, type);
 				if (m != index) e->collision(&mg[m]);
 				else if (type != 1) e->collision(&mg[m]);
@@ -326,7 +327,7 @@ void field::element::ConeGrabbed(robot *robit, int index, element *pl1, element 
 			}
 		}
 	}
-	else if (pos.Z > -1 && pos.Z < 1) landed = true;
+	//else if (pos.Z > -2 && pos.Z < 2) landed = true;//need better margin methodology
 	else held = false;
 	//checking if being dropped
 	/*if ((!robit->c.grabbing && pos.Z > 0) || (!inPositionFront && robit->c.grabbing && pos.Z > 0)) {
@@ -334,24 +335,17 @@ void field::element::ConeGrabbed(robot *robit, int index, element *pl1, element 
 		if(!landed) landed = falling(robit, pl2, landed);
 	}*/
 }
-bool field::element::falling(robot *robit, element *obj, bool hasLanded) {
-	if (!hasLanded && pos.Z > 0) {
-		if (dist(pos, obj->pos) < rad) {//if falling on stat 
-			if (pos.Z > obj->height + 3){//had to increase very high, because updates the grabvity effect before sets hadlanded to true
-				pos.Z += -32 / 12;
-				return false;
-			}
-			else { 
-				pos.X += dist(pos, obj->pos);
-				pos.Y += dist(pos, obj->pos);
-				return true;
-			}//actually lands
-		}
-		else {
-			pos.Z += -32 / 12;
-			return false;
-		}
+void field::element::fallingOn(element *obj, int index) {
+	if (pos.Z > obj->height + 2) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
+		pos.Z += -32 / 12;//gravity?
+		landed = false;//still in air
+		fellOn = -1;//cone hasent fallen on anything yet (or ground)
 	}
+	else {
+		landed = true; //LANDED
+		fellOn = index;//cone has fallen on specific mogo
+	}
+	
 }
 void field::element::MoGoGrabbed(robot *robit, int index) {//ONLY FOR MOGOS
 	index = index + 100;
@@ -380,9 +374,24 @@ void field::FieldUpdate(robot *robit) {
 		c[i].rad = 0.1*c[i].pos.Z + cRad;//changes radius to enlargen when gets taller
 		c[i].ConeGrabbed(robit, i, &pl[0], &pl[1]);
 		if(c[i].pos.Z < c[i].height) physics(i, &c[i], robit, type);//only affect objects when on ground (or low enough)
-		for (int mog = 0; mog < mg.size(); mog++) {
-			if (!c[i].landed && !robit->c.grabbing) c[i].landed = c[i].falling(robit, &mg[mog], c[i].landed);
+		if (c[i].pos.Z > 0) {
+			if (!c[i].landed && !robit->c.grabbing) {
+				for (int mog = 0; mog < mg.size(); mog++) {
+					if (dist(c[i].pos, mg[mog].pos) <= 1.5*cRad) {//added constant to widen range where can drop and stack
+						c[i].fallingOn(&mg[mog], mog);
+					}
+				}
+				if(!c[i].landed) c[i].pos.Z -= 32 / 12;
+			}
+			else if (c[i].landed && c[i].fellOn != -1) {
+				float moveX = 0.5*(c[i].pos.X - mg[c[i].fellOn].pos.X);
+				float moveY = 0.5*(c[i].pos.Y - mg[c[i].fellOn].pos.Y);
+				float min = 0.1;
+				if (abs(moveX) > min) c[i].pos.X -= moveX;
+				if(abs(moveY) > min) c[i].pos.Y -= moveY;
+			}
 		}
+		else c[i].landed = true;
 		//else if (c[i].pos.Z < pl[0].pos.Z) { c[i].collision(&pl[0]); c[i].collision(&pl[1]); }
 	}
 	for (int i = 0; i < mg.size(); i++) {
