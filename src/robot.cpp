@@ -81,8 +81,8 @@ void robot::setVertices() {
 	//gross i know, but its for calculating each vertice of the robot based off its current angle;
 	//math behind is based off basic trig and 45 45 90° triangle analytic geometry
 	
-	double cosDist = (d.size / 2) * cos((p.mRot - 135) * PI / 180) * sqrt(2);
-	double sinDist = (d.size / 2) * sin((p.mRot - 135) * PI / 180) * sqrt(2);
+	float cosDist = (d.size / 2) * cos((p.mRot - 135) * PI / 180) * sqrt(2);
+	float sinDist = (d.size / 2) * sin((p.mRot - 135) * PI / 180) * sqrt(2);
 	if (!d.reversed) {
 		db.vertices[0].X = p.position.X - cosDist;
 		db.vertices[0].Y = p.position.Y + sinDist;

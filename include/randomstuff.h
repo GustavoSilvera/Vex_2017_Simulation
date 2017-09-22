@@ -13,8 +13,8 @@
 
 
 //random #defines and other things that are used throughout all the files
-#define ppi 7.1839
-#define PI 3.14159262
+#define ppi 7.184
+#define PI 3.142
 #define WindowWidth  1600
 #define WindowHeight  1200
 #define numCones 54
@@ -22,10 +22,10 @@
 #define MGRad 5
 #define cHeight 6.82
 #define mgHeight 9.6
-#define statHeight 24.64
+#define statHeight 24.6
 #define numMoGos 8
-#define coneWeight 0.25
-#define moGoWeight 0.75
+#define coneWeight 0.3
+#define moGoWeight 0.8
 #define coefMag 1.0//e.e
 //TYPES
 #define CONE 0
@@ -42,7 +42,7 @@ inline int getSign(float value) {//returns whether a number is negative or posit
 inline float sqr(float value) {
 	return value*value;
 }
-inline void drawText(float text, vec3 pos, vec3 colour, int size) {//simplified way of printing variables as text to the display
+inline void drawText(float text, vec3I pos, vec3I colour, int size) {//simplified way of printing variables as text to the display
 	std::stringstream dummyText;
 	std::string PRINT;
 	dummyText << text;

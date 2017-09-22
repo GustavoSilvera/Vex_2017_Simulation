@@ -51,11 +51,11 @@ void PID::textOutput(robot *r) {
 		tX[0] = 0;//initialize first button
 		tX[i] = (i + 1) * dInBtw;//increment x position for each button based off index
 		gl::drawString(STRING, Vec2f(tX[i] - 70, tY), Color(1, 1, 1), Font("Arial", 30));
-		drawText(DATA, vec3(tX[i], tY), vec3(1, 1, 1), 30);
+		drawText(DATA, vec3I(tX[i], tY), vec3I(1, 1, 1), 30);
 	}
 	gl::color(1, 0, 0);
 	int linePos = 400;
-	drawText(controller(r) / (127 * ppi), vec3(r->p.position.X*ppi, 200), vec3(1, 1, 1), 30);
+	drawText(controller(r) / (127 * ppi), vec3I(r->p.position.X*ppi, 200), vec3I(1, 1, 1), 30);
 	gl::drawLine(cinder::Vec2f(r->p.position.X*ppi, linePos), Vec2f(pid.requestedValue, linePos));
 	gl::drawLine(cinder::Vec2f(r->p.position.X*ppi, linePos+10), Vec2f(r->p.position.X*ppi, linePos - 10));//lil end ticks
 	gl::drawLine(cinder::Vec2f(pid.requestedValue, linePos + 10), Vec2f(pid.requestedValue, linePos - 10));//lil end ticks

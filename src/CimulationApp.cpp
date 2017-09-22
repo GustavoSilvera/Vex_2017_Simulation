@@ -229,7 +229,7 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 		tY[0] = 0;//initialize first button
 		tY[i] = (i + 1) * dInBtw;//increment x position for each button based off index
 		gl::drawString(STRING, Vec2f(tX - 70, tY[i]), Color(1, 1, 1), Font("Arial", 30));
-		drawText(DATA, vec3(tX, tY[i]), vec3(1, 1, 1), 30);
+		drawText(DATA, vec3I(tX, tY[i]), vec3I(1, 1, 1), 30);
 	}
 }
 void robotDebug(vex *v, bool reversed) {
@@ -322,8 +322,8 @@ void drawJoystick(robot *r, joystick *j) {
 	gl::drawStrokedCircle(Vec2f(j->drawX + j->drawSize, j->drawY + j->drawSize), j->drawSize);//circle at (800px, vec3(1, 1, 1), 300px) with radius 127px
 	gl::drawStrokedRect(Area(j->drawX, j->drawY, j->drawX + 2 * j->drawSize, j->drawY + 2 * j->drawSize));
 	if (j->withinAnalogRange(mousePos)) {//defined in joystick.h, basically if within the drawing of the boundaries
-		drawText(round(r->truSpeed(3, j->analogX)), vec3(mousePos.X - 30, mousePos.Y + 50), vec3(1, 1, 1), 30);
-		drawText(round(r->truSpeed(3, j->analogY)), vec3(mousePos.X + 30, mousePos.Y + 50), vec3(1, 1, 1), 30);
+		drawText(round(r->truSpeed(3, j->analogX)), vec3I(mousePos.X - 30, mousePos.Y + 50), vec3I(1, 1, 1), 30);
+		drawText(round(r->truSpeed(3, j->analogY)), vec3I(mousePos.X + 30, mousePos.Y + 50), vec3I(1, 1, 1), 30);
 	}
 }
 void CimulationApp::draw() {
@@ -370,7 +370,11 @@ void CimulationApp::draw() {
 			if (v.f.mg[i].col == 1)/*red mogo*/			RGB = vec3(217, 38, 38);
 			else if (v.f.mg[i].col == 2)/*blue mogo*/	RGB = vec3(0, 64, 255);
 			gl::color(RGB.X / 255, RGB.Y / 255, RGB.Z / 255);
-			gl::draw(v.f.MobileGoal, Area((v.f.f.fieldEnd) - (v.f.mg[i].pos.X*ppi) - (MGRad*ppi), (v.f.f.fieldEnd) - (v.f.mg[i].pos.Y*ppi) - (MGRad * ppi), (v.f.f.fieldEnd) - (v.f.mg[i].pos.X*ppi) + (v.f.mg[i].rad * ppi), (v.f.f.fieldEnd) - (v.f.mg[i].pos.Y*ppi) + (v.f.mg[i].rad * ppi)));
+			gl::draw(v.f.MobileGoal, Area(
+				(v.f.f.fieldEnd) - (v.f.mg[i].pos.X - MGRad) * ppi, 
+				(v.f.f.fieldEnd) - (v.f.mg[i].pos.Y - MGRad) * ppi, 
+				(v.f.f.fieldEnd) - (v.f.mg[i].pos.X + v.f.mg[i].rad) * ppi, 
+				(v.f.f.fieldEnd) - (v.f.mg[i].pos.Y + v.f.mg[i].rad) * ppi));
 		}
 		//drawing each individual cone. oh my
 		for (int i = 0; i < v.f.c.size(); i++) {
@@ -378,18 +382,38 @@ void CimulationApp::draw() {
 			//+-(cRad*ppi) for sayin' that the point pos.X and pos.Y are the center, and the cRad*ppi is 3 inches RADIUS away from the center point
 			gl::color(1, 1, 1);
 			if (i != v.r.c.holding)	gl::draw(v.f.coneTexture, Area(
-				(v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) - (v.f.c[i].rad*ppi),
-				(v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) - (v.f.c[i].rad * ppi),
-				(v.f.f.fieldEnd) - (v.f.c[i].pos.X*ppi) + (v.f.c[i].rad * ppi),
-				(v.f.f.fieldEnd) - (v.f.c[i].pos.Y*ppi) + (v.f.c[i].rad * ppi)));
+				(v.f.f.fieldEnd) - (v.f.c[i].pos.X - v.f.c[i].rad) * ppi,
+				(v.f.f.fieldEnd) - (v.f.c[i].pos.Y - v.f.c[i].rad) * ppi,
+				(v.f.f.fieldEnd) - (v.f.c[i].pos.X + v.f.c[i].rad) * ppi,
+				(v.f.f.fieldEnd) - (v.f.c[i].pos.Y + v.f.c[i].rad) * ppi));
 		}
-		if (v.r.c.holding != -1 && v.r.c.holding < numCones) //if actually holding something (the index exists [!= -1])
+		if (v.r.c.holding != -1 && v.r.c.holding < numCones) { //if actually holding something (the index exists [!= -1])
+			float coneX = v.f.c[v.r.c.holding].pos.X;
+			float coneY = v.f.c[v.r.c.holding].pos.Y;
 			gl::draw(v.f.coneTexture, Area(
-			(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) - (v.f.c[v.r.c.holding].rad * ppi),
-				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) - (v.f.c[v.r.c.holding].rad * ppi),
-				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.X*ppi) + (v.f.c[v.r.c.holding].rad * ppi),
-				(v.f.f.fieldEnd) - (v.f.c[v.r.c.holding].pos.Y*ppi) + (v.f.c[v.r.c.holding].rad * ppi)));
+				(v.f.f.fieldEnd) - (coneX - v.f.c[v.r.c.holding].rad) * ppi,
+				(v.f.f.fieldEnd) - (coneY - v.f.c[v.r.c.holding].rad) * ppi,
+				(v.f.f.fieldEnd) - (coneX + v.f.c[v.r.c.holding].rad) * ppi,
+				(v.f.f.fieldEnd) - (coneY + v.f.c[v.r.c.holding].rad) * ppi) );
+		}
 		//robotDebug(&v, true);
+		for (int i = 0; i < v.f.mg.size(); i++) {//drawing how many are stacked
+			if (v.f.mg[i].stacked.size() > 0) {
+				drawText(v.f.mg[i].stacked.size(), vec3I(
+					(int)(v.f.f.fieldEnd - (v.f.mg[i].pos.X - cRad) * (int)ppi),
+					(int)(v.f.f.fieldEnd - (v.f.mg[i].pos.Y + cRad) * (int)ppi)),
+					vec3I(1, 1, 1), 50);
+			}
+		}
+		for (int i = 0; i < v.f.pl.size(); i++) {//drawing how many are stacked
+			if (v.f.pl[i].stacked.size() > 0) {
+				drawText(v.f.pl[i].stacked.size(), vec3I(
+					(int)(v.f.f.fieldEnd - (v.f.pl[i].pos.X - cRad) * (int)ppi),
+					(int)(v.f.f.fieldEnd - (v.f.pl[i].pos.Y + cRad) * (int)ppi)),
+					vec3I(1, 1, 1), 50);
+			}
+		}
+
 		gl::color(1, 1, 1);
 	}
 	else drawRobot();
@@ -404,7 +428,7 @@ void CimulationApp::draw() {
 	//USER INTERFACE
 	buttons();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
-	drawText(getAverageFps(), vec3(getWindowWidth() - 90, 30), vec3(0, 1, 0), 30);
+	drawText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
 	if(s.SimRunning != s.TRUSPEED) textDraw();//dont run on truspeed sim, unnecessary
 }
 CINDER_APP_NATIVE(CimulationApp, RendererGl)

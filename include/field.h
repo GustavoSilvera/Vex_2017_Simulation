@@ -52,8 +52,8 @@ public:
 		void MoGoGrabbed(robot *r, int index);//DEFAULTED FOR MOGOS ONLY
 		bool held;
 		int fellOn;
+		std::set<int> stacked;
 		volatile bool landed;
-		void fallingOn(element *obj, int index);
 		bool tTop, tBott, tLeft, tRight;//booleans for if touching sides of fence
 	};
 	std::vector<element> c;
@@ -61,13 +61,11 @@ public:
 	std::vector<element> pl;//poles in the field
 	void statGoalPush(element *pl, robot *r, fence *f);
 	void physics(int index, element *e, robot *r, int type);
-	void fallingOn(element *fall, robot *r);
+	void fallingOn(element *fall, robot *r, int index);
 	ci::gl::Texture MobileGoal;
 	ci::gl::Texture coneTexture;
 	ci::gl::Texture fieldBare;
 
 	bool initialized;//if the field bare texture is visible or not. 
-	int HELLO;
-	int pushingCones = 0;
 	bool fieldInit;
 };

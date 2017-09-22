@@ -99,16 +99,16 @@ void tSpeed::textOutput(robot *r, joystick *j) {
 	gl::drawSolidRect(Rectf(gr.drawX + 110, gr.drawY - 18, gr.drawX + 120, gr.drawY - 2));
 	//actual X
 	gl::drawString("Actual X:", Vec2f(gr.drawX + 30, gr.YAxLength + gr.drawY + 10), Color(1, 1, 1), Font("Arial", 25));
-	drawText(j->analogX, vec3(gr.drawX + 130, gr.YAxLength + gr.drawY + 10), vec3(1, 1, 1), 25);
+	drawText(j->analogX, vec3I(gr.drawX + 130, gr.YAxLength + gr.drawY + 10), vec3I(1, 1, 1), 25);
 	//modified X
 	gl::drawString("-->", Vec2f(gr.drawX + 170, gr.YAxLength + gr.drawY + 10), Color(1, 1, 1), Font("Arial", 25));
-	drawText(round(r->truSpeed(3, j->analogX)), vec3(gr.drawX + 210, gr.YAxLength + gr.drawY + 10), vec3(1, 1, 1), 25);
+	drawText(round(r->truSpeed(3, j->analogX)), vec3I(gr.drawX + 210, gr.YAxLength + gr.drawY + 10), vec3I(1, 1, 1), 25);
 	//actual Y
 	gl::drawString("Actual Y:", Vec2f(gr.drawX + 30, gr.YAxLength + gr.drawY + 30), Color(1, 1, 1), Font("Arial", 25));
-	drawText(j->analogY, vec3(gr.drawX + 130, gr.YAxLength + gr.drawY + 30), vec3(1, 1, 1), 25);
+	drawText(j->analogY, vec3I(gr.drawX + 130, gr.YAxLength + gr.drawY + 30), vec3I(1, 1, 1), 25);
 	//modified X
 	gl::drawString("-->", Vec2f(gr.drawX + 170, gr.YAxLength + gr.drawY + 30), Color(1, 1, 1), Font("Arial", 25));
-	drawText(round(r->truSpeed(3, j->analogY)), vec3(gr.drawX + 210, gr.YAxLength + gr.drawY + 30), vec3(1, 1, 1), 25);
+	drawText(round(r->truSpeed(3, j->analogY)), vec3I(gr.drawX + 210, gr.YAxLength + gr.drawY + 30), vec3I(1, 1, 1), 25);
 	
 }
 

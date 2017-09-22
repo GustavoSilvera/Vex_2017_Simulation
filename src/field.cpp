@@ -335,7 +335,7 @@ void field::element::ConeGrabbed(robot *robit, int index, element *pl1, element 
 		if(!landed) landed = falling(robit, pl2, landed);
 	}*/
 }
-void field::fallingOn(element *fall, robot *robit) {
+void field::fallingOn(element *fall, robot *robit, int index) {
 	if (!fall->landed && !robit->c.grabbing) {
 		for (int mog = 0; mog < mg.size(); mog++) {
 			if (!fall->landed) {
@@ -343,10 +343,12 @@ void field::fallingOn(element *fall, robot *robit) {
 					if (fall->pos.Z > mg[mog].height + 4) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
 						fall->pos.Z += -32 / 12;//gravity?
 						fall->landed = false;//still in air
+						mg[mog].stacked.erase(index);
 						fall->fellOn = -1;//cone hasent fallen on anything yet (or ground)
 					}
 					else {
 						fall->landed = true; //LANDED
+						mg[mog].stacked.insert(index);
 						fall->fellOn = mog + MOGO * 100;//cone has fallen on specific mogo(added 100s place value)
 					}
 				}
@@ -359,10 +361,12 @@ void field::fallingOn(element *fall, robot *robit) {
 					if (fall->pos.Z > pl[pol].height + 4) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
 						fall->pos.Z += -32 / 12;//gravity?
 						fall->landed = false;//still in air
+						pl[pol].stacked.erase(index);
 						fall->fellOn = -1;//cone hasent fallen on anything yet (or ground)
 					}
 					else {
 						fall->landed = true;//LANDED
+						pl[pol].stacked.insert(index);
 						fall->fellOn = pol + STAT * 100;//cone has fallen on specific pole (added 200s place value)
 					}
 				}
@@ -418,7 +422,7 @@ void field::FieldUpdate(robot *robit) {
 		c[i].ConeGrabbed(robit, i, &pl[0], &pl[1]);
 		if(c[i].pos.Z < c[i].height) physics(i, &c[i], robit, type);//only affect objects when on ground (or low enough)
 		if (c[i].pos.Z > 0) {
-			fallingOn(&c[i], robit);
+			fallingOn(&c[i], robit, i);//noice
 		}
 		else c[i].landed = true;
 		//else if (c[i].pos.Z < pl[0].pos.Z) { c[i].collision(&pl[0]); c[i].collision(&pl[1]); }
