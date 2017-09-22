@@ -340,7 +340,7 @@ void field::fallingOn(element *fall, robot *robit, int index) {
 		for (int mog = 0; mog < mg.size(); mog++) {
 			if (!fall->landed) {
 				if (dist(fall->pos, mg[mog].pos) <= cRad) {//added constant to widen range where can drop and stack
-					if (fall->pos.Z > mg[mog].height + 4) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
+					if (fall->pos.Z > mg[mog].height + 4 + (mg[mog].stacked.size()* fall->height)) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
 						fall->pos.Z += -32 / 12;//gravity?
 						fall->landed = false;//still in air
 						mg[mog].stacked.erase(index);
@@ -358,7 +358,7 @@ void field::fallingOn(element *fall, robot *robit, int index) {
 		for (int pol = 0; pol < pl.size(); pol++) {
 			if (!fall->landed) {
 				if (dist(fall->pos, pl[pol].pos) <= cRad) {//added constant to widen range where can drop and stack
-					if (fall->pos.Z > pl[pol].height + 4) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
+					if (fall->pos.Z > pl[pol].height + 4 + (pl[pol].stacked.size()* fall->height)) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
 						fall->pos.Z += -32 / 12;//gravity?
 						fall->landed = false;//still in air
 						pl[pol].stacked.erase(index);

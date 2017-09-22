@@ -429,6 +429,6 @@ void CimulationApp::draw() {
 	buttons();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
-	if(s.SimRunning != s.TRUSPEED) textDraw();//dont run on truspeed sim, unnecessary
+	//if(s.SimRunning != s.TRUSPEED) textDraw();//dont run on truspeed sim, unnecessary
 }
 CINDER_APP_NATIVE(CimulationApp, RendererGl)
