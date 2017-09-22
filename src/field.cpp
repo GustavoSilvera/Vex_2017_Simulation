@@ -335,17 +335,60 @@ void field::element::ConeGrabbed(robot *robit, int index, element *pl1, element 
 		if(!landed) landed = falling(robit, pl2, landed);
 	}*/
 }
-void field::element::fallingOn(element *obj, int index) {
-	if (pos.Z > obj->height + 2) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
-		pos.Z += -32 / 12;//gravity?
-		landed = false;//still in air
-		fellOn = -1;//cone hasent fallen on anything yet (or ground)
+void field::fallingOn(element *fall, robot *robit) {
+	if (!fall->landed && !robit->c.grabbing) {
+		for (int mog = 0; mog < mg.size(); mog++) {
+			if (!fall->landed) {
+				if (dist(fall->pos, mg[mog].pos) <= cRad) {//added constant to widen range where can drop and stack
+					if (fall->pos.Z > mg[mog].height + 4) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
+						fall->pos.Z += -32 / 12;//gravity?
+						fall->landed = false;//still in air
+						fall->fellOn = -1;//cone hasent fallen on anything yet (or ground)
+					}
+					else {
+						fall->landed = true; //LANDED
+						fall->fellOn = mog + MOGO * 100;//cone has fallen on specific mogo(added 100s place value)
+					}
+				}
+			}
+			else break;
+		}
+		for (int pol = 0; pol < pl.size(); pol++) {
+			if (!fall->landed) {
+				if (dist(fall->pos, pl[pol].pos) <= cRad) {//added constant to widen range where can drop and stack
+					if (fall->pos.Z > pl[pol].height + 4) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
+						fall->pos.Z += -32 / 12;//gravity?
+						fall->landed = false;//still in air
+						fall->fellOn = -1;//cone hasent fallen on anything yet (or ground)
+					}
+					else {
+						fall->landed = true;//LANDED
+						fall->fellOn = pol + STAT * 100;//cone has fallen on specific pole (added 200s place value)
+					}
+				}
+			}
+			else break;
+		}
+		if (!fall->landed) fall->pos.Z -= 32 / 12;
 	}
-	else {
-		landed = true; //LANDED
-		fellOn = index;//cone has fallen on specific mogo
+	else if (fall->landed && fall->fellOn != -1) {
+		float moveX, moveY;
+		if (fall->fellOn <= numCones) {//if it fell on a cone
+			moveX = 0.5*(fall->pos.X - c[fall->fellOn - CONE * 100].pos.X);
+			moveY = 0.5*(fall->pos.Y - c[fall->fellOn - CONE * 100].pos.Y);
+		}
+		else if (fall->fellOn >= STAT*100) {//if it fell on a stationary goal
+			moveX = 0.5*(fall->pos.X - pl[fall->fellOn - STAT * 100].pos.X);
+			moveY = 0.5*(fall->pos.Y - pl[fall->fellOn - STAT * 100].pos.Y);
+		}
+		else {//between the two (MOGOS)
+			moveX = 0.5*(fall->pos.X - mg[fall->fellOn - MOGO * 100].pos.X);
+			moveY = 0.5*(fall->pos.Y - mg[fall->fellOn - MOGO * 100].pos.Y);
+		}
+		float min = 0.1;
+		if (abs(moveX) > min) fall->pos.X -= moveX;
+		if (abs(moveY) > min) fall->pos.Y -= moveY;
 	}
-	
 }
 void field::element::MoGoGrabbed(robot *robit, int index) {//ONLY FOR MOGOS
 	index = index + 100;
@@ -370,40 +413,26 @@ void field::FieldUpdate(robot *robit) {
 	f.wallPush(robit);
 	for (int i = 0; i < c.size(); i++) {
 		//type for "cone" is 0
-		int type = 0;
+		int type = CONE;
 		c[i].rad = 0.1*c[i].pos.Z + cRad;//changes radius to enlargen when gets taller
 		c[i].ConeGrabbed(robit, i, &pl[0], &pl[1]);
 		if(c[i].pos.Z < c[i].height) physics(i, &c[i], robit, type);//only affect objects when on ground (or low enough)
 		if (c[i].pos.Z > 0) {
-			if (!c[i].landed && !robit->c.grabbing) {
-				for (int mog = 0; mog < mg.size(); mog++) {
-					if (dist(c[i].pos, mg[mog].pos) <= 1.5*cRad) {//added constant to widen range where can drop and stack
-						c[i].fallingOn(&mg[mog], mog);
-					}
-				}
-				if(!c[i].landed) c[i].pos.Z -= 32 / 12;
-			}
-			else if (c[i].landed && c[i].fellOn != -1) {
-				float moveX = 0.5*(c[i].pos.X - mg[c[i].fellOn].pos.X);
-				float moveY = 0.5*(c[i].pos.Y - mg[c[i].fellOn].pos.Y);
-				float min = 0.1;
-				if (abs(moveX) > min) c[i].pos.X -= moveX;
-				if(abs(moveY) > min) c[i].pos.Y -= moveY;
-			}
+			fallingOn(&c[i], robit);
 		}
 		else c[i].landed = true;
 		//else if (c[i].pos.Z < pl[0].pos.Z) { c[i].collision(&pl[0]); c[i].collision(&pl[1]); }
 	}
 	for (int i = 0; i < mg.size(); i++) {
 		//type for "mogo" is 1
-		int type = 1;
+		int type = MOGO;
 		//mg[i].rad = 0.1*mg[i].pos.Z + MGRad;//use better scalar than 0.1, but eventually remove this (because dont rly want to pick up mogos
 		mg[i].MoGoGrabbed(robit, i);
 		physics(i, &mg[i], robit, type);//dont affect things if being lifted into the air
 	}
 	for (int i = 0; i < pl.size(); i++) {
 		//type for stationary goal is 2
-		int type = 2;
+		int type = STAT;
 		pl[0].pos = vec3(93, 47.3);//stationary goal (not moving)
 		pl[1].pos = vec3(46.9, 94);//stationary goal (not moving)
 		statGoalPush(&pl[i], robit, &f);

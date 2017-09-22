@@ -61,7 +61,7 @@ public:
 	std::vector<element> pl;//poles in the field
 	void statGoalPush(element *pl, robot *r, fence *f);
 	void physics(int index, element *e, robot *r, int type);
-
+	void fallingOn(element *fall, robot *r);
 	ci::gl::Texture MobileGoal;
 	ci::gl::Texture coneTexture;
 	ci::gl::Texture fieldBare;

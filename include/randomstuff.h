@@ -27,6 +27,11 @@
 #define coneWeight 0.25
 #define moGoWeight 0.75
 #define coefMag 1.0//e.e
+//TYPES
+#define CONE 0
+#define MOGO 1
+#define STAT 2
+
 #define gAngle robit->p.mRot * (PI / 180)
 #define renderRad 1//amount of the robot's radii that are used to calculate cone distance, smaller is more optimized (but calculates for less cones)
 inline int getSign(float value) {//returns whether a number is negative or positive.
