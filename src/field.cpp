@@ -52,6 +52,16 @@ void field::initialize(robot *robit) {
 	isInit = true;//so that this only gets called ONCE when the field tab is running
 }
 //initialized everything for the field, such as cone and mogo values, and robot posision
+int field::calculateScore() {
+	int score = 0;
+	for (int i = 0; i < mg.size(); i++) {
+		score += 2*mg[i].stacked.size();//each stacked cone is worth 2 points
+	}
+	for (int i = 0; i < 2; i++) {
+		score += 2*pl[i].stacked.size();//each stacked cone is worth 2 points
+	}
+	return score;
+}
 float calcD2Edge(float a, float b, robot *robit) {
 	//EXPLANATION HERE:
 	float C1 = (((sqr(a) - sqr(b)) / robit->d.size) + robit->d.size) / 2;

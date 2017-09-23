@@ -423,6 +423,8 @@ void CimulationApp::draw() {
 	//if (v.f.c[39].landed) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//drawText(dist(v.f.c[39].pos, v.f.mg[4].pos), vec3(1000, 660), vec3(1, 1, 1), 30);
+	gl::drawString("Score:", Vec2f(700, 50), Color(1, 1, 1), Font("Arial", 50));
+	drawText(v.f.calculateScore(), vec3I(850, 50), vec3I(1, 1, 1), 50);
 
 	gl::color(1, 1, 1);
 	//USER INTERFACE

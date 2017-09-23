@@ -62,6 +62,7 @@ public:
 	void statGoalPush(element *pl, robot *r, fence *f);
 	void physics(int index, element *e, robot *r, int type);
 	void fallingOn(element *fall, robot *r, int index);
+	int calculateScore();
 	ci::gl::Texture MobileGoal;
 	ci::gl::Texture coneTexture;
 	ci::gl::Texture fieldBare;
