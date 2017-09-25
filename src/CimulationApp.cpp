@@ -424,9 +424,9 @@ void CimulationApp::draw() {
 	gl::drawSolidCircle(Vec2f(v.f.f.fieldEnd - v.f.mg[2].pos.X*ppi, v.f.f.fieldEnd - v.f.f.poleEquation(140.5, 23.2, -1, v.f.mg[2].pos.X)*ppi), 5);
 	//if (v.f.c[39].landed) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
-	drawText(v.f.f.twentyPoint[0].size(), vec3I(1000, 660), vec3I(1, 1, 1), 30);
-	drawText(v.f.mg[2].pos.Y, vec3I(1000, 500), vec3I(1, 1, 1), 30);
-	drawText(v.f.mg[2].pos.X, vec3I(1000, 400), vec3I(1, 1, 1), 30);
+	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1000, 660), vec3I(1, 1, 1), 30);
+	//drawText(v.f.mg[3].pos.Y, vec3I(1000, 500), vec3I(1, 1, 1), 30);
+	//drawText(v.f.mg[3].pos.X, vec3I(1000, 400), vec3I(1, 1, 1), 30);
 
 	gl::color(1, 1, 1);
 	//USER INTERFACE

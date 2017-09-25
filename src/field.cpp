@@ -416,7 +416,7 @@ void field::fallingOn(element *fall, robot *robit, int index) {
 	}
 }
 void field::element::zoneScore(fence *f, int index) {
-	if (col == 1 && pos.X > f->fieldEnd / 2 && pos.Y < f->fieldEnd / 2) {//red && within bottom left (red) quadrant of field
+	if (col == 1) {//red
 		if (pos.Y <= f->poleEquation(140.5, 23.2, -1, pos.X)) {
 			f->twentyPoint[0].insert(index);
 			f->fivePoint[0].erase(index);
@@ -438,7 +438,7 @@ void field::element::zoneScore(fence *f, int index) {
 			f->tenPoint[0].erase(index);
 		}
 	}
-	else if (col == 2 && pos.X < f->fieldEnd / 2 && pos.Y < f->fieldEnd / 2) {//blue && within top right (bleu) quadrant of field
+	else if (col == 2) {//blue 
 		if (pos.Y >= f->poleEquation(23.2, 140.5, -1, pos.X)) {
 			f->twentyPoint[1].insert(index);
 			f->fivePoint[1].erase(index);
