@@ -30,6 +30,11 @@ public:
 		float d2E[2];
 		/*for stationary goals*/
 		float d2StatGoal[2];
+		/*for zones*/
+		std::set <int> tenPoint[2];//for red and blue
+		std::set <int> fivePoint[2];//for red and blue
+		std::set <int> twentyPoint[2];//for red and blue
+		float poleEquation(float xPoint, float yPoint, float slope, float value);//red and bleu
 	};
 	fence f;
 
@@ -51,6 +56,7 @@ public:
 		void ConeGrabbed(robot *r, int index, element *pl1, element *pl2);
 		void MoGoGrabbed(robot *r, int index);//DEFAULTED FOR MOGOS ONLY
 		bool held;
+		void zoneScore(fence *f, int index);
 		int fellOn;
 		std::set<int> stacked;
 		volatile bool landed;

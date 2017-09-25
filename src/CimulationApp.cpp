@@ -365,6 +365,8 @@ void CimulationApp::draw() {
 		ci::gl::draw(v.f.fieldBare, ci::Area(-1 * v.f.f.fieldSize*ppi / 2, -v.f.f.fieldSize*ppi / 2, v.f.f.fieldSize*ppi / 2, v.f.f.fieldSize*ppi / 2));
 		ci::gl::popModelView();//finish drawing the field
 		drawRobot();
+		gl::drawString("Score:", Vec2f(700, 50), Color(1, 1, 1), Font("Arial", 50));
+		drawText(v.f.calculateScore(), vec3I(850, 50), vec3I(1, 1, 1), 50);
 		for (int i = 0; i < v.f.mg.size(); i++) {
 			vec3 RGB;//true color value because cinder uses values from 0->1 for their colours
 			if (v.f.mg[i].col == 1)/*red mogo*/			RGB = vec3(217, 38, 38);
@@ -419,12 +421,12 @@ void CimulationApp::draw() {
 	else drawRobot();
 
 	gl::color(1, 0, 0);
-	//gl::drawSolidCircle(Vec2f(v.f.f.fieldEnd - ppi * (v.f.c[39].pos.X), v.f.f.fieldEnd - ppi * (v.f.c[39].pos.Y)), 5);
+	gl::drawSolidCircle(Vec2f(v.f.f.fieldEnd - v.f.mg[2].pos.X*ppi, v.f.f.fieldEnd - v.f.f.poleEquation(140.5, 23.2, -1, v.f.mg[2].pos.X)*ppi), 5);
 	//if (v.f.c[39].landed) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
-	//drawText(dist(v.f.c[39].pos, v.f.mg[4].pos), vec3(1000, 660), vec3(1, 1, 1), 30);
-	gl::drawString("Score:", Vec2f(700, 50), Color(1, 1, 1), Font("Arial", 50));
-	drawText(v.f.calculateScore(), vec3I(850, 50), vec3I(1, 1, 1), 50);
+	drawText(v.f.f.twentyPoint[0].size(), vec3I(1000, 660), vec3I(1, 1, 1), 30);
+	drawText(v.f.mg[2].pos.Y, vec3I(1000, 500), vec3I(1, 1, 1), 30);
+	drawText(v.f.mg[2].pos.X, vec3I(1000, 400), vec3I(1, 1, 1), 30);
 
 	gl::color(1, 1, 1);
 	//USER INTERFACE

@@ -60,6 +60,13 @@ int field::calculateScore() {
 	for (int i = 0; i < 2; i++) {
 		score += 2*pl[i].stacked.size();//each stacked cone is worth 2 points
 	}
+	score += f.fivePoint[0].size() * 5;
+	score += f.tenPoint[0].size() * 10;
+	score += f.twentyPoint[0].size() * 20;
+	score += f.fivePoint[1].size() * 5;
+	score += f.tenPoint[1].size() * 10;
+	score += f.twentyPoint[1].size() * 20;
+
 	return score;
 }
 float calcD2Edge(float a, float b, robot *robit) {
@@ -245,6 +252,10 @@ void field::physics(int index, element *e, robot *robit, int type) {
 	}*/
 }
 //function for calling all the collision functions together for el->el and el->robot
+float field::fence::poleEquation(float xPoint, float yPoint, float slope, float value) {
+	return slope * (-value + xPoint) + yPoint;//y-y1 = m(x-x1), and all slopes are negative (in this case)
+}
+
 void field::fence::wallPush(robot *robit) {
 	//deals with robot's boundaries and stationary goals
 	for (int i = 0; i < 4; i++) {
@@ -404,6 +415,52 @@ void field::fallingOn(element *fall, robot *robit, int index) {
 		if (abs(moveY) > min) fall->pos.Y -= moveY;
 	}
 }
+void field::element::zoneScore(fence *f, int index) {
+	if (col == 1 && pos.X > f->fieldEnd / 2 && pos.Y < f->fieldEnd / 2) {//red && within bottom left (red) quadrant of field
+		if (pos.Y <= f->poleEquation(140.5, 23.2, -1, pos.X)) {
+			f->twentyPoint[0].insert(index);
+			f->fivePoint[0].erase(index);
+			f->tenPoint[0].erase(index);
+		}
+		else if (pos.Y <= f->poleEquation(140.5, 46.7, -1, pos.X)) {
+			f->tenPoint[0].insert(index);
+			f->twentyPoint[0].erase(index);
+			f->fivePoint[0].erase(index);
+		}
+		else if (pos.Y <= f->poleEquation(140.5, 70.2, -1, pos.X)) {
+			f->fivePoint[0].insert(index);
+			f->tenPoint[0].erase(index);
+			f->twentyPoint[0].erase(index);
+		}
+		else {
+			f->fivePoint[0].erase(index);
+			f->twentyPoint[0].erase(index);
+			f->tenPoint[0].erase(index);
+		}
+	}
+	else if (col == 2 && pos.X < f->fieldEnd / 2 && pos.Y < f->fieldEnd / 2) {//blue && within top right (bleu) quadrant of field
+		if (pos.Y >= f->poleEquation(23.2, 140.5, -1, pos.X)) {
+			f->twentyPoint[1].insert(index);
+			f->fivePoint[1].erase(index);
+			f->tenPoint[1].erase(index);
+		}
+		else if (pos.Y >= f->poleEquation(46.7, 140.5, -1, pos.X)) {
+			f->tenPoint[1].insert(index);
+			f->twentyPoint[1].erase(index);
+			f->fivePoint[1].erase(index);
+		}
+		else if (pos.Y >= f->poleEquation(70.2, 140.5, -1, pos.X)) {
+			f->fivePoint[1].insert(index);
+			f->tenPoint[1].erase(index);
+			f->twentyPoint[1].erase(index);
+		}
+		else {
+			f->tenPoint[1].erase(index);
+			f->fivePoint[1].erase(index);
+			f->twentyPoint[1].erase(index);
+		}
+	}
+}
 void field::element::MoGoGrabbed(robot *robit, int index) {//ONLY FOR MOGOS
 	index = index + 100;
 	bool inPositionBack = (
@@ -442,6 +499,7 @@ void field::FieldUpdate(robot *robit) {
 		int type = MOGO;
 		//mg[i].rad = 0.1*mg[i].pos.Z + MGRad;//use better scalar than 0.1, but eventually remove this (because dont rly want to pick up mogos
 		mg[i].MoGoGrabbed(robit, i);
+		mg[i].zoneScore(&f, i);
 		physics(i, &mg[i], robit, type);//dont affect things if being lifted into the air
 	}
 	for (int i = 0; i < pl.size(); i++) {
