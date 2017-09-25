@@ -35,6 +35,7 @@ public:
 		std::set <int> fivePoint[2];//for red and blue
 		std::set <int> twentyPoint[2];//for red and blue
 		float poleEquation(float xPoint, float yPoint, float slope, float value);//red and bleu
+		void robotPole(robot *r);//collision between robot and zone poles
 	};
 	fence f;
 

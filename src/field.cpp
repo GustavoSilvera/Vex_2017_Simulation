@@ -255,7 +255,29 @@ void field::physics(int index, element *e, robot *robit, int type) {
 float field::fence::poleEquation(float xPoint, float yPoint, float slope, float value) {
 	return slope * (-value + xPoint) + yPoint;//y-y1 = m(x-x1), and all slopes are negative (in this case)
 }
-
+void field::fence::robotPole(robot *r) {
+	//basically just slows down the robot if its centre passes the poles
+	if (r->p.position.Y <= poleEquation(140.5, 23.2, -1, r->p.position.X)) {//crossed 20 point pole
+		r->p.velocity.X = getSign(r->p.velocity.X) * abs(r->p.velocity.X*0.5);
+		r->p.velocity.Y = getSign(r->p.velocity.Y) * abs(r->p.velocity.Y*0.5);
+		r->p.rotVel = getSign(r->p.rotVel) * abs(r->p.rotVel*0.9);
+	}
+	else if (r->p.position.Y <= poleEquation(140.5, 46.7, -1, r->p.position.X)) {//crossed 10 point pole
+		r->p.velocity.X = getSign(r->p.velocity.X) * abs(r->p.velocity.X*0.75);
+		r->p.velocity.Y = getSign(r->p.velocity.Y) * abs(r->p.velocity.Y*0.75);
+		r->p.rotVel = getSign(r->p.rotVel) * abs(r->p.rotVel*0.9);
+	}
+	if (r->p.position.Y >= poleEquation(23.2, 140.5, -1, r->p.position.X)) {//crossed 20 point pole
+		r->p.velocity.X = getSign(r->p.velocity.X) * abs(r->p.velocity.X*0.5);
+		r->p.velocity.Y = getSign(r->p.velocity.Y) * abs(r->p.velocity.Y*0.5);
+		r->p.rotVel = getSign(r->p.rotVel) * abs(r->p.rotVel*0.9);
+	}
+	else if (r->p.position.Y >= poleEquation(46.7, 140.5, -1, r->p.position.X)) {//crossed 10 point pole
+		r->p.velocity.X = getSign(r->p.velocity.X) * abs(r->p.velocity.X*0.75);
+		r->p.velocity.Y = getSign(r->p.velocity.Y) * abs(r->p.velocity.Y*0.75);
+		r->p.rotVel = getSign(r->p.rotVel) * abs(r->p.rotVel*0.9);
+	}
+}
 void field::fence::wallPush(robot *robit) {
 	//deals with robot's boundaries and stationary goals
 	for (int i = 0; i < 4; i++) {
@@ -482,6 +504,7 @@ void field::element::MoGoGrabbed(robot *robit, int index) {//ONLY FOR MOGOS
 void field::FieldUpdate(robot *robit) {
 	if (!isInit) initialize(robit);
 	f.wallPush(robit);
+	f.robotPole(robit);
 	for (int i = 0; i < c.size(); i++) {
 		//type for "cone" is 0
 		int type = CONE;
