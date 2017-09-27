@@ -6,14 +6,19 @@
 #include "robot.h"
 #include "randomstuff.h"
 
+#include <stdlib.h>
 #include <vector>
 #include <set>
-
+#include <fstream>
+#include <string>
+#include <iostream>
 //declares the class for the robot and all the data that goes with it.
 //LOOKIE HERE: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
 class field {
 public:
+
 	field(robot *robit);
+	std::ofstream textFile;
 
 	std::set<int> pushMoGo;
 	std::set<int> pushCones;

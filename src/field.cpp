@@ -3,32 +3,33 @@
 //declares and defines the field class and functions
 
 //constructor
+
 field::element initConeConfig[numCones] = {//array for each configuration of the cone (in field.h)
 										   //{initial posision (X, Y), color (Y, R, B), radii }
-	{ { 2.9, 13.0 }, 0, cRad, cHeight},{ { 2.9, 23.2 }, 0, cRad, cHeight},{ { 2.9, 34.9 }, 0, cRad, cHeight},{ { 2.9, 46.7 }, 0, cRad, cHeight},
-	{ { 2.9, 58.4 }, 0, cRad, cHeight},{ { 2.9, 70.2 }, 0, cRad, cHeight},{ { 13.0, 2.9 }, 0, cRad, cHeight},{ { 13.0, 13.0 }, 0, cRad, cHeight},
-	{ { 13.0, 23.2 }, 0, cRad, cHeight},{ { 23.2, 2.9 }, 0, cRad, cHeight},{ { 23.2, 13.0 }, 0, cRad, cHeight},{ { 23.2, 23.2 }, 0, cRad, cHeight},
-	{ { 23.2, 34.9 }, 0, cRad, cHeight},{ { 23.2, 46.7 }, 0, cRad, cHeight},{ { 23.2, 58.4 }, 0, cRad, cHeight},{ { 23.2, 70.2 }, 0, cRad, cHeight},
-	{ { 34.9, 2.9 }, 0, cRad, cHeight},{ { 34.9, 23.2 }, 0, cRad, cHeight},{ { 46.7, 2.9 }, 0, cRad, cHeight},{ { 46.7, 23.2 }, 0, cRad, cHeight},
-	{ { 46.7, 46.7 }, 0, cRad, cHeight},{ { 46.7, 58.4 }, 0, cRad, cHeight},{ { 58.4, 2.9 }, 0, cRad, cHeight},{ { 58.4, 23.2 }, 0, cRad, cHeight},
-	{ { 58.4, 46.7 }, 0, cRad, cHeight},{ { 58.4, 70.2 }, 0, cRad, cHeight},{ { 70.2, 2.9 }, 0, cRad, cHeight},{ { 70.2, 23.2 }, 0, cRad, cHeight},
-	{ { 70.2, 58.4 }, 0, cRad, cHeight},{ { 70.2, 82.1 }, 0, cRad, cHeight},{ { 82.1, 70.2 }, 0, cRad, cHeight},{ { 82.1, 93.9 }, 0, cRad, cHeight},
-	{ { 82.1, 139.2 }, 0, cRad, cHeight},{ { 93.9, 82.1 }, 0, cRad, cHeight},{ { 93.9, 93.9 }, 0, cRad, cHeight},{ { 93.9, 117.5 }, 0, cRad, cHeight},
-	{ { 93.9, 137.8 }, 0, cRad, cHeight},{ { 105.8, 117.5 }, 0, cRad, cHeight},{ { 105.8, 137.8 }, 0, cRad, cHeight},{ { 117.5, 93.9 }, 0, cRad, cHeight},
-	{ { 117.5, 105.8 }, 0, cRad, cHeight},{ { 117.5, 117.5 }, 0, cRad, cHeight},{ { 117.5, 127.6 }, 0, cRad, cHeight},{ { 117.5, 137.8 }, 0, cRad, cHeight},
-	{ { 127.6, 117.5 }, 0, cRad, cHeight},{ { 127.6, 127.6 }, 0, cRad, cHeight},{ { 127.6, 137.8 }, 0, cRad, cHeight},{ { 137.8, 82.1 }, 0, cRad, cHeight},
-	{ { 137.8, 93.9 }, 0, cRad, cHeight},{ { 137.8, 105.8 }, 0, cRad, cHeight},{ { 137.8, 117.5 }, 0, cRad, cHeight},{ { 137.8, 127.6 }, 0, cRad, cHeight},
-	{ { 137.8, 137.8 }, 0, cRad, cHeight}
+	{{ 2.9, 13.0 }},{{ 2.9, 23.2 }},{{ 2.9, 34.9 }},{{ 2.9, 46.7 }},
+	{{ 2.9, 58.4 }},{{ 2.9, 70.2 }},{{ 13.0, 2.9 }},{{ 13.0, 13.0 }},
+	{{ 13.0, 23.2 }},{{ 23.2, 2.9 }},{{ 23.2, 13.0 }},{{ 23.2, 23.2 }},
+	{{ 23.2, 34.9 }},{{ 23.2, 46.7 }},{{ 23.2, 58.4 }},{{ 23.2, 70.2 }},
+	{{ 34.9, 2.9 }},{{ 34.9, 23.2 }},{{ 46.7, 2.9 }},{{ 46.7, 23.2 }},
+	{{ 46.7, 46.7 }},{{ 46.7, 58.4 }},{{ 58.4, 2.9 }},{{ 58.4, 23.2 }},
+	{{ 58.4, 46.7 }},{{ 58.4, 70.2 }},{{ 70.2, 2.9 }},{{ 70.2, 23.2 }},
+	{{ 70.2, 58.4 }},{{ 70.2, 82.1 }},{{ 82.1, 70.2 }},{{ 82.1, 93.9 }},
+	{{ 82.1, 139.2 }},{ { 93.9, 82.1 }},{{ 93.9, 93.9 }},{{ 93.9, 117.5 }},
+	{{ 93.9, 137.8 }},{{ 105.8, 117.5 }},{{ 105.8, 137.8 }},{{ 117.5, 93.9 }},
+	{{ 117.5, 105.8 }},{{ 117.5, 117.5 }},{{ 117.5, 127.6 }},{{ 117.5, 137.8 }},
+	{{ 127.6, 117.5 }},{{ 127.6, 127.6 }},{{ 127.6, 137.8 }},{{ 137.8, 82.1 }},
+	{{ 137.8, 93.9 }},{{ 137.8, 105.8 }},{{ 137.8, 117.5 }},{{ 137.8, 127.6 }},
+	{{ 137.8, 137.8 }}
 };
 //initial cone values for position
 field::element initMoGoConfig[numMoGos] = {//array for each configuration of the mobile goal (in field.h)
-	{ { 34.9, 13.0 }, 1 ,  MGRad, mgHeight },{ { 13.0, 34.9 }, 2 , MGRad, mgHeight },
-	{ { 70.2, 46.7 }, 2 , MGRad, mgHeight },{ { 46.7, 70.2 }, 1 , MGRad, mgHeight },
-	{ { 93.9, 70.2 }, 2 , MGRad, mgHeight },{ { 70.2, 93.9 }, 1 , MGRad, mgHeight },
-	{ { 127.6, 105.8 }, 1 , MGRad, mgHeight },{ { 105.8, 127.6 }, 2 , MGRad, mgHeight }
+	{{ 34.9, 13.0 }, 1 ,  MGRad, mgHeight },{{ 13.0, 34.9 }, 2 , MGRad, mgHeight },
+	{{ 70.2, 46.7 }, 2 , MGRad, mgHeight },{{ 46.7, 70.2 }, 1 , MGRad, mgHeight },
+	{{ 93.9, 70.2 }, 2 , MGRad, mgHeight },{{ 70.2, 93.9 }, 1 , MGRad, mgHeight },
+	{{ 127.6, 105.8 }, 1 , MGRad, mgHeight },{{ 105.8, 127.6 }, 2 , MGRad, mgHeight }
 };
 field::element initPoleConfig[2] = {
-	{ { 93, 47.3 }, 3 , 4, 24},{ { 46.9, 94 }, 3 , 4, 24}
+	{{ 93, 47.3 }, 3 , 4, 24},{{ 46.9, 94 }, 3 , 4, 24}
 };
 
 field::field(robot *robit) : isInit(true) {
@@ -36,6 +37,7 @@ field::field(robot *robit) : isInit(true) {
 }
 //initial mogo values for position and colour
 void field::initialize(robot *robit) {
+	textFile = std::ofstream("text.txt");
 	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
 	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
 	pl.assign(&initPoleConfig[0], &initPoleConfig[2]);
@@ -47,7 +49,12 @@ void field::initialize(robot *robit) {
 		c[i].landed = true;
 		c[i].held = false;
 		c[i].fellOn = -1;
+		c[i].col = 0;
+		c[i].rad = cRad;
+		c[i].height = cHeight;
 	}
+	textFile << "//testing data print";
+	textFile.flush();
 	fieldInit = false;
 	isInit = true;//so that this only gets called ONCE when the field tab is running
 }
