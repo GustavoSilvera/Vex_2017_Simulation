@@ -22,10 +22,14 @@ robot::robot() {
 	mg.clawHeight = 2.5;
 	mg.clawSpeed = 0.5;
 	mg.liftPos = 0;
+	d.encoderBase = RESET;
+	d.gyroBase = RESET;
 }//constructor 
 
 void robot::forwards(float power) {
 	//konstants that should be changed later
+	if(power != 0) d.basePower = power;
+	
 	float rateOfChange = 60;//constant changing the amount of initial change the acceleration goes through? maibe
 	//calculate acceleration taking friction into account
 	float Xaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.X);
@@ -50,7 +54,7 @@ void robot::rotate(float power) {
 	if (abs(rotAccel) > 0.3) p.rotAcceleration = rotAccel;
 	else p.rotAcceleration = 0;
 	if (abs(p.rotVel) < 0.1) p.rotVel = 0;
-
+	d.gyroBase = (int)p.mRot;
 }
 
 float robot::truSpeed(int degree, float value) {//see here for reference https://www.desmos.com/calculator/bhwj2xjmef
@@ -120,6 +124,8 @@ void robot::intake::claw(float RobSize, int type) {
 }
 
 void robot::update() {
+	float pastPosX = p.position.X;
+	float pastPosY = p.position.Y;
 	p.acceleration.X += getSign(p.acceleration.X) * coneWeight * p.frictionC 
 		+ getSign(p.acceleration.X) * moGoWeight * p.frictionM;//slows down acceleration when encountering friction
 	p.acceleration.Y += getSign(p.acceleration.Y) * coneWeight * p.frictionC
@@ -132,6 +138,9 @@ void robot::update() {
 	else {
 		p.position.X += p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
 		p.position.Y -= p.velocity.Y * sin((p.mRot)*(PI / 180));//velocity scaled because of rotation
+	}
+	if ((p.velocity.X != 0 && p.velocity.Y != 0) && d.gyroBase == (int)p.mRot) {
+		d.encoderBase += getSign(d.basePower)*sqrt(sqr(p.position.X - pastPosX)+sqr(p.position.Y - pastPosY));
 	}
 	p.rotVel += p.rotAcceleration*(1.0 / 60.0);
 	p.mRot += p.rotVel;

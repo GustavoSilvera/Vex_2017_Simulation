@@ -22,10 +22,10 @@ public:
 	struct debug {;
 	//lines
 		//vertical
-		float slopeV[2];
+		float slopeV;//only need 1 slope, both sides of a square are parallel
 		float YintV[2];
 		//horizontal
-		float slopeH[2];
+		float slopeH;//only need 1 slope, both sides of a square are parallel
 		float YintH[2];
 		vec3 vertices[4];
 	};
@@ -62,6 +62,9 @@ public:
 		physics p;
 	struct details {
 		bool reversed = false;
+		float basePower;
+		float encoderBase;//simulating encoder sensor
+		int gyroBase;//simulating gyro sensor
 		int size = 18;
 	};
 		details d;
@@ -76,7 +79,6 @@ public:
 	ci::gl::Texture TankBase;
 	ci::gl::Texture CChanel;
 	struct position current;
-	float encoder1 = 0;//simulating vex encoder
 	float encoderLast = 0;//last encoder value after a rotation
 	volatile bool fieldSpeed = false;
 };

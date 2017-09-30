@@ -11,13 +11,7 @@ void nav::initialize(robot *r) {
 }
 
 void nav::calculatePos(robot *r) {
-	if (r->p.rotVel == 0) {//not rotating
-						//float Magnitude = ((changeInDist) * 4 * PI) / (360);//function for adding the change in inches to current posiiton
-		r->current.deg = r->p.mRot;
-		r->current.Xpos += cos(r->current.deg*(PI / 180))*(r->encoder1 - r->encoderLast);//cosine of angle times magnitude RADIANS(vector trig)//NOT WORKING
-		r->current.Ypos -= sin(r->current.deg*(PI / 180))*(r->encoder1 - r->encoderLast);//sine of angle times magnitude RADIANS(vector trig)//NOT WORKING
-		r->encoderLast = r->encoder1;
-	}
+
 }
 
 void nav::navUpdate(robot *r) {

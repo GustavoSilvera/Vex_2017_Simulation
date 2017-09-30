@@ -75,8 +75,6 @@ void CimulationApp::setup() {
 	v.r.current.Xpos = 0;
 	v.r.current.Ypos = 0;
 	v.r.current.deg = 0;
-	v.r.encoder1 = 0;
-	v.r.encoderLast = 0;
 	
 }
 //cinder::functions
@@ -208,28 +206,30 @@ void buttons() {//function for drawing the buttons
 }
 void CimulationApp::textDraw() {//function for drawing the buttons 
 	//(	WARNING: RESOURCE HOG!!!!!!!!!!!)
-	static const int rows = 11;
-	int tY[rows], dInBtw = 50;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
-	//tX = 1200;
-	string STRING;
-	float DATA;
-	for (int i = 0; i < rows; i++) {
-		if (i == 0) { STRING = "Angle:"; DATA = v.r.p.mRot; }
-		else if (i == 1) { STRING = "X Pos:"; DATA = v.r.p.position.X; }
-		else if (i == 2) { STRING = "Y Pos:"; DATA = v.r.p.position.Y; }
-		else if (i == 3) { STRING = "X-Vel:"; DATA = v.r.p.velocity.X; }
-		else if (i == 4) { STRING = "Y-Vel:"; DATA = v.r.p.velocity.X; }
-		else if (i == 5) { STRING = "X-Acc:"; DATA = v.r.p.acceleration.X; }//same as y accel
-		else if (i == 6) { STRING = "Y-Acc:"; DATA = v.r.p.acceleration.Y; }//same as X accel
-		else if (i == 7) { STRING = "R-Vel:"; DATA = v.r.p.rotVel; }
-		else if (i == 8) { STRING = "R-Acc:"; DATA = v.r.p.rotAcceleration; }
-		else if (i == 9) { STRING = "L-Pos:"; DATA = v.r.c.liftPos; }
-		else if (i == 10){ STRING = "L-Acc:"; DATA = v.r.p.rotAcceleration; }
-
-		tY[0] = 0;//initialize first button
-		tY[i] = (i + 1) * dInBtw;//increment x position for each button based off index
-		gl::drawString(STRING, Vec2f(tX - 70, tY[i]), Color(1, 1, 1), Font("Arial", 30));
-		drawText(DATA, vec3I(tX, tY[i]), vec3I(1, 1, 1), 30);
+	const int dInBtw = 50;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
+	struct text{
+		string s;
+		float f;
+	};
+	text t[] = { 
+		{ "Angle:", v.r.p.mRot},
+		{ "X Pos:", v.r.p.position.X},
+		{ "Y Pos:", v.r.p.position.Y},
+		{ "X-Vel:", v.r.p.velocity.X},
+		{ "Y-Vel:", v.r.p.velocity.X},
+		{ "X-Acc:", v.r.p.acceleration.X},//same as y accel
+		{ "Y-Acc:", v.r.p.acceleration.Y},//same as X accel
+		{ "R-Vel:", v.r.p.rotVel},
+		{ "R-Acc:", v.r.p.rotAcceleration},
+		{ "L-Pos:", v.r.c.liftPos},
+		{ "L-Acc:", v.r.p.rotAcceleration}
+	};
+	int i = 0;
+	for (text& ti : t) {
+		int tY = (i + 1) * dInBtw;//increment x position for each button based off index
+		gl::drawString(ti.s, Vec2f(tX - 70, tY), Color(1, 1, 1), Font("Arial", 30));
+		drawText(ti.f, vec3I(tX, tY), vec3I(1, 1, 1), 30);
+		++i;
 	}
 }
 void robotDebug(vex *v, bool reversed) {
@@ -425,14 +425,14 @@ void CimulationApp::draw() {
 	//if (v.f.c[39].landed) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1000, 660), vec3I(1, 1, 1), 30);
-	//drawText(v.f.mg[3].pos.Y, vec3I(1000, 500), vec3I(1, 1, 1), 30);
-	//drawText(v.f.mg[3].pos.X, vec3I(1000, 400), vec3I(1, 1, 1), 30);
+	drawText(v.r.d.gyroBase, vec3I(1000, 500), vec3I(1, 1, 1), 30);
+	drawText(v.r.d.encoderBase, vec3I(1000, 400), vec3I(1, 1, 1), 30);
 
 	gl::color(1, 1, 1);
 	//USER INTERFACE
 	buttons();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
-	//if(s.SimRunning != s.TRUSPEED) textDraw();//dont run on truspeed sim, unnecessary
+	//textDraw();//dont run on truspeed sim, unnecessary
 }
 CINDER_APP_NATIVE(CimulationApp, RendererGl)

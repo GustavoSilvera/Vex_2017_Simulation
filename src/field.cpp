@@ -53,7 +53,7 @@ void field::initialize(robot *robit) {
 		c[i].rad = cRad;
 		c[i].height = cHeight;
 	}
-	textFile << "//testing data print";
+	textFile << "//testing Auton producer";
 	textFile.flush();
 	fieldInit = false;
 	isInit = true;//so that this only gets called ONCE when the field tab is running
@@ -97,10 +97,9 @@ void field::element::calcD2Vertices(robot *robit) {
 bool field::element::directlyInVerticalPath(robot *robit) {//vertical lines
 	vec3 origin = pos;//calculattes yintercepts for each cone relative to their position
 	float x = 0;//finds the y intercept
-	robit->db.slopeV[0] = (robit->db.vertices[0].Y - robit->db.vertices[3].Y) / (robit->db.vertices[0].X - robit->db.vertices[3].X);//should be identical to slope[1] kinda redundant i guess
-	robit->db.YintV[0] = robit->db.slopeV[0] * (x - (robit->db.vertices[0].X - origin.X)) + (robit->db.vertices[0].Y - origin.Y);
-	robit->db.slopeV[1] = (robit->db.vertices[1].Y - robit->db.vertices[2].Y) / (robit->db.vertices[1].X - robit->db.vertices[2].X);
-	robit->db.YintV[1] = robit->db.slopeV[1] * (x - (robit->db.vertices[1].X - origin.X)) + (robit->db.vertices[1].Y - origin.Y);
+	robit->db.slopeV = (robit->db.vertices[0].Y - robit->db.vertices[3].Y) / (robit->db.vertices[0].X - robit->db.vertices[3].X);//should be identical to slope[1] kinda redundant i guess
+	robit->db.YintV[0] = robit->db.slopeV * (x - (robit->db.vertices[0].X - origin.X)) + (robit->db.vertices[0].Y - origin.Y);
+	robit->db.YintV[1] = robit->db.slopeV * (x - (robit->db.vertices[1].X - origin.X)) + (robit->db.vertices[1].Y - origin.Y);
 	//with the y intrcepts, checks if the y intercepts are not the same sign, thus the cone (origin) is between them
 	return(getSign(robit->db.YintV[0]) != getSign(robit->db.YintV[1]));//works for telling me if between the two lines
 }
@@ -108,10 +107,9 @@ bool field::element::directlyInVerticalPath(robot *robit) {//vertical lines
 bool field::element::directlyInHorizontalPath(robot *robit) {//horizontal lines
 	vec3 origin = pos;//calculattes yintercepts for each cone relative to their position
 	float x = 0;//finds the y intercept
-	robit->db.slopeH[0] = (robit->db.vertices[0].Y - robit->db.vertices[1].Y) / (robit->db.vertices[0].X - robit->db.vertices[1].X);
-	robit->db.YintH[0] = robit->db.slopeH[0] * (x - (robit->db.vertices[0].X - origin.X)) + (robit->db.vertices[0].Y - origin.Y);
-	robit->db.slopeH[1] = (robit->db.vertices[3].Y - robit->db.vertices[2].Y) / (robit->db.vertices[3].X - robit->db.vertices[2].X);
-	robit->db.YintH[1] = robit->db.slopeH[1] * (x - (robit->db.vertices[3].X - origin.X)) + (robit->db.vertices[3].Y - origin.Y);
+	robit->db.slopeH = (robit->db.vertices[0].Y - robit->db.vertices[1].Y) / (robit->db.vertices[0].X - robit->db.vertices[1].X);
+	robit->db.YintH[0] = robit->db.slopeH * (x - (robit->db.vertices[0].X - origin.X)) + (robit->db.vertices[0].Y - origin.Y);
+	robit->db.YintH[1] = robit->db.slopeH * (x - (robit->db.vertices[3].X - origin.X)) + (robit->db.vertices[3].Y - origin.Y);
 	//with the y intrcepts, checks if the y intercepts are not the same sign, thus the cone (origin) is between them
 	return(getSign(robit->db.YintH[0]) != getSign(robit->db.YintH[1]));//works for telling me if between the two lines
 }

@@ -27,6 +27,7 @@
 #define coneWeight 0.3
 #define moGoWeight 0.8
 #define coefMag 1.0//e.e
+#define RESET 0
 //TYPES
 #define CONE 0
 #define MOGO 1
