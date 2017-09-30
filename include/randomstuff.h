@@ -43,6 +43,10 @@ inline int getSign(float value) {//returns whether a number is negative or posit
 inline float sqr(float value) {
 	return value*value;
 }
+inline float limitTo(float limit, float value) {
+	if (abs(value) < abs(limit)) return value;
+	else return getSign(value) * abs(limit);
+}
 inline void drawText(float text, vec3I pos, vec3I colour, int size) {//simplified way of printing variables as text to the display
 	std::stringstream dummyText;
 	std::string PRINT;

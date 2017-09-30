@@ -135,12 +135,13 @@ float PID::controller(robot *r) {
 void PID::PIDUpdate(robot *r) {
 	if (!isInit) initialize(r);//checks if not initialized
 	pid.isRunning = true;
-	if(pidVel)r->p.velocity.X = controller(r) / (127);
-	else r->p.acceleration.X = controller(r) / (127);
+	//should have option for limiting or nah
+	if(pidVel)r->p.velocity.X = limitTo(5, controller(r) / (127));
+	else r->p.acceleration.X = limitTo(5, controller(r) / (127));
 
 	r->p.mRot = 0;
 	r->p.position.Y = 69.6;
-	float scale = 0.1;
+	float scale = 0.3;//scalar for the truspeed graphs
 	for (int i = 0; i < (maxDots - 1); i++) {//blue line CONTROLLER
 		gr.ControllerY[i] = gr.ControllerY[i + 1];
 	}
