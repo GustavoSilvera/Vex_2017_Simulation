@@ -23,7 +23,6 @@
 #define cHeight 6.82
 #define mgHeight 9.6
 #define statHeight 24.6
-#define numMoGos 8
 #define coneWeight 0.3
 #define moGoWeight 0.8
 #define coefMag 1.0//e.e

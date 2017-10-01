@@ -9,36 +9,38 @@ vec3 V2R(vec3 vec_coord) {
 	return vec3(fieldSizeIn - vec_coord.X, vec_coord.Y, vec_coord.Z);
 }
 
-field::element initConeConfig[] = {//array for each configuration of the cone (in field.h)
+field::cone initConeConfig[] = {//array for each configuration of the cone (in field.h)
 										   //{initial posision (X, Y), color (Y, R, B), radii }
-	{V2R({ 2.9, 13.0 })},{V2R({ 2.9, 23.2 })},{V2R({ 2.9, 34.9 })},{V2R({ 2.9, 46.7 })},
-	{V2R({ 2.9, 58.4 })},{V2R({ 2.9, 70.2 })},{V2R({ 13.0, 2.9 })},{V2R({ 13.0, 13.0 })},
-	{V2R({ 13.0, 23.2 })},{V2R({ 23.2, 2.9 })},{V2R({ 23.2, 13.0 })},{V2R({ 23.2, 23.2 })},
-	{V2R({ 23.2, 34.9 })},{V2R({ 23.2, 46.7 })},{V2R({ 23.2, 58.4 })},{V2R({ 23.2, 70.2 })},
-	{V2R({ 34.9, 2.9 })},{V2R({ 34.9, 23.2 })},{V2R({ 46.7, 2.9 })},{V2R({ 46.7, 23.2 })},
-	{V2R({ 46.7, 46.7 })},{V2R({ 46.7, 58.4 })},{V2R({ 58.4, 2.9 })},{V2R({ 58.4, 23.2 })},
-	{V2R({ 58.4, 46.7 })},{V2R({ 58.4, 70.2 })},{V2R({ 70.2, 2.9 })},{V2R({ 70.2, 23.2 })},
-	{V2R({ 70.2, 58.4 })},{V2R({ 70.2, 82.1 })},{V2R({ 82.1, 70.2 })},{V2R({ 82.1, 93.9 })},
-	{V2R({ 82.1, 139.2 })},{V2R({ 93.9, 82.1 })},{V2R({ 93.9, 93.9 })},{V2R({ 93.9, 117.5 })},
-	{V2R({ 93.9, 137.8 })},{V2R({ 105.8, 117.5 })},{V2R({ 105.8, 137.8 })},{V2R({ 117.5, 93.9 })},
-	{V2R({ 117.5, 105.8 })},{V2R({ 117.5, 117.5 })},{V2R({ 117.5, 127.6 })},{V2R({ 117.5, 137.8 })},
-	{V2R({ 127.6, 117.5 })},{V2R({ 127.6, 127.6 })},{V2R({ 127.6, 137.8 })},{V2R({ 137.8, 82.1 })},
-	{V2R({ 137.8, 93.9 })},{V2R({ 137.8, 105.8 })},{V2R({ 137.8, 117.5 })},{V2R({ 137.8, 127.6 })},
-	{V2R({ 137.8, 137.8 })}
+	{ V2R({ 2.9, 13.0 })},{ V2R({ 2.9, 23.2 })},{ V2R({ 2.9, 34.9 })},{ V2R({ 2.9, 46.7 })},
+	{ V2R({ 2.9, 58.4 })},{ V2R({ 2.9, 70.2 })},{ V2R({ 13.0, 2.9 })},{ V2R({ 13.0, 13.0 })},
+	{ V2R({ 13.0, 23.2 })},{ V2R({ 23.2, 2.9 })},{ V2R({ 23.2, 13.0 })},{ V2R({ 23.2, 23.2 })},
+	{ V2R({ 23.2, 34.9 })},{ V2R({ 23.2, 46.7 })},{ V2R({ 23.2, 58.4 })},{ V2R({ 23.2, 70.2 })},
+	{ V2R({ 34.9, 2.9 })},{ V2R({ 34.9, 23.2 })},{ V2R({ 46.7, 2.9 })},{ V2R({ 46.7, 23.2 })},
+	{ V2R({ 46.7, 46.7 })},{ V2R({ 46.7, 58.4 })},{ V2R({ 58.4, 2.9 })},{ V2R({ 58.4, 23.2 })},
+	{ V2R({ 58.4, 46.7 })},{ V2R({ 58.4, 70.2 })},{ V2R({ 70.2, 2.9 })},{ V2R({ 70.2, 23.2 })},
+	{ V2R({ 70.2, 58.4 })},{ V2R({ 70.2, 82.1 })},{ V2R({ 82.1, 70.2 })},{ V2R({ 82.1, 93.9 })},
+	{ V2R({ 82.1, 139.2 })},{ V2R({ 93.9, 82.1 })},{ V2R({ 93.9, 93.9 })},{ V2R({ 93.9, 117.5 })},
+	{ V2R({ 93.9, 137.8 })},{ V2R({ 105.8, 117.5 })},{ V2R({ 105.8, 137.8 })},{ V2R({ 117.5, 93.9 })},
+	{ V2R({ 117.5, 105.8 })},{ V2R({ 117.5, 117.5 })},{ V2R({ 117.5, 127.6 })},{ V2R({ 117.5, 137.8 })},
+	{ V2R({ 127.6, 117.5 })},{ V2R({ 127.6, 127.6 })},{ V2R({ 127.6, 137.8 })},{ V2R({ 137.8, 82.1 })},
+	{ V2R({ 137.8, 93.9 })},{ V2R({ 137.8, 105.8 })},{ V2R({ 137.8, 117.5 })},{ V2R({ 137.8, 127.6 })},
+	{ V2R({ 137.8, 137.8 })}
 };
-
-int numCones = sizeof(initConeConfig) / sizeof(field::element);
+int numCones = sizeof(initConeConfig) / sizeof(field::cone);
 
 //initial cone values for position
-field::element initMoGoConfig[numMoGos] = {//array for each configuration of the mobile goal (in field.h)
-	{V2R({ 34.9, 13.0 }), 1 ,  MGRad, mgHeight },{ V2R({ 13.0, 34.9 }), 2 , MGRad, mgHeight },
-	{ V2R({ 70.2, 46.7 }), 2 , MGRad, mgHeight },{ V2R({ 46.7, 70.2 }), 1 , MGRad, mgHeight },
-	{ V2R({ 93.9, 70.2 }), 2 , MGRad, mgHeight },{ V2R({70.2, 93.9 }), 1 , MGRad, mgHeight },
-	{ V2R({ 127.6, 105.8 }), 1 , MGRad, mgHeight },{ V2R({105.8, 127.6 }), 2 , MGRad, mgHeight }
+field::MoGo initMoGoConfig[] = {//array for each configuration of the mobile goal (in field.h)
+	{ V2R({ 34.9, 13.0 }), 1  },{ V2R({ 13.0, 34.9 }), 2  },
+	{ V2R({ 70.2, 46.7 }), 2  },{ V2R({ 46.7, 70.2 }), 1  },
+	{ V2R({ 93.9, 70.2 }), 2  },{ V2R({70.2, 93.9 }), 1  },
+	{ V2R({ 127.6, 105.8 }), 1  },{ V2R({105.8, 127.6 }), 2  }
 };
-field::element initPoleConfig[2] = {
-	{V2R({ 93, 47.3 }), 3 , 4, 24},{V2R({ 46.9, 94 }), 3 , 4, 24}
+int numMoGos = sizeof(initMoGoConfig) / sizeof(field::MoGo);
+
+field::stat initPoleConfig[] = {
+	{ V2R({ 93, 47.3 }), 4, 24},{ V2R({ 46.9, 94 }), 4, 24}
 };
+int numPoles = sizeof(initPoleConfig) / sizeof(field::stat);
 field::field(robot *robit) : isInit(true) {
 	field::initialize(robit);
 }
@@ -47,21 +49,11 @@ void field::initialize(robot *robit) {
 	textFile = std::ofstream("text.txt");
 	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
 	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
-	pl.assign(&initPoleConfig[0], &initPoleConfig[2]);
+	pl.assign(&initPoleConfig[0], &initPoleConfig[numPoles]);
 	robit->reset();
 	robit->p.position.X = 35;
 	robit->p.position.Y = 35;
 	robit->p.mRot = 45;
-	for (int i = 0; i < c.size(); i++) {
-		//c[i].landed = true;
-		//c[i].held = false;
-		//c[i].fellOn = -1;
-		c[i].colour = 0;
-		c[i].radius = cRad;
-		c[i].height = cHeight;
-		//c[i].pos.X = 100 / ppi + f.fieldSizeIn - c[i].pos.X;
-		//c[i].pos.Y = 100 / ppi + f.fieldSizeIn - c[i].pos.Y;
-	}
 	textFile << "//testing Auton producer";
 	textFile.flush();
 	fieldInit = false;
@@ -85,7 +77,7 @@ int field::calculateScore() {
 }
 float calcD2Edge(float a, float b, robot *robit) {
 	//EXPLANATION HERE:
-	float C1 = (((sqr(a) - sqr(b)) / robit->d.size) + robit->d.size) / 2;
+	float C1 = ( ( (sqr(a) - sqr(b)) / robit->d.size) + robit->d.size) / 2;
 	return sqrt(abs(sqr(a) - sqr(C1)));
 }
 //calculate distance to edge of robot
@@ -291,7 +283,7 @@ void field::fence::wallPush(robot *robit) {
 		}
 	}
 }
-void field::statGoalPush(element *pl, robot *robit, fence *f) {
+void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 	float d2obj = dist(robit->p.position, pl->pos);
 	if (d2obj < renderRad * robit->d.size) {
 		float d2V[4];
@@ -355,16 +347,21 @@ void field::element::grabbed(robot *robit, int index, int type) {
 			else if (type == MOGO) robit->mg.holding = index + 100; //+ 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
 			pos.X = (robit->p.position.X + mult * (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2));//works
 			pos.Y = (robit->p.position.Y - mult * (robit->d.size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2));//works
-			if (type == CONE && abs(robit->c.liftPos - pos.Z) < height) {//makes sure lift is within grabbing distance
-				if (robit->c.liftUp && pos.Z < robit->c.maxHeight || robit->c.liftDown && pos.Z > 0){
-					pos.Z = robit->c.liftPos;//LATER: add something to try to pickyp from center
-					landed = false;
-				}
+		}
+	}
+}
+void field::cone::coneGrab(robot *robit, int index, int type) {
+	grabbed(robit, index, CONE);
+	if ((index < numCones && robit->c.grabbing && robit->c.holding == index) || (robit->c.grabbing && robit->c.holding == -1)) {
+		if (abs(robit->c.liftPos - pos.Z) < height) {//makes sure lift is within grabbing distance
+			if (robit->c.liftUp && pos.Z < robit->c.maxHeight || robit->c.liftDown && pos.Z > 0) {
+				pos.Z = robit->c.liftPos;//LATER: add something to try to pickyp from center
+				landed = false;
 			}
 		}
 	}
 }
-void field::fallingOn(element *fall, robot *robit, int index) {
+void field::fallingOn(cone *fall, robot *robit, int index) {
 	if (!fall->landed && !robit->c.grabbing) {
 		for (int mog = 0; mog < mg.size(); mog++) {
 			if (!fall->landed) {
@@ -423,7 +420,7 @@ void field::fallingOn(element *fall, robot *robit, int index) {
 		if (abs(moveY) > min) fall->pos.Y -= moveY;
 	}
 }
-void field::element::zoneScore(fence *f, int index) {
+void field::MoGo::zoneScore(fence *f, int index) {
 	if (colour == 1) {//red
 		if (pos.Y <= f->poleEquation(0, 23.2, -1, pos.X)) {
 			f->z[0].twentyPoint.insert(index);
@@ -469,7 +466,6 @@ void field::element::zoneScore(fence *f, int index) {
 		}
 	}
 }
-
 //function for having a 'grabbed' element lock in place
 void field::FieldUpdate(robot *robit) {
 	if (!isInit) initialize(robit);
@@ -479,7 +475,7 @@ void field::FieldUpdate(robot *robit) {
 		//type for "cone" is 0
 		int type = CONE;
 		c[i].radius = 0.1*c[i].pos.Z + cRad;//changes radius to enlargen when gets taller
-		c[i].grabbed(robit, i, CONE);
+		c[i].coneGrab(robit, i, CONE);
 		if(c[i].pos.Z < c[i].height) physics(i, &c[i], robit, type);//only affect objects when on ground (or low enough)
 		if (c[i].pos.Z > 0) {
 			fallingOn(&c[i], robit, i);//noice

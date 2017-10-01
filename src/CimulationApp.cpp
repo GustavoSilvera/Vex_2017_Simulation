@@ -65,17 +65,14 @@ public:
 	vex v;
 };
 void CimulationApp::setup() {
-	srand(time(NULL));
-	gl::enableVerticalSync();
+	srand(time(NULL));//seeds random number generator
+	//gl::enableVerticalSync();
 	v.r.TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
 	v.r.CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
 	v.f.fieldBare = gl::Texture(loadImage(loadAsset("InTheZoneFieldBare.jpg")));
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
 	setWindowSize(WindowWidth, WindowHeight);
-	v.r.current.Xpos = 0;
-	v.r.current.Ypos = 0;
-	v.r.current.deg = 0;
 	
 }
 //cinder::functions
@@ -291,7 +288,7 @@ void CimulationApp::drawClaw() {
 }
 void CimulationApp::drawRobot() {
 	glPushMatrix();
-	robotDebug(&v, true);
+	///robotDebug(&v, true);
 	//had to modify the y because the origin is bottom left hand corner
 	gl::translate(Vec3f(R2S3(v.r.p.position.X, v.r.p.position.Y, 0.0)));//origin of rotation
 	gl::rotate(Vec3f(0, 0, -v.r.p.mRot - 90));//something for like 3D rotation.... ugh
@@ -362,8 +359,6 @@ void CimulationApp::draw() {
 		}
 		//drawing each individual cone. oh my
 		for (int i = 0; i < v.f.c.size(); i++) {
-			//fieldend for where the end of the field is, to subtract values because: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
-			//+-(cRad*ppi) for sayin' that the point pos.X and pos.Y are the center, and the cRad*ppi is 3 inches RADIUS away from the center point
 			gl::color(1, 1, 1);
 			if (i != v.r.c.holding)	gl::draw(v.f.coneTexture, Area(R2S4(
 				(v.f.c[i].pos.X - v.f.c[i].radius),
@@ -382,7 +377,6 @@ void CimulationApp::draw() {
 				(coneY + v.f.c[v.r.c.holding].radius)))
 			);
 		}
-		//robotDebug(&v, true);
 		for (int i = 0; i < v.f.mg.size(); i++) {//drawing how many are stacked
 			if (v.f.mg[i].stacked.size() > 0) {
 				drawText(v.f.mg[i].stacked.size(), vec3I(
@@ -399,7 +393,6 @@ void CimulationApp::draw() {
 					vec3I(1, 1, 1), 50);
 			}
 		}
-
 		gl::color(1, 1, 1);
 	}
 	else drawRobot();

@@ -50,34 +50,42 @@ public:
 	fence f;
 
 	struct element {
+		element(vec3 initpos, float initradius, float initheight) : pos(initpos), radius(initradius), height(initheight) {}
 		vec3 pos;
-		int colour;//0 is yellow, 1 is red, 2 is blue 
 		float radius;//size of the object;
-		/*const */ float height;
+		/*const*/ float height;
 		void calcD2Vertices(robot *r);
-		// float d2V[4];//distance to each vertice on the robot
-		// float d2Robot, d2RobotEdge;
 		bool directlyInVerticalPath(robot *r);
 		bool directlyInHorizontalPath(robot *r);
-		//vec3 closestPoint;
 		void fencePush(fence *f);
-		//float d2E[2];//0 is d2 top, 1 is d2left, 
 		void robotColl(int index, robot *r, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f);
 		void collision(element *e);
 		void grabbed(robot *r, int index, int type);
-		//bool held;
-		void zoneScore(fence *f, int index);
-		int fellOn;
-		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
-		 bool landed;
-//		bool tTop, tBott, tLeft, tRight;//booleans for if touching sides of fence
+
 	};
-	std::vector<element> c;
-	std::vector<element> mg;
-	std::vector<element> pl;//poles in the field
-	void statGoalPush(element *pl, robot *r, fence *f);
+	struct cone : public element {
+		cone(vec3 pos) : element(pos, cRad, cHeight), fellOn(0), landed(false) {}
+		int fellOn;
+		bool landed;
+		void coneGrab(robot *robit, int index, int type);
+	};
+	struct MoGo : public element {
+		MoGo(vec3 pos, int initColour) : element(pos, MGRad, mgHeight), colour(initColour) {}
+		int colour;//0 is yellow, 1 is red, 2 is blue 
+		void mogoGrab(robot *robit, int index, int type);
+		void zoneScore(fence *f, int index);
+		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
+	};
+	struct stat : public element {
+		stat(vec3 pos, float initRad, float initHeight) : element(pos, initRad, initHeight) {}
+		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
+	};
+	std::vector<cone> c;
+	std::vector<MoGo> mg;
+	std::vector<stat> pl;//poles in the field
+	void statGoalPush(stat *pl, robot *r, fence *f);
 	void physics(int index, element *e, robot *r, int type);
-	void fallingOn(element *fall, robot *r, int index);
+	void fallingOn(cone *fall, robot *r, int index);
 	int calculateScore();
 	ci::gl::Texture MobileGoal;
 	ci::gl::Texture coneTexture;

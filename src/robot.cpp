@@ -146,7 +146,7 @@ void robot::update() {
 void robot::moveAround(float jAnalogX, float jAnalogY) {
 	if (ctrl.ArrowKeyUp) forwards(127);//checking up key
 	else if (ctrl.ArrowKeyDown) forwards(-127);//checking down key
-	else if (jAnalogY != 0) forwards(truSpeed(3, jAnalogY));//chacking analog drawing
+	else if (jAnalogY != 0) forwards(truSpeed(3, -jAnalogY));//chacking analog drawing
 	else forwards(0);//welp, no movement
 
 	if (ctrl.RotLeft) rotate(127);//checking left key
