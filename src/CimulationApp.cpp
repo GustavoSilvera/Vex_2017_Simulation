@@ -327,10 +327,8 @@ void CimulationApp::draw() {
 		if (s.SimRunning == s.FIELD) {
 			v.j.drawX = 100 + v.f.f.fieldSizeIn*ppi + 20;
 			v.j.drawY = getWindowHeight() / 2;
-			v.r.d.reversed = true;
 		}
 		else {
-			v.r.d.reversed = false;
 			v.j.drawX = 600;
 			v.j.drawY = 500;
 			//robotDebug(&v, false);

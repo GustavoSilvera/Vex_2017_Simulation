@@ -62,7 +62,6 @@ public:
 	};
 		physics p;
 	struct details {
-		bool reversed = false;
 		float basePower;
 		float encoderBase;//simulating encoder sensor
 		int gyroBase;//simulating gyro sensor
@@ -81,6 +80,5 @@ public:
 	ci::gl::Texture CChanel;
 	struct position current;
 	float encoderLast = 0;//last encoder value after a rotation
-	volatile bool fieldSpeed = false;
 };
 #endif  // ROBOT_H

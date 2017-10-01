@@ -350,7 +350,7 @@ void field::element::grabbed(robot *robit, int index, int type) {
 	bool inPosition = (dist(pos, idealSpot) <= radius);
 	if (type == CONE && (index < numCones && robit->c.grabbing && robit->c.holding == index) || (robit->c.grabbing && robit->c.holding == -1) || 
 		type == MOGO && ((robit->mg.grabbing && robit->mg.holding == index + 100) || (robit->mg.grabbing && robit->mg.holding == -101))) {
-		if ((type == MOGO && inPosition) || (type == CONE && abs(pos.Z - robit->c.liftPos) < height)) {
+		if ((type == MOGO && inPosition) || (type == CONE && inPosition && abs(pos.Z - robit->c.liftPos) < height)) {
 			if (type == CONE) robit->c.holding = index; //+ 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
 			else if (type == MOGO) robit->mg.holding = index + 100; //+ 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
 			pos.X = (robit->p.position.X + mult * (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2));//works
