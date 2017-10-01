@@ -57,6 +57,7 @@ public:
 		float rotAcceleration = 0;
 		int frictionC = 0;
 		int frictionM = 0;
+		void speedMult(float base, float rot);
 		float amountOfFriction = 3;	//constant changing the amount of friction for the robot
 	};
 		physics p;

@@ -136,8 +136,8 @@ void PID::PIDUpdate(robot *r) {
 	if (!isInit) initialize(r);//checks if not initialized
 	pid.isRunning = true;
 	//should have option for limiting or nah
-	if(pidVel)r->p.velocity.X = limitTo(5, controller(r) / (127));
-	else r->p.acceleration.X = limitTo(5, controller(r) / (127));
+	if(pidVel)r->p.velocity.X = limitTo(5, -controller(r) / (127));
+	else r->p.acceleration.X = limitTo(5, -controller(r) / (127));
 
 	r->p.mRot = 0;
 	r->p.position.Y = 69.6;

@@ -21,6 +21,7 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+extern int numCones;
 vec3 startPos;
 vec3 mousePos;
 class vex {
@@ -159,7 +160,7 @@ void CimulationApp::update() {
 		break;
 	case simulation::FIELD:
 		tX = 1200;
-		v.j.drawX = v.f.f.fieldSize + 100;
+		v.j.drawX = v.f.f.fieldSizeIn + 100;
 		v.j.drawY = 500;
 		v.j.drawSize = 150;
 		v.pid.isInit = false;
@@ -171,7 +172,7 @@ void CimulationApp::update() {
 		v.r.moveAround(v.j.analogX, v.j.analogY);
 		break;
 	}
-	v.f.f.fieldEnd = v.f.f.centre.X + v.f.f.fieldSize*ppi / 2;
+	//v.f.f.fieldEnd = v.f.f.centre.X + v.f.f.fieldSizeIn*ppi / 2;
 }
 //for buttons
 void clicky(int AMOUNT_BUTTON) {//function for clicking the buttons
@@ -232,64 +233,54 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 		++i;
 	}
 }
+
+// Map robot coordinates to screen coordinates.
+Vec2f R2S2(vec3 robot_coord) {
+	const double fieldSizeIn = 141.05;
+	return Vec2f(100 + ppi * robot_coord.X, 100 + fieldSizeIn * ppi - ppi * robot_coord.Y);
+}
+Vec3f R2S3(float robot_coordX, float robot_coordY, float robot_coordZ) {//for 3d coords, usually z is 0 coords
+	const double fieldSizeIn = 141.05;
+	return Vec3f(100 + ppi * robot_coordX, 100 + fieldSizeIn * ppi - ppi * robot_coordY, robot_coordZ);
+}
+Rectf R2S4(float p1X, float p1Y, float p2X, float p2Y) {//for rectangular coords
+	const double fieldSizeIn = 141.05;
+	return Rectf(100 + ppi * p1X, 100 + fieldSizeIn * ppi - ppi * p1Y, 100 + ppi * p2X, 100 + fieldSizeIn * ppi - ppi * p2Y);
+}
+
 void robotDebug(vex *v, bool reversed) {
 	gl::color(1, 0, 0);
 	for (int i = 0; i < 4; i++) {//simplified version of drawing the vertices
-		if (reversed) gl::drawSolidCircle(Vec2f(v->f.f.fieldEnd - ppi * v->r.db.vertices[i].X, v->f.f.fieldEnd - ppi * v->r.db.vertices[i].Y), 5 + i);
-		else gl::drawSolidCircle(Vec2f(ppi * v->r.db.vertices[i].X, ppi * v->r.db.vertices[i].Y), 5 + i);
+		if (true) gl::drawSolidCircle(R2S2(v->r.db.vertices[i]), 5 + i);
+		//else gl::drawSolidCircle(Vec2f(ppi * v->r.db.vertices[i].X, ppi * v->r.db.vertices[i].Y), 5 + i);
 	}
-	if (reversed) {
 		//vertice rectangles
-		gl::drawStrokedRect(Area(v->f.f.fieldEnd - v->r.db.vertices[0].X*ppi, v->f.f.fieldEnd - v->r.db.vertices[0].Y*ppi, v->f.f.fieldEnd - v->r.db.vertices[1].X*ppi, v->f.f.fieldEnd - v->r.db.vertices[1].Y*ppi));
-		gl::drawStrokedRect(Area(v->f.f.fieldEnd - v->r.db.vertices[2].X*ppi, v->f.f.fieldEnd - v->r.db.vertices[2].Y*ppi, v->f.f.fieldEnd - v->r.db.vertices[3].X*ppi, v->f.f.fieldEnd - v->r.db.vertices[3].Y*ppi));
+		gl::drawStrokedRect(Area(100 + v->r.db.vertices[0].X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[0].Y*ppi, 100 + v->r.db.vertices[1].X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[1].Y*ppi));
+		gl::drawStrokedRect(Area(100 + v->r.db.vertices[2].X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[2].Y*ppi, 100 +v->r.db.vertices[3].X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[3].Y*ppi));
 		//vertical lines
-		gl::drawLine(cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[1].X + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
-			v->f.f.fieldEnd - (v->r.db.vertices[1].Y + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[2].X - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
-				v->f.f.fieldEnd - (v->r.db.vertices[2].Y - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[0].X + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
-			v->f.f.fieldEnd - (v->r.db.vertices[0].Y + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[3].X - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
-				v->f.f.fieldEnd - (v->r.db.vertices[3].Y - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(100 +(v->r.db.vertices[1].X + 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
+			100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[1].Y + 300 * sin((v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(100 + (v->r.db.vertices[2].X - 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
+				100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[2].Y - 300 * sin((v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f( 100 + (v->r.db.vertices[0].X + 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
+			100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[0].Y + 300 * sin((v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(100 + (v->r.db.vertices[3].X - 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
+				100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[3].Y - 300 * sin((v->r.p.mRot) * PI / 180))*ppi));
 		//horizontal lines
-		gl::drawLine(cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[0].X + 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
-			v->f.f.fieldEnd - (v->r.db.vertices[0].Y + 300 * cos((v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[1].X - 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
-				v->f.f.fieldEnd - (v->r.db.vertices[1].Y - 300 * cos((v->r.p.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[2].X + 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
-			v->f.f.fieldEnd - (v->r.db.vertices[2].Y + 300 * cos((v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.fieldEnd - (v->r.db.vertices[3].X - 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
-				v->f.f.fieldEnd - (v->r.db.vertices[3].Y - 300 * cos((v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(100 + (v->r.db.vertices[0].X + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
+			100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[0].Y + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(100 + (v->r.db.vertices[1].X - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
+				100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[1].Y - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(100 + (v->r.db.vertices[2].X + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
+			100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[2].Y + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(100 + (v->r.db.vertices[3].X - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
+				100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[3].Y - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi));
 		//draw circle
-		gl::drawStrokedCircle(Vec2f(v->f.f.fieldEnd - v->r.p.position.X*ppi, v->f.f.fieldEnd - v->r.p.position.Y*ppi), renderRad * v->r.d.size*ppi);
-	}
-	else {
-		//vertice rectangles
-		gl::drawStrokedRect(Area(v->r.db.vertices[0].X*ppi, v->r.db.vertices[0].Y*ppi, v->r.db.vertices[1].X*ppi, v->r.db.vertices[1].Y*ppi));
-		gl::drawStrokedRect(Area(v->r.db.vertices[2].X*ppi, v->r.db.vertices[2].Y*ppi, v->r.db.vertices[3].X*ppi, v->r.db.vertices[3].Y*ppi));
-		//vertical lines
-		gl::drawLine(cinder::Vec2f((v->r.db.vertices[1].X + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
-			(v->r.db.vertices[1].Y + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f((v->r.db.vertices[2].X - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
-			(v->r.db.vertices[2].Y - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f((v->r.db.vertices[0].X + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
-			(v->r.db.vertices[0].Y + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f((v->r.db.vertices[3].X - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi,
-			(v->r.db.vertices[3].Y - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi));
-		//horizontal lines
-		gl::drawLine(cinder::Vec2f((v->r.db.vertices[0].X + 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
-			(v->r.db.vertices[0].Y + 300 * cos((v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f((v->r.db.vertices[1].X - 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
-			(v->r.db.vertices[1].Y - 300 * cos((v->r.p.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f((v->r.db.vertices[2].X + 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
-			(v->r.db.vertices[2].Y + 300 * cos((v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f((v->r.db.vertices[3].X - 300 * sin((v->r.p.mRot) * PI / 180))*ppi,
-			(v->r.db.vertices[3].Y - 300 * cos((v->r.p.mRot) * PI / 180))*ppi));
-		//draw circle
-		gl::drawStrokedCircle(Vec2f(v->r.p.position.X*ppi, v->r.p.position.Y*ppi), renderRad* v->r.d.size*ppi);
-	}
-	//gl::drawLine(cinder::Vec2f(v.r.db.vertices[0].X*ppi, v.r.db.vertices[0].Y*ppi), cinder::Vec2f(v.r.db.vertices[3].X*ppi, v.r.db.vertices[3].Y*ppi));
-	gl::color(1, 1, 1);//resets colour to white
+		gl::drawStrokedCircle(Vec2f(100 + v->r.p.position.X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.p.position.Y*ppi), renderRad * v->r.d.size*ppi);
+		gl::drawStrokedRect(Area(100 + v->r.db.vertices[0].X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[0].Y*ppi, 100 + v->r.db.vertices[2].X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[2].Y*ppi));
+		
+		gl::drawSolidCircle(Vec2f(100+ppi*(v->r.p.position.X + (v->r.d.size / 2) * cos((-v->r.p.mRot) * PI / 180) * sqrt(2)),
+			100+v->f.f.fieldSizeIn*ppi - ppi*(v->r.p.position.Y - (v->r.d.size / 2) * sin((-v->r.p.mRot) * PI / 180) * sqrt(2))), 5);
 }
 void CimulationApp::drawClaw() {
 	gl::draw(v.r.CChanel, Area((v.r.c.clawSize)*ppi, (v.r.d.size*.5 + v.r.c.baseSize)*ppi, (-v.r.c.clawSize)*ppi, (v.r.d.size*.5)*ppi));
@@ -300,14 +291,10 @@ void CimulationApp::drawClaw() {
 }
 void CimulationApp::drawRobot() {
 	glPushMatrix();
-	if (s.SimRunning == s.FIELD) {
-		gl::translate(Vec3f(v.f.f.fieldEnd - v.r.p.position.X*ppi, v.f.f.fieldEnd - v.r.p.position.Y*ppi, 0.0));//origin of rotation
-		v.r.fieldSpeed = true;
-	}
-	else gl::translate(Vec3f(v.r.p.position.X*ppi, v.r.p.position.Y*ppi, 0.0));//origin of rotation
+	robotDebug(&v, true);
+	//had to modify the y because the origin is bottom left hand corner
+	gl::translate(Vec3f(R2S3(v.r.p.position.X, v.r.p.position.Y, 0.0)));//origin of rotation
 	gl::rotate(Vec3f(0, 0, -v.r.p.mRot - 90));//something for like 3D rotation.... ugh
-											  //gl::color(160.0/255, 160.0/255, 160.0/255);GRAY
-											  //base
 	gl::color(1, 1, 1);
 	gl::draw(v.r.TankBase, Area((-(v.r.d.size / 2))*ppi, (-(v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi));
 	//mogo
@@ -338,7 +325,7 @@ void CimulationApp::draw() {
 	//joystick analog drawing
 	if (s.SimRunning == s.NAVIGATION || s.SimRunning == s.TRUSPEED || s.SimRunning == s.FIELD) {//only for navigation and truspeed sim
 		if (s.SimRunning == s.FIELD) {
-			v.j.drawX = v.f.f.fieldEnd + 20;
+			v.j.drawX = 100 + v.f.f.fieldSizeIn*ppi + 20;
 			v.j.drawY = getWindowHeight() / 2;
 			v.r.d.reversed = true;
 		}
@@ -359,59 +346,58 @@ void CimulationApp::draw() {
 		v.tS.textOutput(&v.r, &v.j);//draws the text for the graph
 	}
 	if (s.SimRunning == s.FIELD) {//when field button is pressed
-		ci::gl::pushModelView();//for drawing the field, had to be rotated based off source
-		ci::gl::translate(ci::Vec3f(v.f.f.centre.X, v.f.f.centre.X, 0.0));//origin of rotation
-		ci::gl::rotate(-90);//easy rotation technique
-		ci::gl::draw(v.f.fieldBare, ci::Area(-1 * v.f.f.fieldSize*ppi / 2, -v.f.f.fieldSize*ppi / 2, v.f.f.fieldSize*ppi / 2, v.f.f.fieldSize*ppi / 2));
-		ci::gl::popModelView();//finish drawing the field
+		ci::gl::draw(v.f.fieldBare, ci::Area(100, 100, 100 + v.f.f.fieldSizeIn*ppi, 100 + v.f.f.fieldSizeIn*ppi ));
 		drawRobot();
 		gl::drawString("Score:", Vec2f(700, 50), Color(1, 1, 1), Font("Arial", 50));
 		drawText(v.f.calculateScore(), vec3I(850, 50), vec3I(1, 1, 1), 50);
 		for (int i = 0; i < v.f.mg.size(); i++) {
 			vec3 RGB;//true color value because cinder uses values from 0->1 for their colours
-			if (v.f.mg[i].col == 1)/*red mogo*/			RGB = vec3(217, 38, 38);
-			else if (v.f.mg[i].col == 2)/*blue mogo*/	RGB = vec3(0, 64, 255);
+			if (v.f.mg[i].colour == 1)/*red mogo*/			RGB = vec3(217, 38, 38);
+			else if (v.f.mg[i].colour == 2)/*blue mogo*/	RGB = vec3(0, 64, 255);
 			gl::color(RGB.X / 255, RGB.Y / 255, RGB.Z / 255);
-			gl::draw(v.f.MobileGoal, Area(
-				(v.f.f.fieldEnd) - (v.f.mg[i].pos.X - MGRad) * ppi, 
-				(v.f.f.fieldEnd) - (v.f.mg[i].pos.Y - MGRad) * ppi, 
-				(v.f.f.fieldEnd) - (v.f.mg[i].pos.X + v.f.mg[i].rad) * ppi, 
-				(v.f.f.fieldEnd) - (v.f.mg[i].pos.Y + v.f.mg[i].rad) * ppi));
+			gl::draw(v.f.MobileGoal, Area(R2S4(
+				(v.f.mg[i].pos.X - MGRad),
+				(v.f.mg[i].pos.Y - MGRad),
+				(v.f.mg[i].pos.X + v.f.mg[i].radius),
+				(v.f.mg[i].pos.Y + v.f.mg[i].radius)))
+				);
 		}
 		//drawing each individual cone. oh my
 		for (int i = 0; i < v.f.c.size(); i++) {
 			//fieldend for where the end of the field is, to subtract values because: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
 			//+-(cRad*ppi) for sayin' that the point pos.X and pos.Y are the center, and the cRad*ppi is 3 inches RADIUS away from the center point
 			gl::color(1, 1, 1);
-			if (i != v.r.c.holding)	gl::draw(v.f.coneTexture, Area(
-				(v.f.f.fieldEnd) - (v.f.c[i].pos.X - v.f.c[i].rad) * ppi,
-				(v.f.f.fieldEnd) - (v.f.c[i].pos.Y - v.f.c[i].rad) * ppi,
-				(v.f.f.fieldEnd) - (v.f.c[i].pos.X + v.f.c[i].rad) * ppi,
-				(v.f.f.fieldEnd) - (v.f.c[i].pos.Y + v.f.c[i].rad) * ppi));
+			if (i != v.r.c.holding)	gl::draw(v.f.coneTexture, Area(R2S4(
+				(v.f.c[i].pos.X - v.f.c[i].radius),
+				(v.f.c[i].pos.Y - v.f.c[i].radius),
+				(v.f.c[i].pos.X + v.f.c[i].radius),
+				(v.f.c[i].pos.Y + v.f.c[i].radius)))
+			);
 		}
 		if (v.r.c.holding != -1 && v.r.c.holding < numCones) { //if actually holding something (the index exists [!= -1])
 			float coneX = v.f.c[v.r.c.holding].pos.X;
 			float coneY = v.f.c[v.r.c.holding].pos.Y;
-			gl::draw(v.f.coneTexture, Area(
-				(v.f.f.fieldEnd) - (coneX - v.f.c[v.r.c.holding].rad) * ppi,
-				(v.f.f.fieldEnd) - (coneY - v.f.c[v.r.c.holding].rad) * ppi,
-				(v.f.f.fieldEnd) - (coneX + v.f.c[v.r.c.holding].rad) * ppi,
-				(v.f.f.fieldEnd) - (coneY + v.f.c[v.r.c.holding].rad) * ppi) );
+			gl::draw(v.f.coneTexture, Area(R2S4(
+				(coneX - v.f.c[v.r.c.holding].radius),
+				(coneY - v.f.c[v.r.c.holding].radius),
+				(coneX + v.f.c[v.r.c.holding].radius),
+				(coneY + v.f.c[v.r.c.holding].radius)))
+			);
 		}
 		//robotDebug(&v, true);
 		for (int i = 0; i < v.f.mg.size(); i++) {//drawing how many are stacked
 			if (v.f.mg[i].stacked.size() > 0) {
 				drawText(v.f.mg[i].stacked.size(), vec3I(
-					(int)(v.f.f.fieldEnd - (v.f.mg[i].pos.X - cRad) * (int)ppi),
-					(int)(v.f.f.fieldEnd - (v.f.mg[i].pos.Y + cRad) * (int)ppi)),
+					70 + (int)((v.f.mg[i].pos.X - cRad) * (int)ppi),
+					50 + (int)((v.f.f.fieldSizeIn - v.f.mg[i].pos.Y + cRad) * (int)ppi)),
 					vec3I(1, 1, 1), 50);
 			}
 		}
 		for (int i = 0; i < v.f.pl.size(); i++) {//drawing how many are stacked
 			if (v.f.pl[i].stacked.size() > 0) {
 				drawText(v.f.pl[i].stacked.size(), vec3I(
-					(int)(v.f.f.fieldEnd - (v.f.pl[i].pos.X - cRad) * (int)ppi),
-					(int)(v.f.f.fieldEnd - (v.f.pl[i].pos.Y + cRad) * (int)ppi)),
+					70 + (int)((v.f.pl[i].pos.X - cRad) * (int)ppi),
+					50 + (int)((v.f.f.fieldSizeIn - v.f.pl[i].pos.Y + cRad) * (int)ppi)),
 					vec3I(1, 1, 1), 50);
 			}
 		}
@@ -421,12 +407,12 @@ void CimulationApp::draw() {
 	else drawRobot();
 
 	gl::color(1, 0, 0);
-	gl::drawSolidCircle(Vec2f(v.f.f.fieldEnd - v.f.mg[2].pos.X*ppi, v.f.f.fieldEnd - v.f.f.poleEquation(140.5, 23.2, -1, v.f.mg[2].pos.X)*ppi), 5);
+	gl::drawSolidCircle(Vec2f(v.f.mg[2].pos.X*ppi, v.f.f.poleEquation(140.5, 23.2, -1, v.f.mg[2].pos.X)*ppi), 5);
 	//if (v.f.c[39].landed) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1000, 660), vec3I(1, 1, 1), 30);
-	drawText(v.r.d.gyroBase, vec3I(1000, 500), vec3I(1, 1, 1), 30);
-	drawText(v.r.d.encoderBase, vec3I(1000, 400), vec3I(1, 1, 1), 30);
+	drawText(v.f.c[0].pos.X, vec3I(1000, 500), vec3I(1, 1, 1), 30);
+	drawText(v.f.c[0].pos.Y, vec3I(1000, 400), vec3I(1, 1, 1), 30);
 
 	gl::color(1, 1, 1);
 	//USER INTERFACE

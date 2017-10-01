@@ -16,29 +16,34 @@
 //LOOKIE HERE: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
 class field {
 public:
-
 	field(robot *robit);
 	std::ofstream textFile;
 
-	std::set<int> pushMoGo;
-	std::set<int> pushCones;
+	typedef int mobileGoalIndex;
+	typedef int coneIndex;
+
+	std::set<mobileGoalIndex> pushMoGo;
+	std::set<coneIndex> pushCones;
 
 	void FieldUpdate(robot *r);
 	void initialize(robot *r);
-	bool isInit;
+	bool isInit; // suggestion: construct instead of initialize
+
 	struct fence {
-		float fieldSize = 141.05;// 140.5 + 2 * (1.27);wall thickness accounted for
-		vec3 centre = vec3(606, 606);//in pixels
-		float fieldEnd = centre.X + fieldSize*ppi / 2;//furthest to the right the field is touching
-		float depth = 1.27;//thickness of the vex fence
+		/*const*/ float fieldSizeIn = 141.05;// 140.5 + 2 * (1.27);wall thickness accounted for
+	//	vec3 centre = vec3(606, 606);//in pixels
+	//	float fieldEnd = centre.X + fieldSizeIn*ppi / 2;//furthest to the right the field is touching
+		float depthIn = 1.27;//thickness of the vex fence
 		void wallPush(robot *r);
-		float d2E[2];
+		// float d2E[2];
 		/*for stationary goals*/
-		float d2StatGoal[2];
-		/*for zones*/
-		std::set <int> tenPoint[2];//for red and blue
-		std::set <int> fivePoint[2];//for red and blue
-		std::set <int> twentyPoint[2];//for red and blue
+		// float d2StatGoal[2];
+		struct zone {
+			std::set<mobileGoalIndex> tenPoint;
+			std::set<mobileGoalIndex> fivePoint;
+			std::set<mobileGoalIndex> twentyPoint;
+		};
+		zone z[2]; // red and blue
 		float poleEquation(float xPoint, float yPoint, float slope, float value);//red and bleu
 		void robotPole(robot *r);//collision between robot and zone poles
 	};
@@ -46,27 +51,26 @@ public:
 
 	struct element {
 		vec3 pos;
-		int col;//0 is yellow, 1 is red, 2 is blue 
-		float rad;//size of the object;
-		float height;
+		int colour;//0 is yellow, 1 is red, 2 is blue 
+		float radius;//size of the object;
+		/*const */ float height;
 		void calcD2Vertices(robot *r);
-		float d2V[4];//distance to each vertice on the robot
-		float d2Robot, d2RobotEdge;
+		// float d2V[4];//distance to each vertice on the robot
+		// float d2Robot, d2RobotEdge;
 		bool directlyInVerticalPath(robot *r);
 		bool directlyInHorizontalPath(robot *r);
-		vec3 closestPoint;
+		//vec3 closestPoint;
 		void fencePush(fence *f);
-		float d2E[2];//0 is d2 top, 1 is d2left, 
-		void robotColl(int index, robot *r, std::set<int> &pushCone, std::set<int> &pushMoGo, int type);
+		//float d2E[2];//0 is d2 top, 1 is d2left, 
+		void robotColl(int index, robot *r, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f);
 		void collision(element *e);
-		void ConeGrabbed(robot *r, int index, element *pl1, element *pl2);
-		void MoGoGrabbed(robot *r, int index);//DEFAULTED FOR MOGOS ONLY
-		bool held;
+		void grabbed(robot *r, int index, int type);
+		//bool held;
 		void zoneScore(fence *f, int index);
 		int fellOn;
-		std::set<int> stacked;
-		volatile bool landed;
-		bool tTop, tBott, tLeft, tRight;//booleans for if touching sides of fence
+		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
+		 bool landed;
+//		bool tTop, tBott, tLeft, tRight;//booleans for if touching sides of fence
 	};
 	std::vector<element> c;
 	std::vector<element> mg;
@@ -81,4 +85,5 @@ public:
 
 	bool initialized;//if the field bare texture is visible or not. 
 	bool fieldInit;
+	//vec3 Rpos;
 };

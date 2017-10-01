@@ -56,7 +56,11 @@ void robot::rotate(float power) {
 	if (abs(p.rotVel) < 0.1) p.rotVel = 0;
 	d.gyroBase = (int)p.mRot;
 }
-
+void robot::physics::speedMult(float base, float rot) {
+	velocity.X = getSign(velocity.X) * abs(velocity.X*base);
+	velocity.Y = getSign(velocity.Y) * abs(velocity.Y*base);
+	rotVel = getSign(rotVel) * abs(rotVel*rot);
+}
 float robot::truSpeed(int degree, float value) {//see here for reference https://www.desmos.com/calculator/bhwj2xjmef
 	float exponented = value;//finished value after being taken to the degree's exponent
 	int divisor = 1;
@@ -84,29 +88,16 @@ void robot::reset() {
 void robot::setVertices() {
 	//gross i know, but its for calculating each vertice of the robot based off its current angle;
 	//math behind is based off basic trig and 45 45 90° triangle analytic geometry
-	
-	float cosDist = (d.size / 2) * cos((p.mRot - 135) * PI / 180) * sqrt(2);
-	float sinDist = (d.size / 2) * sin((p.mRot - 135) * PI / 180) * sqrt(2);
-	if (!d.reversed) {
+	float cosDist = (d.size / 2) * cos((-p.mRot + 135) * PI / 180) * sqrt(2);
+	float sinDist = (d.size / 2) * sin((-p.mRot + 135) * PI / 180) * sqrt(2);
 		db.vertices[0].X = p.position.X - cosDist;
 		db.vertices[0].Y = p.position.Y + sinDist;
-		db.vertices[1].X = p.position.X - sinDist;//flipped sin and cos
-		db.vertices[1].Y = p.position.Y - cosDist;
-		db.vertices[2].X = p.position.X + cosDist;
-		db.vertices[2].Y = p.position.Y - sinDist;
-		db.vertices[3].X = p.position.X + sinDist;//flipped sin and cos
-		db.vertices[3].Y = p.position.Y + cosDist;
-	}
-	else {//because when drawing with new vertice, entire robot gets rotated and so do all its vertices
-		db.vertices[2].X = p.position.X - cosDist;
-		db.vertices[2].Y = p.position.Y + sinDist;
-		db.vertices[3].X = p.position.X - sinDist;//flipped sin and cos
-		db.vertices[3].Y = p.position.Y - cosDist;
-		db.vertices[0].X = p.position.X + cosDist;
-		db.vertices[0].Y = p.position.Y - sinDist;
 		db.vertices[1].X = p.position.X + sinDist;//flipped sin and cos
 		db.vertices[1].Y = p.position.Y + cosDist;
-	}
+		db.vertices[2].X = p.position.X + cosDist;
+		db.vertices[2].Y = p.position.Y - sinDist;
+		db.vertices[3].X = p.position.X - sinDist;//flipped sin and cos
+		db.vertices[3].Y = p.position.Y - cosDist;
 }
 
 void robot::intake::claw(float RobSize, int type) {
@@ -119,7 +110,7 @@ void robot::intake::claw(float RobSize, int type) {
 
 	if (grabbing) { if (clawPos > RobSize / 18) clawPos -= clawSpeed; }//animation for claw close
 	else { if (clawPos < clawSize) clawPos += clawSpeed; }//animation for claw open
-	if (grabbing == false) holding = -1 - type*100;//reset index (TO EITHER -1 (for cones) or -100 (for MOGOS))
+	if (grabbing == false) holding = -1 - type*100;//reset index (TO EITHER -1 (for cones) or -101 (for MOGOS))
 	if (liftDown  && liftPos > 0 && clawPos > clawSize) clawPos -= clawSpeed;
 }
 
@@ -131,14 +122,14 @@ void robot::update() {
 	p.acceleration.Y += getSign(p.acceleration.Y) * coneWeight * p.frictionC
 		+ getSign(p.acceleration.Y) * moGoWeight * p.frictionM;
 	p.velocity = p.velocity + p.acceleration.times(1.0/60.0);
-	if (fieldSpeed) {//weird issue with how the robot is being drawn in the field update with the origin on the bottom right rather than top left
-		p.position.X -= p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
+	//if (fieldSpeed) {//weird issue with how the robot is being drawn in the field update with the origin on the bottom right rather than top left
+		///p.position.X -= p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
 		p.position.Y += p.velocity.Y * sin((p.mRot)*(PI / 180));//velocity scaled because of rotation
-	}
-	else {
+	//}
+	//else {
 		p.position.X += p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
-		p.position.Y -= p.velocity.Y * sin((p.mRot)*(PI / 180));//velocity scaled because of rotation
-	}
+		///p.position.Y -= p.velocity.Y * sin((p.mRot)*(PI / 180));//velocity scaled because of rotation
+	//}
 	if ((p.velocity.X != 0 && p.velocity.Y != 0) && d.gyroBase == (int)p.mRot) {
 		d.encoderBase += getSign(d.basePower)*sqrt(sqr(p.position.X - pastPosX)+sqr(p.position.Y - pastPosY));
 	}
