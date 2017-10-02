@@ -92,5 +92,9 @@ inline int sortSmallVER(float v1, float v2, float v3, float v4) {
 	else if (smallestD2V == v3) return 2;
 	else if (smallestD2V == v4) return 3;
 }
+inline float largest(float v1, float v2) {
+	if (v1 > v2)return v1;
+	else return v2;
+}
 
 #endif  // RANDOMSTUFF_H

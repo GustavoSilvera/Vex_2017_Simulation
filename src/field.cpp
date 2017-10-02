@@ -122,7 +122,6 @@ void field::element::fencePush(fence *f) {
 bool withinAngle(double angle, int lowerBound, int upperBound) {
 	//checks if angle is within upper and lower
 	int thresh = 2;//degrees of freedom
-	angle = abs(angle);
 	return (angle < upperBound - thresh && angle > lowerBound + thresh) || (angle + 180 < upperBound - thresh && angle + 180 > lowerBound + thresh || (angle + 360 < upperBound - thresh && angle + 360 > lowerBound + thresh));
 	//checks both the positive and "negative" angle
 }
@@ -261,25 +260,29 @@ void field::fence::wallPush(robot *robit) {
 	for (int i = 0; i < 4; i++) {
 		float d2Top = fieldSizeIn - robit->db.vertices[i].Y;
 		float d2Left = fieldSizeIn - robit->db.vertices[i].X;
-		if (d2Left <= (depthIn)) {//checking left side
+		if (d2Left <= (depthIn)) {//checking RIGHT side
 			robit->p.position.X -= (depthIn) - d2Left;
-			if (withinAngle(robit->p.mRot, 0, 90) || withinAngle(robit->p.mRot, 180, 270))  robit->p.mRot -= robit->p.velocity.X * cos(gAngle);
-			else if (withinAngle(robit->p.mRot, 270, 360) || withinAngle(robit->p.mRot, 90, 180)) robit->p.mRot += robit->p.velocity.X * cos(gAngle);
+			robit->p.velocity.X = 0;
+			if (withinAngle(robit->p.mRot, 0, 90) || withinAngle(robit->p.mRot, 180, 270))  robit->p.mRot -= 1.5*cos(gAngle);
+			else if (withinAngle(robit->p.mRot, 90, 180) || withinAngle(robit->p.mRot, 270, 360)) robit->p.mRot += 1.5*cos(gAngle);
 		}
-		else if (robit->db.vertices[i].X <= (depthIn)) {//checking right side
+		else if (robit->db.vertices[i].X <= (depthIn)) {//checking LEFT side
 			robit->p.position.X += (depthIn)-robit->db.vertices[i].X;
-			if (withinAngle(robit->p.mRot, 90, 180) || withinAngle(robit->p.mRot, 270, 360))  robit->p.mRot += robit->p.velocity.X * cos(gAngle);
-			else if (withinAngle(robit->p.mRot, 180, 270) || withinAngle(robit->p.mRot, 0, 90)) robit->p.mRot -= robit->p.velocity.X * cos(gAngle);
+			robit->p.velocity.X = 0;
+			if (withinAngle(robit->p.mRot, 90, 180) || withinAngle(robit->p.mRot, 270, 360))  robit->p.mRot -= 1.5*cos(gAngle);
+			else if (withinAngle(robit->p.mRot, 180, 270) || withinAngle(robit->p.mRot, 0, 90)) robit->p.mRot += 1.5*cos(gAngle);
 		}
 		if (d2Top <= (depthIn)) {//checking top
 			robit->p.position.Y -= (depthIn)-d2Top;
-			if (withinAngle(robit->p.mRot, 90, 180) || withinAngle(robit->p.mRot, 270, 360))  robit->p.mRot -= robit->p.velocity.Y * sin(gAngle);
-			else if (withinAngle(robit->p.mRot, 0, 90) || withinAngle(robit->p.mRot, 0, 90)) robit->p.mRot += robit->p.velocity.Y * sin(gAngle);
+			robit->p.velocity.Y = 0;
+			if (withinAngle(robit->p.mRot, 90, 180) || withinAngle(robit->p.mRot, 270, 360))  robit->p.mRot += 1.5*sin(gAngle);
+			else if (withinAngle(robit->p.mRot, 0, 90) || withinAngle(robit->p.mRot, 0, 90)) robit->p.mRot -= 1.5*sin(gAngle);
 		}
 		else if (robit->db.vertices[i].Y <= (depthIn)) {//checking bottom side
 			robit->p.position.Y += (depthIn)-robit->db.vertices[i].Y;
-			if (withinAngle(robit->p.mRot, 270, 360) || withinAngle(robit->p.mRot, 90, 180))  robit->p.mRot -= robit->p.velocity.Y * sin(gAngle);
-			else if (withinAngle(robit->p.mRot, 180, 270) || withinAngle(robit->p.mRot, 0, 90)) robit->p.mRot += robit->p.velocity.Y * sin(gAngle);
+			robit->p.velocity.Y = 0;
+			if (withinAngle(robit->p.mRot, 270, 360) || withinAngle(robit->p.mRot, 90, 180))  robit->p.mRot += 1.5*sin(gAngle);
+			else if (withinAngle(robit->p.mRot, 180, 270) || withinAngle(robit->p.mRot, 0, 90)) robit->p.mRot -= 1.5*sin(gAngle);
 		}
 	}
 }
@@ -312,22 +315,31 @@ void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 		if (d2closestPoint <= pl->radius) {//touching
 			robit->p.position.X += (R.X - closestPoint.X);
 			robit->p.position.Y += (R.Y - closestPoint.Y);
+			robit->p.velocity = vec3(0, 0, 0);
 			//rotation when hits the stationary goal
 			int thresh = 2;//degrees of freedom
 			if (inFront) {
 				if (abs(d2V[0] - d2V[1]) > thresh) {
 					if (d2V[0] < d2V[1])//checking which way to rotate
-						robit->p.mRot += abs(robit->p.velocity.Y * sin(gAngle));
+						robit->p.mRot += 0.1*largest(d2V[0], d2V[1]);
 					else if (d2V[0] > d2V[1])
-						robit->p.mRot -= abs(robit->p.velocity.Y * sin(gAngle));
+						robit->p.mRot -= 0.1*largest(d2V[0], d2V[1]);
 				}
+				//robit->d.frontStop = true;
 			}
-			else  if (abs(d2V[2] - d2V[3]) > thresh) {
-				if (d2V[2] > d2V[3])
-					robit->p.mRot -= abs(robit->p.velocity.Y * sin(gAngle));
-				else if (d2V[2] < d2V[3])
-					robit->p.mRot += abs(robit->p.velocity.Y * sin(gAngle));
+			else {
+				if (abs(d2V[2] - d2V[3]) > thresh) {
+					if (d2V[2] > d2V[3])
+						robit->p.mRot -= 0.1*largest(d2V[2], d2V[3]);
+					else if (d2V[2] < d2V[3])
+						robit->p.mRot += 0.1*largest(d2V[2], d2V[3]);
+				}
+				//robit->d.backStop = true;
 			}
+		}
+		else if (d2closestPoint > 1.05 * pl->radius) {//slightly out of range of touching
+			//robit->d.backStop = false;
+			//robit->d.frontStop = false;
 		}
 	}
 }

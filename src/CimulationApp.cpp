@@ -117,6 +117,8 @@ void CimulationApp::keyUp(KeyEvent event) {
 
 }
 void CimulationApp::update() {
+	float pastPosX = v.r.p.position.X;
+	float pastPosY = v.r.p.position.Y;
 	v.j.getAnalog(mousePos);
 	v.r.update();//calls robot update function
 	switch (s.SimRunning) {
@@ -169,6 +171,7 @@ void CimulationApp::update() {
 		v.r.moveAround(v.j.analogX, v.j.analogY);
 		break;
 	}
+		v.r.d.encoderBase += getSign(v.r.d.basePower)*sqrt(sqr(v.r.p.position.X - pastPosX) + sqr(v.r.p.position.Y - pastPosY));
 	//v.f.f.fieldEnd = v.f.f.centre.X + v.f.f.fieldSizeIn*ppi / 2;
 }
 //for buttons
@@ -402,14 +405,14 @@ void CimulationApp::draw() {
 	//if (v.f.c[39].landed) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1000, 660), vec3I(1, 1, 1), 30);
-	drawText(v.f.c[0].pos.X, vec3I(1000, 500), vec3I(1, 1, 1), 30);
-	drawText(v.f.c[0].pos.Y, vec3I(1000, 400), vec3I(1, 1, 1), 30);
+	drawText(v.r.d.encoderBase, vec3I(1000, 500), vec3I(1, 1, 1), 30);
+	drawText(v.r.d.gyroBase, vec3I(1000, 400), vec3I(1, 1, 1), 30);
 
 	gl::color(1, 1, 1);
 	//USER INTERFACE
 	buttons();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
-	//textDraw();//dont run on truspeed sim, unnecessary
+	textDraw();//dont run on truspeed sim, unnecessary
 }
 CINDER_APP_NATIVE(CimulationApp, RendererGl)

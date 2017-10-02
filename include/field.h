@@ -61,7 +61,6 @@ public:
 		void robotColl(int index, robot *r, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f);
 		void collision(element *e);
 		void grabbed(robot *r, int index, int type);
-
 	};
 	struct cone : public element {
 		cone(vec3 pos) : element(pos, cRad, cHeight), fellOn(0), landed(false) {}

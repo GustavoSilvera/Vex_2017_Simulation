@@ -115,24 +115,14 @@ void robot::intake::claw(float RobSize, int type) {
 }
 
 void robot::update() {
-	float pastPosX = p.position.X;
-	float pastPosY = p.position.Y;
+	
 	p.acceleration.X += getSign(p.acceleration.X) * coneWeight * p.frictionC 
 		+ getSign(p.acceleration.X) * moGoWeight * p.frictionM;//slows down acceleration when encountering friction
 	p.acceleration.Y += getSign(p.acceleration.Y) * coneWeight * p.frictionC
 		+ getSign(p.acceleration.Y) * moGoWeight * p.frictionM;
 	p.velocity = p.velocity + p.acceleration.times(1.0/60.0);
-	//if (fieldSpeed) {//weird issue with how the robot is being drawn in the field update with the origin on the bottom right rather than top left
-		///p.position.X -= p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
-		p.position.Y += p.velocity.Y * sin((p.mRot)*(PI / 180));//velocity scaled because of rotation
-	//}
-	//else {
-		p.position.X += p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
-		///p.position.Y -= p.velocity.Y * sin((p.mRot)*(PI / 180));//velocity scaled because of rotation
-	//}
-	if ((p.velocity.X != 0 && p.velocity.Y != 0) && d.gyroBase == (int)p.mRot) {
-		d.encoderBase += getSign(d.basePower)*sqrt(sqr(p.position.X - pastPosX)+sqr(p.position.Y - pastPosY));
-	}
+	p.position.Y += p.velocity.Y * sin((p.mRot)*(PI / 180));//velocity scaled because of rotation
+	p.position.X += p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
 	p.rotVel += p.rotAcceleration*(1.0 / 60.0);
 	p.mRot += p.rotVel;
 	p.mRot = ((p.mRot / 360) - (long)(p.mRot / 360)) * 360;//only within 360° and -360° (takes the decimal portion and discards the whole number)
@@ -144,8 +134,8 @@ void robot::update() {
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {
-	if (ctrl.ArrowKeyUp) forwards(127);//checking up key
-	else if (ctrl.ArrowKeyDown) forwards(-127);//checking down key
+	if (ctrl.ArrowKeyUp && !d.frontStop) forwards(127);//checking up key
+	else if (ctrl.ArrowKeyDown && ! d.backStop) forwards(-127);//checking down key
 	else if (jAnalogY != 0) forwards(truSpeed(3, -jAnalogY));//chacking analog drawing
 	else forwards(0);//welp, no movement
 

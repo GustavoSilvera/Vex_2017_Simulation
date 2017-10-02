@@ -66,6 +66,7 @@ public:
 		float encoderBase;//simulating encoder sensor
 		int gyroBase;//simulating gyro sensor
 		int size = 18;
+		bool frontStop = false, backStop = false;
 	};
 		details d;
 	struct controls {
