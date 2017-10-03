@@ -17,7 +17,7 @@
 class field {
 public:
 	field(robot *robit);
-	std::ofstream textFile;
+
 
 	typedef int mobileGoalIndex;
 	typedef int coneIndex;

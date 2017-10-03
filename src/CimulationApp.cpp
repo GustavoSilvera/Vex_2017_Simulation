@@ -5,6 +5,7 @@
 #include "cinder/Vector.h"
 #include "cinder/Text.h"
 #include "cinder/Font.h"
+#include <ostream>
 //my own headers
 #include "joystick.h"
 #include "field.h"
@@ -24,6 +25,7 @@ using namespace std;
 extern int numCones;
 vec3 startPos;
 vec3 mousePos;
+	std::ofstream textFile;
 class vex {
 public:
 	robot r;
@@ -66,6 +68,7 @@ public:
 };
 void CimulationApp::setup() {
 	srand(time(NULL));//seeds random number generator
+	textFile = std::ofstream("text.txt");
 	//gl::enableVerticalSync();
 	v.r.TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
 	v.r.CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
@@ -73,7 +76,8 @@ void CimulationApp::setup() {
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
 	setWindowSize(WindowWidth, WindowHeight);
-	
+	textFile << "//testing Auton producer";
+	textFile.flush();
 }
 //cinder::functions
 void CimulationApp::mouseDown(MouseEvent event) {
@@ -117,6 +121,7 @@ void CimulationApp::keyUp(KeyEvent event) {
 
 }
 void CimulationApp::update() {
+	int pastRot = (int)v.r.p.mRot;
 	float pastPosX = v.r.p.position.X;
 	float pastPosY = v.r.p.position.Y;
 	v.j.getAnalog(mousePos);
@@ -171,7 +176,22 @@ void CimulationApp::update() {
 		v.r.moveAround(v.j.analogX, v.j.analogY);
 		break;
 	}
-		v.r.d.encoderBase += getSign(v.r.d.basePower)*sqrt(sqr(v.r.p.position.X - pastPosX) + sqr(v.r.p.position.Y - pastPosY));
+	v.r.db.distance += getSign(v.r.d.basePower)*sqrt(sqr(v.r.p.position.X - pastPosX) + sqr(v.r.p.position.Y - pastPosY));
+	if (pastRot != (int)v.r.p.mRot) {//rotation changed
+		std::stringstream dummyText2;
+		std::string distance;
+		dummyText2 << (v.r.db.distance);
+		dummyText2 >> distance;
+		textFile << "driveFor(" + distance + ");\n";
+		textFile.flush();
+		v.r.db.distance = RESET;//resets change in position after a while
+		std::stringstream dummyText;
+		std::string newAngle;
+		dummyText << ((int)v.r.p.mRot - pastRot);
+		dummyText >> newAngle;
+		textFile << "rotFor(" + newAngle + ");\n";
+		textFile.flush();
+	}
 	//v.f.f.fieldEnd = v.f.f.centre.X + v.f.f.fieldSizeIn*ppi / 2;
 }
 //for buttons
@@ -405,14 +425,14 @@ void CimulationApp::draw() {
 	//if (v.f.c[39].landed) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1000, 660), vec3I(1, 1, 1), 30);
-	drawText(v.r.d.encoderBase, vec3I(1000, 500), vec3I(1, 1, 1), 30);
-	drawText(v.r.d.gyroBase, vec3I(1000, 400), vec3I(1, 1, 1), 30);
+	drawText(v.r.db.distance, vec3I(1000, 500), vec3I(1, 1, 1), 30);
+	drawText(v.r.db.rotDist, vec3I(1000, 400), vec3I(1, 1, 1), 30);
 
 	gl::color(1, 1, 1);
 	//USER INTERFACE
 	buttons();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
-	textDraw();//dont run on truspeed sim, unnecessary
+	//textDraw();//dont run on truspeed sim, unnecessary
 }
 CINDER_APP_NATIVE(CimulationApp, RendererGl)

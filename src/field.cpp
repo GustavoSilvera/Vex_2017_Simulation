@@ -46,7 +46,6 @@ field::field(robot *robit) : isInit(true) {
 }
 //initial mogo values for position and colour
 void field::initialize(robot *robit) {
-	textFile = std::ofstream("text.txt");
 	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
 	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
 	pl.assign(&initPoleConfig[0], &initPoleConfig[numPoles]);
@@ -54,8 +53,6 @@ void field::initialize(robot *robit) {
 	robit->p.position.X = 35;
 	robit->p.position.Y = 35;
 	robit->p.mRot = 45;
-	textFile << "//testing Auton producer";
-	textFile.flush();
 	fieldInit = false;
 	isInit = true;//so that this only gets called ONCE when the field tab is running
 }

@@ -28,6 +28,9 @@ public:
 		float slopeH;//only need 1 slope, both sides of a square are parallel
 		float YintH[2];
 		vec3 vertices[4];
+	//output text
+		float distance;//simulating a real worl vex encoder shaft
+		float rotDist;//simulating a real world vex gyro 
 	};
 	debug db;
 	//claw
@@ -63,8 +66,6 @@ public:
 		physics p;
 	struct details {
 		float basePower;
-		float encoderBase;//simulating encoder sensor
-		int gyroBase;//simulating gyro sensor
 		int size = 18;
 		bool frontStop = false, backStop = false;
 	};

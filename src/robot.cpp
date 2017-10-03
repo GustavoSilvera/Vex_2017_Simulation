@@ -22,8 +22,8 @@ robot::robot() {
 	mg.clawHeight = 2.5;
 	mg.clawSpeed = 0.5;
 	mg.liftPos = 0;
-	d.encoderBase = RESET;
-	d.gyroBase = RESET;
+	db.distance = RESET;
+	db.rotDist = RESET;
 }//constructor 
 
 void robot::forwards(float power) {
@@ -54,7 +54,7 @@ void robot::rotate(float power) {
 	if (abs(rotAccel) > 0.3) p.rotAcceleration = rotAccel;
 	else p.rotAcceleration = 0;
 	if (abs(p.rotVel) < 0.1) p.rotVel = 0;
-	d.gyroBase = (int)p.mRot;
+	db.rotDist = (int)p.mRot;
 }
 void robot::physics::speedMult(float base, float rot) {
 	velocity.X = getSign(velocity.X) * abs(velocity.X*base);
@@ -99,7 +99,6 @@ void robot::setVertices() {
 		db.vertices[3].X = p.position.X - sinDist;//flipped sin and cos
 		db.vertices[3].Y = p.position.Y - cosDist;
 }
-
 void robot::intake::claw(float RobSize, int type) {
 	//janky animations for claw 
 	clawSize = 0.1*liftPos + cRad;
@@ -115,7 +114,6 @@ void robot::intake::claw(float RobSize, int type) {
 }
 
 void robot::update() {
-	
 	p.acceleration.X += getSign(p.acceleration.X) * coneWeight * p.frictionC 
 		+ getSign(p.acceleration.X) * moGoWeight * p.frictionM;//slows down acceleration when encountering friction
 	p.acceleration.Y += getSign(p.acceleration.Y) * coneWeight * p.frictionC
