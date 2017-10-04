@@ -125,10 +125,10 @@ bool withinAngle(double angle, int lowerBound, int upperBound) {
 void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f) {
 	//collisions from robot
 	float d2V[4];
-	float d2Robot = dist(pos, robit->p.position);
+	float d2Robot = pos.distance(robit->p.position);
 	if (pos.Z < height && d2Robot < renderRad * robit->d.size) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
 		for (int v = 0; v < 4; v++) {
-			d2V[v] = dist(pos, robit->db.vertices[v]);
+			d2V[v] = pos.distance(robit->db.vertices[v]);
 		}		
 		float d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
 		vec3 closestPoint;
@@ -147,7 +147,7 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 			int smallest_vertice = sortSmallVER(d2V[0], d2V[1], d2V[2], d2V[3]);
 			closestPoint = robit->db.vertices[smallest_vertice];//closest point to center will then be the vertice
 		}
-		float d2closestPoint = dist(pos, closestPoint);
+		float d2closestPoint = pos.distance(closestPoint);
 		vec3 R = (closestPoint + pos.times(-1)).times(radius / d2closestPoint) + pos;
 		if (d2closestPoint <= radius) {//touching
 			pos.X -= R.X - closestPoint.X;
@@ -195,7 +195,7 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 //functions for collisions between the element and the robot
 void field::element::collision(element *e) {//collisions from element->element
 	//ELEMENT *E IS WHAT IS BEING MOVED, NOT THE OTHER WAY AROUND
-	float distance = dist(pos, e->pos);
+	float distance = pos.distance(e->pos);
 	if (distance <= coefMag * (radius + e->radius)) {//touching
 		vec3 normal = vec3(e->pos.X - pos.X, e->pos.Y - pos.Y);
 		e->pos = e->pos + normal.times(((radius + e->radius) - distance) / distance);//push of the cones
@@ -284,11 +284,11 @@ void field::fence::wallPush(robot *robit) {
 	}
 }
 void field::statGoalPush(stat *pl, robot *robit, fence *f) {
-	float d2obj = dist(robit->p.position, pl->pos);
+	float d2obj = robit->p.position.distance(pl->pos);
 	if (d2obj < renderRad * robit->d.size) {
 		float d2V[4];
 		for (int v = 0; v < 4; v++) {
-			d2V[v] = dist(pl->pos, robit->db.vertices[v]);
+			d2V[v] = pl->pos.distance(robit->db.vertices[v]);
 		}
 		bool inFront, onRight;
 		vec3 closestPoint;
@@ -307,7 +307,7 @@ void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 			int smallest_vertice = sortSmallVER(d2V[0], d2V[1], d2V[2], d2V[3]);
 			closestPoint = robit->db.vertices[smallest_vertice];//closest point to center will then be the vertice
 		}
-		float d2closestPoint = dist(pl->pos, closestPoint);
+		float d2closestPoint = closestPoint.distance(pl->pos);
 		vec3 R = (closestPoint + pl->pos.times(-1)).times(pl->radius / d2closestPoint) + pl->pos;
 		if (d2closestPoint <= pl->radius) {//touching
 			robit->p.position.X += (R.X - closestPoint.X);
@@ -348,7 +348,7 @@ void field::element::grabbed(robot *robit, int index, int type) {
 	idealSpot = vec3(//perf
 		(robit->p.position.X + mult * (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2)),
 		(robit->p.position.Y - mult * (robit->d.size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2)));
-	bool inPosition = (dist(pos, idealSpot) <= radius);
+	bool inPosition = (pos.distance(idealSpot) <= radius);
 	if (type == CONE && (index < numCones && robit->c.grabbing && robit->c.holding == index) || (robit->c.grabbing && robit->c.holding == -1) || 
 		type == MOGO && ((robit->mg.grabbing && robit->mg.holding == index + 100) || (robit->mg.grabbing && robit->mg.holding == -101))) {
 		if ((type == MOGO && inPosition) || (type == CONE && inPosition && abs(pos.Z - robit->c.liftPos) < height)) {
@@ -374,7 +374,7 @@ void field::fallingOn(cone *fall, robot *robit, int index) {
 	if (!fall->landed && !robit->c.grabbing) {
 		for (int mog = 0; mog < mg.size(); mog++) {
 			if (!fall->landed) {
-				if (dist(fall->pos, mg[mog].pos) <= cRad) {//added constant to widen range where can drop and stack
+				if (fall->pos.distance(mg[mog].pos) <= cRad) {//added constant to widen range where can drop and stack
 					if (fall->pos.Z > mg[mog].height + 4 + (mg[mog].stacked.size()* fall->height)) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
 						fall->pos.Z += -32 / 12;//gravity?
 						fall->landed = false;//still in air
@@ -392,7 +392,7 @@ void field::fallingOn(cone *fall, robot *robit, int index) {
 		}
 		for (int pol = 0; pol < pl.size(); pol++) {
 			if (!fall->landed) {
-				if (dist(fall->pos, pl[pol].pos) <= cRad) {//added constant to widen range where can drop and stack
+				if (fall->pos.distance(pl[pol].pos) <= cRad) {//added constant to widen range where can drop and stack
 					if (fall->pos.Z > pl[pol].height + 4 + (pl[pol].stacked.size()* fall->height)) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
 						fall->pos.Z += -32 / 12;//gravity?
 						fall->landed = false;//still in air

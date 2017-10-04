@@ -76,7 +76,7 @@ void CimulationApp::setup() {
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
 	setWindowSize(WindowWidth, WindowHeight);
-	textFile << "//testing Auton producer";
+	textFile << "//testing Auton producer\n";
 	textFile.flush();
 }
 //cinder::functions
@@ -122,8 +122,7 @@ void CimulationApp::keyUp(KeyEvent event) {
 }
 void CimulationApp::update() {
 	int pastRot = (int)v.r.p.mRot;
-	float pastPosX = v.r.p.position.X;
-	float pastPosY = v.r.p.position.Y;
+	vec3 pastPos(v.r.p.position);
 	v.j.getAnalog(mousePos);
 	v.r.update();//calls robot update function
 	switch (s.SimRunning) {
@@ -176,23 +175,26 @@ void CimulationApp::update() {
 		v.r.moveAround(v.j.analogX, v.j.analogY);
 		break;
 	}
-	v.r.db.distance += getSign(v.r.d.basePower)*sqrt(sqr(v.r.p.position.X - pastPosX) + sqr(v.r.p.position.Y - pastPosY));
+	v.r.db.distance += getSign(v.r.d.basePower)*v.r.p.position.distance(pastPos);
+
 	if (pastRot != (int)v.r.p.mRot) {//rotation changed
-		std::stringstream dummyText2;
-		std::string distance;
-		dummyText2 << (v.r.db.distance);
-		dummyText2 >> distance;
-		textFile << "driveFor(" + distance + ");\n";
-		textFile.flush();
-		v.r.db.distance = RESET;//resets change in position after a while
-		std::stringstream dummyText;
-		std::string newAngle;
-		dummyText << ((int)v.r.p.mRot - pastRot);
-		dummyText >> newAngle;
-		textFile << "rotFor(" + newAngle + ");\n";
+		if (v.r.db.distance != 0) {//difference in distance trav
+			std::stringstream dummyText2;
+			std::string distance;
+			dummyText2 << (v.r.db.distance);
+			dummyText2 >> distance;
+			textFile << "driveFor(" + distance + ");\n";
+			v.r.db.distance = RESET;//resets change in position after a while
+		}
+		if (abs(pastRot - (int)v.r.p.mRot) > 0) {//difference in rotation
+			std::stringstream dummyText;
+			std::string newAngle;
+			dummyText << (v.r.p.mRot - pastRot);//difference in angle
+			dummyText >> newAngle;
+			textFile << "rotFor(" + newAngle + ");\n";
+		}
 		textFile.flush();
 	}
-	//v.f.f.fieldEnd = v.f.f.centre.X + v.f.f.fieldSizeIn*ppi / 2;
 }
 //for buttons
 void clicky(int AMOUNT_BUTTON) {//function for clicking the buttons
