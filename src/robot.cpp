@@ -30,7 +30,7 @@ void robot::forwards(float power) {
 	//konstants that should be changed later
 	if(power != 0) d.basePower = power;
 	
-	float rateOfChange = 60;//constant changing the amount of initial change the acceleration goes through? maibe
+	float rateOfChange = 56.15;//constant changing the amount of initial change the acceleration goes through? maibe
 	//calculate acceleration taking friction into account
 	float Xaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.X);
 	float Yaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.Y);
@@ -47,14 +47,117 @@ void robot::forwards(float power) {
 
 void robot::rotate(float power) {
 	//konstants that should be changed later
-	float rateOfChange = 15;//constant changing the amount of initial change the acceleration goes through? maibe
+	float rateOfChange = 23.35;//constant changing the amount of initial change the acceleration goes through? maibe
 							//calculate acceleration taking friction into account
-	float rotAccel = (power / rateOfChange) - (p.amountOfFriction*p.rotVel);
+	float rotAccel = 2 * (power / rateOfChange) - (p.amountOfFriction*p.rotVel);
 	//limiting acceleration to 0.01, no need for further acceleration rly
 	if (abs(rotAccel) > 0.3) p.rotAcceleration = rotAccel;
 	else p.rotAcceleration = 0;
 	if (abs(p.rotVel) < 0.1) p.rotVel = 0;
 	db.rotDist = (int)p.mRot;
+}
+bool robot::driveFor(float inches) {
+	float power = 100 * inches;
+	float rateOfChange = 56.15;//constant changing the amount of initial change the acceleration goes through? maibe
+							   //calculate acceleration taking friction into account
+	float Xaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.X);
+	float Yaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.Y);
+	//limiting acceleration to 0.01, no need for further acceleration rly
+	if (abs(Xaccel) > 0.01) p.acceleration.X = Xaccel;
+	else p.acceleration.X = 0;
+	if (abs(Yaccel) > 0.01) p.acceleration.Y = Yaccel;
+	else p.acceleration.Y = 0;
+	if (abs(p.velocity.X) < 0.01) p.velocity.X = 0;
+	if (abs(p.velocity.Y) < 0.01) p.velocity.Y = 0;
+	return true;
+}
+bool robot::rotFor(float degrees) {
+	float power = degrees * 100;
+	float rateOfChange = 23.35;//constant changing the amount of initial change the acceleration goes through? maibe
+							   //calculate acceleration taking friction into account
+	float rotAccel = 2 * (power / rateOfChange) - (p.amountOfFriction*p.rotVel);
+	//limiting acceleration to 0.01, no need for further acceleration rly
+	if (abs(rotAccel) > 0.3) p.rotAcceleration = rotAccel;
+	else p.rotAcceleration = 0;
+	if (abs(p.rotVel) < 0.1) p.rotVel = 0;
+	db.rotDist = (int)p.mRot;
+	return true;
+}
+void robot::outputTextfunc() {//not weorking, all the distances are being summed and executed at once... no delays :_(
+	bool ready = false;
+	//testing Auton producer
+	if(!ready) ready = driveFor(-6.14602); 
+	if(ready) ready = rotFor(1.05199);
+	if(ready) ready = driveFor(-0.500114);
+	if(ready) ready = rotFor(1.54485);
+	if(ready) ready = driveFor(-0.231463);
+	if(ready) ready = rotFor(1.50541);
+	if(ready) ready = driveFor(-0.21989);
+	if(ready) ready = rotFor(1.59923);
+	if(ready) ready = driveFor(-0.208895);
+	if(ready) ready = rotFor(1.81966);
+	if(ready) ready = driveFor(-0.198451);
+	if(ready) ready = rotFor(2.16037);
+	if(ready) ready = driveFor(-0.188528);
+	if(ready) ready = rotFor(1.61534);
+	if(ready) ready = driveFor(-0.179102);
+	if(ready) ready = rotFor(2.17886);
+	if(ready) ready = driveFor(-0.170147);
+	if(ready) ready = rotFor(1.84551);
+	if(ready) ready = driveFor(-0.161639);
+	if(ready) ready = rotFor(2.42882);
+	if(ready) ready = driveFor(-0.153557);
+	if(ready) ready = rotFor(1.93297);
+	if(ready) ready = driveFor(-0.145879);
+	if(ready) ready = rotFor(2.36191);
+	if(ready) ready = driveFor(-0.138585);
+	if(ready) ready = rotFor(1.7194);
+	if(ready) ready = driveFor(-0.131656);
+	if(ready) ready = rotFor(2.00902);
+	if(ready) ready = driveFor(-0.125073);
+	if(ready) ready = rotFor(1.23415);
+	if(ready) ready = driveFor(-0.11882);
+	if(ready) ready = rotFor(1.39803);
+	if(ready) ready = driveFor(-0.112879);
+	if(ready) ready = rotFor(1.50372);
+	if(ready) ready = driveFor(-0.107235);
+	if(ready) ready = rotFor(1.55412);
+	if(ready) ready = driveFor(-0.101873);
+	if(ready) ready = rotFor(1.552);
+	if(ready) ready = driveFor(-0.0967793);
+	if(ready) ready = rotFor(1.49999);
+	if(ready) ready = driveFor(-0.0919404);
+	if(ready) ready = rotFor(1.40058);
+	if(ready) ready = driveFor(-0.0873434);
+	if(ready) ready = rotFor(1.25614);
+	if(ready) ready = driveFor(-0.0829762);
+	if(ready) ready = rotFor(1.06892);
+	if(ready) ready = driveFor(-0.153713);
+	if(ready) ready = rotFor(1.5746);
+	if(ready) ready = driveFor(-0.0711417);
+	if(ready) ready = rotFor(1.27146);
+	if(ready) ready = driveFor(-0.13179);
+	if(ready) ready = rotFor(1.56239);
+	if(ready) ready = driveFor(-0.0609951);
+	if(ready) ready = rotFor(1.15986);
+	if(ready) ready = driveFor(-0.112993);
+	if(ready) ready = rotFor(1.26667);
+	if(ready) ready = driveFor(-0.101977);
+	if(ready) ready = rotFor(1.26556);
+	if(ready) ready = driveFor(-0.0920339);
+	if(ready) ready = rotFor(1.16707);
+	if(ready) ready = driveFor(-0.121503);
+	if(ready) ready = rotFor(1.35723);
+	if(ready) ready = driveFor(-0.0712141);
+	if(ready) ready = rotFor(1.0548);
+	if(ready) ready = driveFor(-0.122275);
+	if(ready) ready = rotFor(1.25253);
+	if(ready) ready = driveFor(-0.076577);
+	if(ready) ready = rotFor(1.00263);
+	if(ready) ready = driveFor(-0.104136);
+	if(ready) ready = rotFor(1.02269);
+	if(ready) ready = driveFor(-0.107452);
+	if(ready) ready = rotFor(1.07523);
 }
 void robot::physics::speedMult(float base, float rot) {
 	velocity.X = getSign(velocity.X) * abs(velocity.X*base);

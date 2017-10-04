@@ -36,6 +36,7 @@ public:
 	joystick j;
 
 	vex() : tS(&r), pid(&r), n(&r), f(&r){}
+	bool debugText = true;
 };
 //begin
 int tX = 1200;
@@ -109,7 +110,12 @@ void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r.c.liftDown = true;//left Z button
 	if (event.getChar() == 'p' || event.getChar() == 'P') v.pid.pidVel = !v.pid.pidVel;//right P button
 	if (event.getChar() == 'o' || event.getChar() == 'O') v.pid.reset(&v.r);
-
+	if (event.getChar() == 'm' || event.getChar() == 'M') v.debugText = !v.debugText;
+	if (event.getChar() == 'n' || event.getChar() == 'N') v.r.forwards(100);//works as of rn for ~1" 
+	if (event.getChar() == 'B' || event.getChar() == 'b') v.r.rotate(-100);//works as of rn as ~1°
+	if (event.getChar() == 'c') {
+		v.r.outputTextfunc();
+	}
 }
 void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_DOWN) v.r.ctrl.ArrowKeyDown = false;
@@ -435,6 +441,6 @@ void CimulationApp::draw() {
 	buttons();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
-	//textDraw();//dont run on truspeed sim, unnecessary
+	if(v.debugText) textDraw();//dont run on truspeed sim, unnecessary
 }
 CINDER_APP_NATIVE(CimulationApp, RendererGl)

@@ -9,13 +9,16 @@ class robot {
 public:
 	robot();
 
-	void forwards(float  power);
+	void forwards(float power);
 	void rotate(float power);
 	float truSpeed(int degree, float value);
 	void reset();
 	void update();
 	void moveAround(float jAnalogX, float jAnalogY);
 	void setVertices();
+	bool driveFor(float inches);
+	bool rotFor(float degrees);
+	void outputTextfunc();
 	struct position {
 		double Xpos, Ypos, deg;
 	};
