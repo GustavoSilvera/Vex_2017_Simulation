@@ -2,7 +2,9 @@
 #include "robot.h"
 #include "randomstuff.h"
 
+
 //declares and defines the robot class and functions
+
 
 robot::robot() {
 	p.position = vec3(69.6, 69.6, 0);//initial constructor position
@@ -24,6 +26,7 @@ robot::robot() {
 	mg.liftPos = 0;
 	db.distance = RESET;
 	db.rotDist = RESET;
+	//vector stuff
 }//constructor 
 
 void robot::forwards(float power) {
@@ -44,7 +47,29 @@ void robot::forwards(float power) {
 	//if (abs(power) > 0.01)
 	//	encoder1 += power;//increments the encoder while going forwards or backwards
 }
+void robot::readScript() {
+	#define MAX_LINE 100
+	readyToRun = false;
+	std::ifstream file("script.txt");
+	while (!file.eof()) {
+		char line[MAX_LINE];
+		file.getline(line, MAX_LINE);
+		char command[MAX_LINE];
+		char num[MAX_LINE];
+		char garb[MAX_LINE];
 
+		sscanf(line, "%s %s %s", command, num, garb);
+		enum action a;
+		if (std::string(command) == "driveFor(") {
+			a = ACTION_FWDS;
+		}
+		else {
+			a = ACTION_ROTATE;
+		}
+		commands.push_back({a, atof(num)});
+	}
+	readyToRun = true;
+}
 void robot::rotate(float power) {
 	//konstants that should be changed later
 	float rateOfChange = 23.35;//constant changing the amount of initial change the acceleration goes through? maibe
@@ -54,8 +79,8 @@ void robot::rotate(float power) {
 	if (abs(rotAccel) > 0.3) p.rotAcceleration = rotAccel;
 	else p.rotAcceleration = 0;
 	if (abs(p.rotVel) < 0.1) p.rotVel = 0;
-	db.rotDist = (int)p.mRot;
 }
+
 bool robot::driveFor(float inches) {
 	float power = 100 * inches;
 	float rateOfChange = 56.15;//constant changing the amount of initial change the acceleration goes through? maibe
@@ -82,82 +107,6 @@ bool robot::rotFor(float degrees) {
 	if (abs(p.rotVel) < 0.1) p.rotVel = 0;
 	db.rotDist = (int)p.mRot;
 	return true;
-}
-void robot::outputTextfunc() {//not weorking, all the distances are being summed and executed at once... no delays :_(
-	bool ready = false;
-	//testing Auton producer
-	if(!ready) ready = driveFor(-6.14602); 
-	if(ready) ready = rotFor(1.05199);
-	if(ready) ready = driveFor(-0.500114);
-	if(ready) ready = rotFor(1.54485);
-	if(ready) ready = driveFor(-0.231463);
-	if(ready) ready = rotFor(1.50541);
-	if(ready) ready = driveFor(-0.21989);
-	if(ready) ready = rotFor(1.59923);
-	if(ready) ready = driveFor(-0.208895);
-	if(ready) ready = rotFor(1.81966);
-	if(ready) ready = driveFor(-0.198451);
-	if(ready) ready = rotFor(2.16037);
-	if(ready) ready = driveFor(-0.188528);
-	if(ready) ready = rotFor(1.61534);
-	if(ready) ready = driveFor(-0.179102);
-	if(ready) ready = rotFor(2.17886);
-	if(ready) ready = driveFor(-0.170147);
-	if(ready) ready = rotFor(1.84551);
-	if(ready) ready = driveFor(-0.161639);
-	if(ready) ready = rotFor(2.42882);
-	if(ready) ready = driveFor(-0.153557);
-	if(ready) ready = rotFor(1.93297);
-	if(ready) ready = driveFor(-0.145879);
-	if(ready) ready = rotFor(2.36191);
-	if(ready) ready = driveFor(-0.138585);
-	if(ready) ready = rotFor(1.7194);
-	if(ready) ready = driveFor(-0.131656);
-	if(ready) ready = rotFor(2.00902);
-	if(ready) ready = driveFor(-0.125073);
-	if(ready) ready = rotFor(1.23415);
-	if(ready) ready = driveFor(-0.11882);
-	if(ready) ready = rotFor(1.39803);
-	if(ready) ready = driveFor(-0.112879);
-	if(ready) ready = rotFor(1.50372);
-	if(ready) ready = driveFor(-0.107235);
-	if(ready) ready = rotFor(1.55412);
-	if(ready) ready = driveFor(-0.101873);
-	if(ready) ready = rotFor(1.552);
-	if(ready) ready = driveFor(-0.0967793);
-	if(ready) ready = rotFor(1.49999);
-	if(ready) ready = driveFor(-0.0919404);
-	if(ready) ready = rotFor(1.40058);
-	if(ready) ready = driveFor(-0.0873434);
-	if(ready) ready = rotFor(1.25614);
-	if(ready) ready = driveFor(-0.0829762);
-	if(ready) ready = rotFor(1.06892);
-	if(ready) ready = driveFor(-0.153713);
-	if(ready) ready = rotFor(1.5746);
-	if(ready) ready = driveFor(-0.0711417);
-	if(ready) ready = rotFor(1.27146);
-	if(ready) ready = driveFor(-0.13179);
-	if(ready) ready = rotFor(1.56239);
-	if(ready) ready = driveFor(-0.0609951);
-	if(ready) ready = rotFor(1.15986);
-	if(ready) ready = driveFor(-0.112993);
-	if(ready) ready = rotFor(1.26667);
-	if(ready) ready = driveFor(-0.101977);
-	if(ready) ready = rotFor(1.26556);
-	if(ready) ready = driveFor(-0.0920339);
-	if(ready) ready = rotFor(1.16707);
-	if(ready) ready = driveFor(-0.121503);
-	if(ready) ready = rotFor(1.35723);
-	if(ready) ready = driveFor(-0.0712141);
-	if(ready) ready = rotFor(1.0548);
-	if(ready) ready = driveFor(-0.122275);
-	if(ready) ready = rotFor(1.25253);
-	if(ready) ready = driveFor(-0.076577);
-	if(ready) ready = rotFor(1.00263);
-	if(ready) ready = driveFor(-0.104136);
-	if(ready) ready = rotFor(1.02269);
-	if(ready) ready = driveFor(-0.107452);
-	if(ready) ready = rotFor(1.07523);
 }
 void robot::physics::speedMult(float base, float rot) {
 	velocity.X = getSign(velocity.X) * abs(velocity.X*base);

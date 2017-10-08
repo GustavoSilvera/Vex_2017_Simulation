@@ -4,6 +4,8 @@
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "vec3.h"
+
+#include <iostream>
 //declares the class for the robot and all the data that goes with it. 
 class robot {
 public:
@@ -16,9 +18,20 @@ public:
 	void update();
 	void moveAround(float jAnalogX, float jAnalogY);
 	void setVertices();
+	void readScript();
 	bool driveFor(float inches);
 	bool rotFor(float degrees);
-	void outputTextfunc();
+	bool readyToRun = false;
+	enum action  {
+		ACTION_ROTATE,
+		ACTION_FWDS
+	};
+	struct command {
+		enum action a;
+		double amnt;
+	};
+	std::vector<command> commands;
+
 	struct position {
 		double Xpos, Ypos, deg;
 	};

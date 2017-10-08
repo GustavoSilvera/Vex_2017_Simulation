@@ -6,6 +6,8 @@
 #include "cinder/Text.h"
 #include "cinder/Font.h"
 #include <ostream>
+#include <fstream>
+#include <filesystem>
 //my own headers
 #include "joystick.h"
 #include "field.h"
@@ -25,7 +27,6 @@ using namespace std;
 extern int numCones;
 vec3 startPos;
 vec3 mousePos;
-	std::ofstream textFile;
 class vex {
 public:
 	robot r;
@@ -37,6 +38,7 @@ public:
 
 	vex() : tS(&r), pid(&r), n(&r), f(&r){}
 	bool debugText = true;
+	bool recording = false;
 };
 //begin
 int tX = 1200;
@@ -61,6 +63,8 @@ public:
 	void keyDown(KeyEvent event);
 	void keyUp(KeyEvent event);
 	void update();
+	void clicky(int num_buttons);
+	void buttons();
 	void textDraw();
 	void drawClaw();
 	void drawRobot();
@@ -69,7 +73,6 @@ public:
 };
 void CimulationApp::setup() {
 	srand(time(NULL));//seeds random number generator
-	textFile = std::ofstream("text.txt");
 	//gl::enableVerticalSync();
 	v.r.TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
 	v.r.CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
@@ -77,8 +80,6 @@ void CimulationApp::setup() {
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
 	setWindowSize(WindowWidth, WindowHeight);
-	textFile << "//testing Auton producer\n";
-	textFile.flush();
 }
 //cinder::functions
 void CimulationApp::mouseDown(MouseEvent event) {
@@ -114,7 +115,7 @@ void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getChar() == 'n' || event.getChar() == 'N') v.r.forwards(100);//works as of rn for ~1" 
 	if (event.getChar() == 'B' || event.getChar() == 'b') v.r.rotate(-100);//works as of rn as ~1°
 	if (event.getChar() == 'c') {
-		v.r.outputTextfunc();
+		v.r.readScript();
 	}
 }
 void CimulationApp::keyUp(KeyEvent event) {
@@ -124,11 +125,12 @@ void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_LEFT) v.r.ctrl.RotLeft = false;
 	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.c.liftUp = false;
 	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r.c.liftDown = false;//left Z button
-
 }
 void CimulationApp::update() {
-	int pastRot = (int)v.r.p.mRot;
+	int pastRot = v.r.p.mRot;
 	vec3 pastPos(v.r.p.position);
+	float pastTime = ci::app::getElapsedSeconds();
+	int signVX = getSign(v.r.p.velocity.X), signVY = getSign(v.r.p.velocity.Y), signRot = getSign(v.r.p.rotVel);
 	v.j.getAnalog(mousePos);
 	v.r.update();//calls robot update function
 	switch (s.SimRunning) {
@@ -177,46 +179,106 @@ void CimulationApp::update() {
 		v.tS.isInit = false;
 		v.n.isInit = false;
 		v.f.FieldUpdate(&v.r);
-		v.pid.pid.isRunning = false; 
+		v.pid.pid.isRunning = false;
 		v.r.moveAround(v.j.analogX, v.j.analogY);
 		break;
 	}
 	v.r.db.distance += getSign(v.r.d.basePower)*v.r.p.position.distance(pastPos);
+	v.r.db.rotDist += getSign(v.r.p.rotVel)*(v.r.p.mRot - pastRot);
 
-	if (pastRot != (int)v.r.p.mRot) {//rotation changed
-		if (v.r.db.distance != 0) {//difference in distance trav
-			std::stringstream dummyText2;
-			std::string distance;
-			dummyText2 << (v.r.db.distance);
-			dummyText2 >> distance;
-			textFile << "driveFor(" + distance + ");\n";
-			v.r.db.distance = RESET;//resets change in position after a while
+	if (v.r.readyToRun) {
+		enum action {
+			ACTION_ROTATE,
+			ACTION_FWDS
+		};
+		if (v.r.commands.size() > 0) {
+			if (v.r.commands[0].a == ACTION_ROTATE) {//for rotate
+				if (abs(v.r.db.rotDist) < abs(v.r.commands[0].amnt)) {
+					//v.r.commandRun(0, v.r.amnt[0]);
+					v.r.rotate(getSign(v.r.commands[0].amnt) * 127);
+				}
+				else {
+					v.r.db.rotDist = RESET;
+					v.r.commands.erase(v.r.commands.begin());//removes first element of vector
+				}
+			}
+			else if (v.r.commands[0].a == ACTION_FWDS) {//for fwds
+				if (abs(v.r.db.distance) < abs(v.r.commands[0].amnt)) {
+					//v.r.commandRun(1, v.r.amnt[0]);
+					v.r.forwards(getSign(v.r.commands[0].amnt) * 127);
+				}
+				else {
+					v.r.db.distance = RESET;
+					v.r.commands.erase(v.r.commands.begin());//removes first element of vector
+				}
+			}
 		}
-		if (abs(pastRot - (int)v.r.p.mRot) > 0) {//difference in rotation
-			std::stringstream dummyText;
-			std::string newAngle;
-			dummyText << (v.r.p.mRot - pastRot);//difference in angle
-			dummyText >> newAngle;
-			textFile << "rotFor(" + newAngle + ");\n";
+	}
+
+	if (v.recording) {//macro recording
+		std::ofstream scriptFile("script.txt", fstream::app);
+		//less accurate (straight line running)
+		if ((v.r.p.velocity.X == 0 && v.r.p.velocity.Y == 0) ||
+			(getSign(v.r.p.velocity.X) != signVX &&
+				getSign(v.r.p.velocity.Y) != signVY)) {//stopped or changed direction
+			if (abs(v.r.db.distance) >= 0.01) {//but still moved 
+				std::stringstream dummyText2;
+				std::string distance;
+				dummyText2 << (v.r.db.distance);
+				dummyText2 >> distance;
+				scriptFile << "driveFor( " + distance + ");\n";//used for scripting
+
+				v.r.db.distance = RESET;//resets change in position after a while
+				/*std::stringstream dummyText3;
+				std::string time;
+				dummyText3 << ((ci::app::getElapsedSeconds() - pastTime));
+				dummyText3 >> time;
+				textFile << "delay(" + time + ");\n";
+				pastTime = ci::app::getElapsedSeconds();*/
+			}
 		}
-		textFile.flush();
+		if ((int)pastRot != (int)v.r.p.mRot) {//rotation changed
+			if (v.r.db.distance != 0) {//difference in distance trav
+				std::stringstream dummyText2;
+				std::string distance;
+				dummyText2 << (v.r.db.distance);
+				dummyText2 >> distance;
+				scriptFile << "driveFor( " + distance + ");\n";//used for scripting
+				v.r.db.distance = RESET;//resets change in position after a while
+			}
+
+			if (abs(pastRot - (int)v.r.p.mRot) > 0) {//difference in rotation
+				std::stringstream dummyText;
+				std::string newAngle;
+				dummyText << v.r.db.rotDist;//difference in angle
+				dummyText >> newAngle;
+				scriptFile << "rotFor( " + newAngle + ");\n";//used for scripting
+				v.r.db.rotDist = RESET;//resets change in position after a while
+			}
+		}
 	}
 }
 //for buttons
-void clicky(int AMOUNT_BUTTON) {//function for clicking the buttons
+void CimulationApp::clicky(int AMOUNT_BUTTON) {//function for clicking the buttons
 	for (int i = 0; i < AMOUNT_BUTTON; i++) {//for each button in the array 
 		if (mousePos.X > 100 * (i + 1) - (50) + (25 * i) &&
 			mousePos.X < 100 * (i + 1) + (50) + (25 * i) &&
 			mousePos.Y > 25 && mousePos.Y < 75) {//within boundaries for each button based off their index
 			s.hovering = i;
-			if (s.mouseClicked) {
+			if (s.mouseClicked && i <=3 ) {
 				s.SimRunning = simulation::SimulationType(i);
+			}
+			else if (s.mouseClicked && i == 4) {
+				v.recording = true;//toggles macro recording
+			}
+			else if (s.mouseClicked && i == 5) {
+				v.recording = false;//toggles macro recording
 			}
 		}
 	}
 }
-void buttons() {//function for drawing the buttons
-	#define BUTTON_AMOUNT 4//number of buttons
+void CimulationApp::buttons() {//function for drawing the buttons
+	#define BUTTON_AMOUNT 6//number of buttons
 	int bX[BUTTON_AMOUNT], bY = 50, dInBtw = 25;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
 	for (int i = 0; i < BUTTON_AMOUNT; i++) {
 		bX[0] = 0;//initialize first button
@@ -230,6 +292,8 @@ void buttons() {//function for drawing the buttons
 		else if (i == 1)gl::drawString("NAV", Vec2f(bX[i] - 18 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 25));
 		else if (i == 2)gl::drawString("TRUSpeed", Vec2f(bX[i] - 49 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 25));
 		else if (i == 3)gl::drawString("Auton", Vec2f(bX[i] - 35 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 29));
+		else if (i == 4)gl::drawString("Macro", Vec2f(bX[i] - 35 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 29));
+		else if (i == 5)gl::drawString("noRec", Vec2f(bX[i] - 35 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 29));
 		clicky(BUTTON_AMOUNT);//function for if a button is being hovered of pressed
 	}
 }
@@ -430,11 +494,12 @@ void CimulationApp::draw() {
 
 	gl::color(1, 0, 0);
 	gl::drawSolidCircle(Vec2f(v.f.mg[2].pos.X*ppi, v.f.f.poleEquation(140.5, 23.2, -1, v.f.mg[2].pos.X)*ppi), 5);
-	//if (v.f.c[39].landed) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
-	//else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
+	if (v.recording) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
+	else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
 	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1000, 660), vec3I(1, 1, 1), 30);
 	drawText(v.r.db.distance, vec3I(1000, 500), vec3I(1, 1, 1), 30);
 	drawText(v.r.db.rotDist, vec3I(1000, 400), vec3I(1, 1, 1), 30);
+	drawText(ci::app::getElapsedSeconds(), vec3I(1000, 200), vec3I(1, 1, 1), 30);
 
 	gl::color(1, 1, 1);
 	//USER INTERFACE
