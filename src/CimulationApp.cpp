@@ -23,6 +23,7 @@
 using namespace ci;
 using namespace ci::app;
 using namespace std;
+std::ofstream scriptFile;
 
 extern int numCones;
 vec3 startPos;
@@ -192,31 +193,31 @@ void CimulationApp::update() {
 			ACTION_FWDS
 		};
 		if (v.r.commands.size() > 0) {
-			if (v.r.commands[0].a == ACTION_ROTATE) {//for rotate
-				if (abs(v.r.db.rotDist) < abs(v.r.commands[0].amnt)) {
-					//v.r.commandRun(0, v.r.amnt[0]);
-					v.r.rotate(getSign(v.r.commands[0].amnt) * 127);
+			if (v.r.commands[0].amnt != 0) {//at least 
+				if (v.r.commands[0].a == ACTION_ROTATE) {//for rotate
+					if (abs(v.r.db.rotDist) <= abs(v.r.commands[0].amnt)) {
+						v.r.rotate(getSign(v.r.commands[0].amnt) * 127);
+					}
+					else {
+						v.r.db.rotDist = RESET;
+						v.r.commands.erase(v.r.commands.begin());//removes first element of vector
+					}
 				}
-				else {
-					v.r.db.rotDist = RESET;
-					v.r.commands.erase(v.r.commands.begin());//removes first element of vector
+				else if (v.r.commands[0].a == ACTION_FWDS) {//for fwds
+					if (abs(v.r.db.distance) <= abs(v.r.commands[0].amnt)) {
+						v.r.forwards(getSign(v.r.commands[0].amnt) * 127);
+					}
+					else {
+						v.r.db.distance = RESET;
+						v.r.commands.erase(v.r.commands.begin());//removes first element of vector
+					}
 				}
 			}
-			else if (v.r.commands[0].a == ACTION_FWDS) {//for fwds
-				if (abs(v.r.db.distance) < abs(v.r.commands[0].amnt)) {
-					//v.r.commandRun(1, v.r.amnt[0]);
-					v.r.forwards(getSign(v.r.commands[0].amnt) * 127);
-				}
-				else {
-					v.r.db.distance = RESET;
-					v.r.commands.erase(v.r.commands.begin());//removes first element of vector
-				}
-			}
+			else v.r.commands.erase(v.r.commands.begin());
 		}
 	}
 
 	if (v.recording) {//macro recording
-		std::ofstream scriptFile("script.txt", fstream::app);
 		//less accurate (straight line running)
 		if ((v.r.p.velocity.X == 0 && v.r.p.velocity.Y == 0) ||
 			(getSign(v.r.p.velocity.X) != signVX &&
@@ -224,33 +225,27 @@ void CimulationApp::update() {
 			if (abs(v.r.db.distance) >= 0.01) {//but still moved 
 				std::stringstream dummyText2;
 				std::string distance;
-				dummyText2 << (v.r.db.distance);
+				dummyText2 << ((int)v.r.db.distance);
 				dummyText2 >> distance;
 				scriptFile << "driveFor( " + distance + ");\n";//used for scripting
 
 				v.r.db.distance = RESET;//resets change in position after a while
-				/*std::stringstream dummyText3;
-				std::string time;
-				dummyText3 << ((ci::app::getElapsedSeconds() - pastTime));
-				dummyText3 >> time;
-				textFile << "delay(" + time + ");\n";
-				pastTime = ci::app::getElapsedSeconds();*/
 			}
 		}
 		if ((int)pastRot != (int)v.r.p.mRot) {//rotation changed
 			if (v.r.db.distance != 0) {//difference in distance trav
 				std::stringstream dummyText2;
 				std::string distance;
-				dummyText2 << (v.r.db.distance);
+				dummyText2 << ((int)v.r.db.distance);
 				dummyText2 >> distance;
 				scriptFile << "driveFor( " + distance + ");\n";//used for scripting
 				v.r.db.distance = RESET;//resets change in position after a while
 			}
 
-			if (abs(pastRot - (int)v.r.p.mRot) > 0) {//difference in rotation
+			if (abs((int)v.r.db.rotDist) > 0) {//difference in rotation
 				std::stringstream dummyText;
 				std::string newAngle;
-				dummyText << v.r.db.rotDist;//difference in angle
+				dummyText << getSign(v.r.p.rotVel)*(int)v.r.db.rotDist;//difference in angle
 				dummyText >> newAngle;
 				scriptFile << "rotFor( " + newAngle + ");\n";//used for scripting
 				v.r.db.rotDist = RESET;//resets change in position after a while
@@ -270,9 +265,12 @@ void CimulationApp::clicky(int AMOUNT_BUTTON) {//function for clicking the butto
 			}
 			else if (s.mouseClicked && i == 4) {
 				v.recording = true;//toggles macro recording
+				scriptFile = std::ofstream("script.txt");
 			}
 			else if (s.mouseClicked && i == 5) {
 				v.recording = false;//toggles macro recording
+				scriptFile = std::ofstream("script.txt", fstream::app);
+
 			}
 		}
 	}
@@ -436,6 +434,15 @@ void CimulationApp::draw() {
 		v.tS.textOutput(&v.r, &v.j);//draws the text for the graph
 	}
 	if (s.SimRunning == s.FIELD) {//when field button is pressed
+		if (v.recording) {
+			int size = 10;//pixels in which to draw the rectangles width
+			gl::color(1, 0, 0);
+			gl::drawSolidRect(Area(0, 0, size, getWindowHeight()));
+			gl::drawSolidRect(Area(0, 0, getWindowWidth(), size));
+			gl::drawSolidRect(Area(0, getWindowHeight() - size, getWindowWidth(), getWindowHeight()));
+			gl::drawSolidRect(Area(getWindowWidth() - size, 0, getWindowWidth(), getWindowHeight()));
+			gl::color(1, 1, 1);//reset to white
+		}
 		ci::gl::draw(v.f.fieldBare, ci::Area(100, 100, 100 + v.f.f.fieldSizeIn*ppi, 100 + v.f.f.fieldSizeIn*ppi ));
 		drawRobot();
 		gl::drawString("Score:", Vec2f(700, 50), Color(1, 1, 1), Font("Arial", 50));
