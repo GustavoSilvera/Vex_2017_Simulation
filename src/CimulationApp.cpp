@@ -195,7 +195,7 @@ void CimulationApp::update() {
 		if (v.r.commands.size() > 0) {
 			if (v.r.commands[0].amnt != 0) {//at least 
 				if (v.r.commands[0].a == ACTION_ROTATE) {//for rotate
-					if (abs(v.r.db.rotDist) <= abs(v.r.commands[0].amnt)) {
+					if (abs(v.r.db.rotDist) <= 0.6*abs(v.r.commands[0].amnt)) {
 						v.r.rotate(getSign(v.r.commands[0].amnt) * 127);
 					}
 					else {
@@ -225,7 +225,7 @@ void CimulationApp::update() {
 			if (abs(v.r.db.distance) >= 0.01) {//but still moved 
 				std::stringstream dummyText2;
 				std::string distance;
-				dummyText2 << ((int)v.r.db.distance);
+				dummyText2 << (v.r.db.distance);
 				dummyText2 >> distance;
 				scriptFile << "driveFor( " + distance + ");\n";//used for scripting
 
@@ -236,7 +236,7 @@ void CimulationApp::update() {
 			if (v.r.db.distance != 0) {//difference in distance trav
 				std::stringstream dummyText2;
 				std::string distance;
-				dummyText2 << ((int)v.r.db.distance);
+				dummyText2 << (v.r.db.distance);
 				dummyText2 >> distance;
 				scriptFile << "driveFor( " + distance + ");\n";//used for scripting
 				v.r.db.distance = RESET;//resets change in position after a while
@@ -245,7 +245,7 @@ void CimulationApp::update() {
 			if (abs((int)v.r.db.rotDist) > 0) {//difference in rotation
 				std::stringstream dummyText;
 				std::string newAngle;
-				dummyText << getSign(v.r.p.rotVel)*(int)v.r.db.rotDist;//difference in angle
+				dummyText << getSign(v.r.p.rotVel)*v.r.db.rotDist;//difference in angle
 				dummyText >> newAngle;
 				scriptFile << "rotFor( " + newAngle + ");\n";//used for scripting
 				v.r.db.rotDist = RESET;//resets change in position after a while

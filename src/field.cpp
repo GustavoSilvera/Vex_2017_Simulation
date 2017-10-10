@@ -110,10 +110,10 @@ bool field::element::directlyInHorizontalPath(robot *robit) {//horizontal lines
 void field::element::fencePush(fence *f) {
 	float d2Top = f->fieldSizeIn - pos.Y;
 	float d2Right = f->fieldSizeIn - pos.X;
-	if (pos.X <= (radius + f->depthIn)) pos.X += (radius + f->depthIn) - 1.1*pos.X;
-	else if (d2Right <= (radius + f->depthIn)) pos.X -= (radius + f->depthIn) - 1.1*d2Right;
-	if (d2Top <= (radius + f->depthIn)) pos.Y -= (radius + f->depthIn) - 1.1*d2Top;
-	else if (pos.Y <= (radius + f->depthIn)) pos.Y += (radius + f->depthIn) - 1.1*pos.Y;
+	if (pos.X <= (radius + f->depthIn)) pos.X += (radius + f->depthIn) - 1.1*pos.X;////checking left side
+	else if (d2Right <= (radius + f->depthIn)) pos.X -= (radius + f->depthIn) - 1.1*d2Right;//checking right side
+	if (d2Top <= (radius + f->depthIn)) pos.Y -= (radius + f->depthIn) - 1.1*d2Top;//checking top
+	else if (pos.Y <= (radius + f->depthIn)) pos.Y += (radius + f->depthIn) - 1.1*pos.Y;//checking bottom
 }
 //calculates distances to the edges of the field, and acts accordingly
 bool withinAngle(double angle, int lowerBound, int upperBound) {
@@ -152,13 +152,13 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 		if (d2closestPoint <= radius) {//touching
 			pos.X -= R.X - closestPoint.X;
 			pos.Y -= R.Y - closestPoint.Y;
-			bool crushingCone = 
+			bool crushingCone = //NEED TO FIX CONDITIONALS, DOSENT WORK
 				/*replaces all the tSides with direct copy from the fencepush code*/
-				(((pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 225, 315)) ||//checking bottom
-				((f->fieldSizeIn + 100 / ppi - pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 45, 135)) ||//checking top
-				((f->fieldSizeIn + 100 / ppi - pos.X <= (radius + f->depthIn)) && (withinAngle(robit->p.mRot, 0, 45) ||//checking right P1
+				((pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 225, 315)) ||//checking bottom
+					((f->fieldSizeIn - pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 45, 135)) ||//checking top
+					((f->fieldSizeIn - pos.X <= (radius + f->depthIn)) && (withinAngle(robit->p.mRot, 0, 45) ||//checking right P1
 				withinAngle(robit->p.mRot, 315, 360))) || //checking right P2
-				(pos.X <= (radius + f->depthIn) && withinAngle(robit->p.mRot, 135, 225)));//checking Left
+				((pos.X <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 135, 225));//checking Left
 			//could change crushingCone to be affected for a smaller angle, so that the reverse push only happens if almost directly crushing against the fence
 			if (crushingCone ) {//HAVE only affected when pushing further into fence
 				int thresh = 3;//degrees of freedom
