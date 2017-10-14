@@ -41,18 +41,22 @@ field::stat initPoleConfig[] = {
 	{ V2R({ 93, 47.3 }), 4, 24},{ V2R({ 46.9, 94 }), 4, 24}
 };
 int numPoles = sizeof(initPoleConfig) / sizeof(field::stat);
-field::field(robot *robit) : isInit(true) {
-	field::initialize(robit);
+field::field(robot *r, robot *r2) : isInit(true) {
+	field::initialize(r, r2);
 }
 //initial mogo values for position and colour
-void field::initialize(robot *robit) {
+void field::initialize(robot *r, robot *r2) {
 	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
 	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
 	pl.assign(&initPoleConfig[0], &initPoleConfig[numPoles]);
-	robit->reset();
-	robit->p.position.X = 35;
-	robit->p.position.Y = 35;
-	robit->p.mRot = 45;
+	r->reset();
+	r->p.position.X = 35;
+	r->p.position.Y = 35;
+	r->p.mRot = 45;
+	r2->reset();
+	r2->p.position.X = 100;
+	r2->p.position.Y = 100;
+	r2->p.mRot = 45+180;
 	fieldInit = false;
 	isInit = true;//so that this only gets called ONCE when the field tab is running
 }
@@ -348,7 +352,7 @@ void field::cone::coneGrab(robot *robit, int index) {
 			robit->c.holding = index;
 			pos.X = (robit->p.position.X + (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2));//works
 			pos.Y = (robit->p.position.Y - (robit->d.size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2));//works
-			if ((robit->c.liftUp && pos.Z < robit->c.maxHeight) || (robit->c.liftDown && pos.Z > 0)) {
+			if ((pos.Z < robit->c.maxHeight) || (pos.Z > 0)) {
 				pos.Z = robit->c.liftPos;//LATER: add something to try to pickyp from center
 				landed = false;
 			}
@@ -474,18 +478,24 @@ void field::MoGo::zoneScore(fence *f, int index) {
 	}
 }
 //function for having a 'grabbed' element lock in place
-void field::FieldUpdate(robot *robit) {
-	if (!isInit) initialize(robit);
+void field::FieldUpdate(robot *robit, robot *r2) {
+	if (!isInit) initialize(robit, r2);
 	f.wallPush(robit);
-	f.robotPole(robit);
+	f.wallPush(r2);
+	f.robotPole(robit); f.robotPole(r2);
 	for (int i = 0; i < c.size(); i++) {
 		//type for "cone" is 0
 		int type = CONE;
 		c[i].radius = 0.1*c[i].pos.Z + cRad;//changes radius to enlargen when gets taller
 		c[i].coneGrab(robit, i);
-		if(c[i].pos.Z < c[i].height) physics(i, &c[i], robit, type);//only affect objects when on ground (or low enough)
+		c[i].coneGrab(r2, i);
+		if (c[i].pos.Z < c[i].height) { 
+			physics(i, &c[i], robit, type);
+			physics(i, &c[i], r2, type);
+		}//only affect objects when on ground (or low enough)
 		if (c[i].pos.Z > 0) {
 			fallingOn(&c[i], robit, i);//noice
+			fallingOn(&c[i], r2, i);//noice
 		}
 	}
 	for (int i = 0; i < mg.size(); i++) {
@@ -493,8 +503,10 @@ void field::FieldUpdate(robot *robit) {
 		int type = MOGO;
 		//mg[i].radius = 0.1*mg[i].pos.Z + MGRad;//use better scalar than 0.1, but eventually remove this (because dont rly want to pick up mogos
 		mg[i].mogoGrab(robit, i);
+		mg[i].mogoGrab(r2, i);
 		mg[i].zoneScore(&f, i);
 		physics(i, &mg[i], robit, type);//dont affect things if being lifted into the air
+		physics(i, &mg[i], r2, type);//dont affect things if being lifted into the air
 	}
 	for (int i = 0; i < pl.size(); i++) {
 		//type for stationary goal is 2
@@ -503,8 +515,12 @@ void field::FieldUpdate(robot *robit) {
 		pl[1].pos = initPoleConfig[1].pos; //  vec3(46.9, 94);//stationary goal (not moving)
 		statGoalPush(&pl[i], robit, &f);
 		physics(i, &pl[i], robit, type);
+		statGoalPush(&pl[i], r2, &f);
+		physics(i, &pl[i], r2, type);
 	}
 	robit->p.frictionC = pushCones.size();
 	robit->p.frictionM = pushMoGo.size();
+	r2->p.frictionC = pushCones.size();
+	r2->p.frictionM = pushMoGo.size();
 }
 //update task for the entire field simulation

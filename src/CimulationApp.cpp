@@ -31,13 +31,14 @@ vec3 mousePos;
 class vex {
 public:
 	robot r;
+	robot r2;
 	tSpeed tS;
 	PID pid;
 	nav n;
 	field f;
 	joystick j;
 
-	vex() : tS(&r), pid(&r), n(&r), f(&r){}
+	vex() : tS(&r), pid(&r), n(&r), f(&r, &r2){}
 	bool debugText = true;
 	bool recording = false;
 };
@@ -67,8 +68,8 @@ public:
 	void clicky(int num_buttons);
 	void buttons();
 	void textDraw();
-	void drawClaw();
-	void drawRobot();
+	void drawClaw(robot *r);
+	void drawRobot(robot *r);
 	void draw();
 	vex v;
 };
@@ -77,10 +78,13 @@ void CimulationApp::setup() {
 	//gl::enableVerticalSync();
 	v.r.TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
 	v.r.CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
+	v.r2.TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
+	v.r2.CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
 	v.f.fieldBare = gl::Texture(loadImage(loadAsset("InTheZoneFieldBare.jpg")));
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
 	setWindowSize(WindowWidth, WindowHeight);
+	v.r2.p.position = vec3(100, 100, 0);
 }
 //cinder::functions
 void CimulationApp::mouseDown(MouseEvent event) {
@@ -134,6 +138,7 @@ void CimulationApp::update() {
 	int signVX = getSign(v.r.p.velocity.X), signVY = getSign(v.r.p.velocity.Y), signRot = getSign(v.r.p.rotVel);
 	v.j.getAnalog(mousePos);
 	v.r.update();//calls robot update function
+	v.r2.update();//calls enemy robot update function
 	switch (s.SimRunning) {
 	case simulation::NAVIGATION:
 		tX = 1200;
@@ -179,42 +184,13 @@ void CimulationApp::update() {
 		v.f.isInit = true;
 		v.tS.isInit = false;
 		v.n.isInit = false;
-		v.f.FieldUpdate(&v.r);
+		v.f.FieldUpdate(&v.r, &v.r2);
 		v.pid.pid.isRunning = false;
 		v.r.moveAround(v.j.analogX, v.j.analogY);
 		break;
 	}
 	v.r.db.distance += getSign(v.r.d.basePower)*v.r.p.position.distance(pastPos);
 	v.r.db.rotDist += getSign(v.r.p.rotVel)*(v.r.p.mRot - pastRot);
-	/*
-	if (v.r.commands.size() > 0) {//make this more accriate
-			float maxSpeed = 127;
-			if (v.r.commands[0].amnt != 0) {//at least 
-				if (v.r.commands[0].a == ACTION_ROTATE) {//for rotate
-					if (abs(v.r.db.rotDist) <= 0.65*abs(v.r.commands[0].amnt)) {
-						v.r.p.amountOfFriction = 10;
-						v.r.rotate(getSign(v.r.commands[0].amnt) * 127);
-					}
-					else {
-						v.r.db.rotDist = RESET;
-						v.r.p.amountOfFriction = 5;
-						v.r.commands.erase(v.r.commands.begin());//removes first element of vector
-					}
-				}
-				else if (v.r.commands[0].a == ACTION_FWDS) {//for fwds
-					if (abs(v.r.db.distance) <= abs(v.r.commands[0].amnt)) {
-						v.r.p.amountOfFriction = 7.5;
-						v.r.forwards(getSign(v.r.commands[0].amnt) * 127);
-					}
-					else {
-						v.r.db.distance = RESET;
-						v.r.p.amountOfFriction = 5;
-						v.r.commands.erase(v.r.commands.begin());//removes first element of vector
-					}
-				}
-			}
-			else v.r.commands.erase(v.r.commands.begin());
-		}*/
 	if (v.r.readyToRun) {
 		enum action {
 			ACTION_ROTATE,
@@ -371,57 +347,57 @@ Rectf R2S4(float p1X, float p1Y, float p2X, float p2Y) {//for rectangular coords
 void robotDebug(vex *v, bool reversed) {
 	gl::color(1, 0, 0);
 	for (int i = 0; i < 4; i++) {//simplified version of drawing the vertices
-		if (true) gl::drawSolidCircle(R2S2(v->r.db.vertices[i]), 5 + i);
+		gl::drawSolidCircle(R2S2(v->r.db.vertices[i]), 5 + i);
 		//else gl::drawSolidCircle(Vec2f(ppi * v->r.db.vertices[i].X, ppi * v->r.db.vertices[i].Y), 5 + i);
 	}
 		//vertice rectangles
-		gl::drawStrokedRect(Area(100 + v->r.db.vertices[0].X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[0].Y*ppi, 100 + v->r.db.vertices[1].X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[1].Y*ppi));
-		gl::drawStrokedRect(Area(100 + v->r.db.vertices[2].X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[2].Y*ppi, 100 +v->r.db.vertices[3].X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[3].Y*ppi));
+		gl::drawStrokedRect(Area(v->f.f.inFromEnd*ppi + v->r.db.vertices[0].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[0].Y*ppi, v->f.f.inFromEnd*ppi + v->r.db.vertices[1].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[1].Y*ppi));
+		gl::drawStrokedRect(Area(v->f.f.inFromEnd*ppi + v->r.db.vertices[2].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[2].Y*ppi, v->f.f.inFromEnd*ppi +v->r.db.vertices[3].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[3].Y*ppi));
 		//vertical lines
-		gl::drawLine(cinder::Vec2f(100 +(v->r.db.vertices[1].X + 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
-			100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[1].Y + 300 * sin((v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(100 + (v->r.db.vertices[2].X - 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
-				100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[2].Y - 300 * sin((v->r.p.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f( 100 + (v->r.db.vertices[0].X + 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
-			100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[0].Y + 300 * sin((v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(100 + (v->r.db.vertices[3].X - 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
-				100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[3].Y - 300 * sin((v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(v->f.f.inFromEnd*ppi +(v->r.db.vertices[1].X + 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
+			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[1].Y + 300 * sin((v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r.db.vertices[2].X - 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
+				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[2].Y - 300 * sin((v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f( v->f.f.inFromEnd*ppi + (v->r.db.vertices[0].X + 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
+			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[0].Y + 300 * sin((v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r.db.vertices[3].X - 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
+				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[3].Y - 300 * sin((v->r.p.mRot) * PI / 180))*ppi));
 		//horizontal lines
-		gl::drawLine(cinder::Vec2f(100 + (v->r.db.vertices[0].X + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
-			100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[0].Y + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(100 + (v->r.db.vertices[1].X - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
-				100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[1].Y - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f(100 + (v->r.db.vertices[2].X + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
-			100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[2].Y + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(100 + (v->r.db.vertices[3].X - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
-				100 + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[3].Y - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r.db.vertices[0].X + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
+			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[0].Y + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r.db.vertices[1].X - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
+				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[1].Y - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r.db.vertices[2].X + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
+			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[2].Y + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r.db.vertices[3].X - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
+				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[3].Y - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi));
 		//draw circle
-		gl::drawStrokedCircle(Vec2f(100 + v->r.p.position.X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.p.position.Y*ppi), renderRad * v->r.d.size*ppi);
-		gl::drawStrokedRect(Area(100 + v->r.db.vertices[0].X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[0].Y*ppi, 100 + v->r.db.vertices[2].X*ppi, 100 + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[2].Y*ppi));
+		gl::drawStrokedCircle(Vec2f(v->f.f.inFromEnd*ppi + v->r.p.position.X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.p.position.Y*ppi), renderRad * v->r.d.size*ppi);
+		gl::drawStrokedRect(Area(v->f.f.inFromEnd*ppi + v->r.db.vertices[0].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[0].Y*ppi, v->f.f.inFromEnd*ppi + v->r.db.vertices[2].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[2].Y*ppi));
 		
-		gl::drawSolidCircle(Vec2f(100+ppi*(v->r.p.position.X + (v->r.d.size / 2) * cos((-v->r.p.mRot) * PI / 180) * sqrt(2)),
-			100+v->f.f.fieldSizeIn*ppi - ppi*(v->r.p.position.Y - (v->r.d.size / 2) * sin((-v->r.p.mRot) * PI / 180) * sqrt(2))), 5);
+		gl::drawSolidCircle(Vec2f(v->f.f.inFromEnd*ppi+ppi*(v->r.p.position.X + (v->r.d.size / 2) * cos((-v->r.p.mRot) * PI / 180) * sqrt(2)),
+			v->f.f.inFromEnd*ppi+v->f.f.fieldSizeIn*ppi - ppi*(v->r.p.position.Y - (v->r.d.size / 2) * sin((-v->r.p.mRot) * PI / 180) * sqrt(2))), 5);
 }
-void CimulationApp::drawClaw() {
-	gl::draw(v.r.CChanel, Area((v.r.c.clawSize)*ppi, (v.r.d.size*.5 + v.r.c.baseSize)*ppi, (-v.r.c.clawSize)*ppi, (v.r.d.size*.5)*ppi));
+void CimulationApp::drawClaw(robot *r) {
+	gl::draw(v.r.CChanel, Area((r->c.clawSize)*ppi, (r->d.size*.5 + r->c.baseSize)*ppi, (-r->c.clawSize)*ppi, (r->d.size*.5)*ppi));
 	gl::color(222.0 / 225, 229.0 / 225, 34.0 / 225);
-	gl::drawSolidRect(Area(Vec2d((v.r.c.clawPos + v.r.c.clawThick)*ppi, (v.r.d.size*.5 + v.r.c.clawHeight + v.r.c.baseSize)*ppi), Vec2d((v.r.c.clawPos - v.r.c.clawThick)*ppi, (v.r.d.size*.5 + v.r.c.baseSize)*ppi)));
-	gl::drawSolidRect(Area(Vec2d((-v.r.c.clawPos - v.r.c.clawThick)*ppi, (v.r.d.size*.5 + v.r.c.clawHeight + v.r.c.baseSize)*ppi), Vec2d((-v.r.c.clawPos + v.r.c.clawThick)*ppi, (v.r.d.size*.5 + v.r.c.baseSize)*ppi)));
+	gl::drawSolidRect(Area(Vec2d((r->c.clawPos + r->c.clawThick)*ppi, (r->d.size*.5 + r->c.clawHeight + r->c.baseSize)*ppi), Vec2d((r->c.clawPos - r->c.clawThick)*ppi, (r->d.size*.5 + r->c.baseSize)*ppi)));
+	gl::drawSolidRect(Area(Vec2d((-r->c.clawPos - r->c.clawThick)*ppi, (r->d.size*.5 + r->c.clawHeight + r->c.baseSize)*ppi), Vec2d((-r->c.clawPos + r->c.clawThick)*ppi, (r->d.size*.5 + r->c.baseSize)*ppi)));
 	gl::color(1, 1, 1);//reset colour
 }
-void CimulationApp::drawRobot() {
+void CimulationApp::drawRobot(robot *r) {
 	glPushMatrix();
 	///robotDebug(&v, true);
 	//had to modify the y because the origin is bottom left hand corner
-	gl::translate(Vec3f(R2S3(v.r.p.position.X, v.r.p.position.Y, 0.0)));//origin of rotation
-	gl::rotate(Vec3f(0, 0, -v.r.p.mRot - 90));//something for like 3D rotation.... ugh
+	gl::translate(Vec3f(R2S3(r->p.position.X, r->p.position.Y, 0.0)));//origin of rotation
+	gl::rotate(Vec3f(0, 0, -r->p.mRot - 90));//something for like 3D rotation.... ugh
 	gl::color(1, 1, 1);
-	gl::draw(v.r.TankBase, Area((-(v.r.d.size / 2))*ppi, (-(v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi, ((v.r.d.size / 2))*ppi));
+	gl::draw(r->TankBase, Area((-(r->d.size / 2))*ppi, (-(r->d.size / 2))*ppi, ((r->d.size / 2))*ppi, ((r->d.size / 2))*ppi));
 	//mogo
-	drawClaw();
+	drawClaw(r);
 	gl::color(66.0 / 255, 135.0 / 255, 224.0 / 255);
-	gl::drawSolidRect(Area((-v.r.mg.clawPos - v.r.c.clawThick)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (-v.r.mg.clawPos + v.r.c.clawThick)*ppi, (-v.r.d.size*.5)*ppi));
-	gl::drawSolidRect(Area((v.r.mg.clawPos + v.r.c.clawThick)*ppi, (-v.r.d.size*.5 - v.r.mg.clawHeight)*ppi, (v.r.mg.clawPos - v.r.c.clawThick)*ppi, (-v.r.d.size*.5)*ppi));
+	gl::drawSolidRect(Area((-r->mg.clawPos - r->c.clawThick)*ppi, (-r->d.size*.5 - r->mg.clawHeight)*ppi, (-r->mg.clawPos + r->c.clawThick)*ppi, (-r->d.size*.5)*ppi));
+	gl::drawSolidRect(Area((r->mg.clawPos + r->c.clawThick)*ppi, (-r->d.size*.5 - r->mg.clawHeight)*ppi, (r->mg.clawPos - r->c.clawThick)*ppi, (-r->d.size*.5)*ppi));
 
 	glPopMatrix();//end of rotation code
 }
@@ -473,10 +449,12 @@ void CimulationApp::draw() {
 			gl::drawSolidRect(Area(getWindowWidth() - size, 0, getWindowWidth(), getWindowHeight()));
 			gl::color(1, 1, 1);//reset to white
 		}
-		ci::gl::draw(v.f.fieldBare, ci::Area(100, 100, 100 + v.f.f.fieldSizeIn*ppi, 100 + v.f.f.fieldSizeIn*ppi ));
-		drawRobot();
+		ci::gl::draw(v.f.fieldBare, ci::Area(v.f.f.inFromEnd*ppi, v.f.f.inFromEnd*ppi, v.f.f.inFromEnd*ppi + v.f.f.fieldSizeIn*ppi, v.f.f.inFromEnd*ppi + v.f.f.fieldSizeIn*ppi ));
+		drawRobot(&v.r);//drawing robot 1
+		drawRobot(&v.r2);//drawing oppposing robot
 		gl::drawString("Score:", Vec2f(700, 50), Color(1, 1, 1), Font("Arial", 50));
 		drawText(v.f.calculateScore(), vec3I(850, 50), vec3I(1, 1, 1), 50);
+
 		for (int i = 0; i < v.f.mg.size(); i++) {
 			vec3 RGB;//true color value because cinder uses values from 0->1 for their colours
 			if (v.f.mg[i].colour == 1)/*red mogo*/			RGB = vec3(217, 38, 38);
@@ -527,16 +505,16 @@ void CimulationApp::draw() {
 		}
 		gl::color(1, 1, 1);
 	}
-	else drawRobot();
-
+	else drawRobot(&v.r);
+	
 	gl::color(1, 0, 0);
 	gl::drawSolidCircle(Vec2f(v.f.mg[2].pos.X*ppi, v.f.f.poleEquation(140.5, 23.2, -1, v.f.mg[2].pos.X)*ppi), 5);
-	if (v.recording) gl::drawString("YES", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
-	else gl::drawString("NO", Vec2f(1000, 600), Color(1, 1, 1), Font("Arial", 30));
-	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1000, 660), vec3I(1, 1, 1), 30);
-	drawText(v.r.db.distance, vec3I(1000, 500), vec3I(1, 1, 1), 30);
-	drawText(v.r.db.rotDist, vec3I(1000, 400), vec3I(1, 1, 1), 30);
-	drawText(ci::app::getElapsedSeconds(), vec3I(1000, 200), vec3I(1, 1, 1), 30);
+	if (v.recording) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
+	else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
+	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1010, 660), vec3I(1, 1, 1), 30);
+	drawText(v.r.db.distance, vec3I(1010, 500), vec3I(1, 1, 1), 30);
+	drawText(v.r.db.rotDist, vec3I(1010, 400), vec3I(1, 1, 1), 30);
+	drawText(ci::app::getElapsedSeconds(), vec3I(1010, 200), vec3I(1, 1, 1), 30);
 
 	gl::color(1, 1, 1);
 	//USER INTERFACE

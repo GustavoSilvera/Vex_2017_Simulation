@@ -16,7 +16,7 @@
 //LOOKIE HERE: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
 class field {
 public:
-	field(robot *robit);
+	field(robot *r, robot *r2);
 
 
 	typedef int mobileGoalIndex;
@@ -25,19 +25,15 @@ public:
 	std::set<mobileGoalIndex> pushMoGo;
 	std::set<coneIndex> pushCones;
 
-	void FieldUpdate(robot *r);
-	void initialize(robot *r);
+	void FieldUpdate(robot *r, robot *r2);
+	void initialize(robot *r, robot *r2);
 	bool isInit; // suggestion: construct instead of initialize
 
 	struct fence {
 		/*const*/ float fieldSizeIn = 141.05;// 140.5 + 2 * (1.27);wall thickness accounted for
-	//	vec3 centre = vec3(606, 606);//in pixels
-	//	float fieldEnd = centre.X + fieldSizeIn*ppi / 2;//furthest to the right the field is touching
 		float depthIn = 1.27;//thickness of the vex fence
 		void wallPush(robot *r);
-		// float d2E[2];
-		/*for stationary goals*/
-		// float d2StatGoal[2];
+		float inFromEnd = 13.9198;
 		struct zone {
 			std::set<mobileGoalIndex> tenPoint;
 			std::set<mobileGoalIndex> fivePoint;

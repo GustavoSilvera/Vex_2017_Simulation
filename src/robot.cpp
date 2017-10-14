@@ -7,7 +7,6 @@
 
 
 robot::robot() {
-	p.position = vec3(69.6, 69.6, 0);//initial constructor position
 	c.clawSize = cRad;
 	c.baseSize = d.size / 18;
 	c.clawPos = c.clawSize;
@@ -26,6 +25,8 @@ robot::robot() {
 	mg.liftPos = 0;
 	db.distance = RESET;
 	db.rotDist = RESET;
+	p.position = vec3(69.6, 69.6, 0);//initial robot position
+
 	//vector stuff
 }//constructor 
 
