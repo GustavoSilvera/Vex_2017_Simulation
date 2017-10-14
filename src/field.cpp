@@ -298,11 +298,11 @@ void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 			if (inFront) closestPoint = vec3(pl->pos.X - (d2Edge)*cos(gAngle), pl->pos.Y + (d2Edge)*sin(gAngle));//does work
 			else closestPoint = vec3(pl->pos.X + (d2Edge)*cos(gAngle), pl->pos.Y - (d2Edge)*sin(gAngle));//does work
 		}
-		/*else if (pl->directlyInHorizontalPath(robit)) {//DONT NEED HORIZONTAL CHECKING
+		else if (pl->directlyInHorizontalPath(robit)) {//DONT NEED HORIZONTAL CHECKING
 			bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if cone is closer to the right side
 			if (onRight) closestPoint = vec3(pl->pos.X + (d2Edge)*sin(gAngle), pl->pos.Y - (d2Edge)*cos(gAngle));//does work
 			else closestPoint = vec3(pl->pos.X - (d2Edge)*sin(gAngle), pl->pos.Y + (d2Edge)*cos(gAngle));//does work
-		}*/
+		}
 		else {//not directly in path finds which vertice is the closest to the cone
 			int smallest_vertice = sortSmallVER(d2V[0], d2V[1], d2V[2], d2V[3]);
 			closestPoint = robit->db.vertices[smallest_vertice];//closest point to center will then be the vertice
@@ -360,10 +360,16 @@ void field::element::grabbed(robot *robit, int index, int type) {
 	}
 }
 void field::cone::coneGrab(robot *robit, int index, int type) {
-	grabbed(robit, index, CONE);
-	if ((index < numCones && robit->c.grabbing && robit->c.holding == index) || (robit->c.grabbing && robit->c.holding == -1)) {
-		if (abs(robit->c.liftPos - pos.Z) < height) {//makes sure lift is within grabbing distance
-			if (robit->c.liftUp && pos.Z < robit->c.maxHeight || robit->c.liftDown && pos.Z > 0) {
+	vec3 idealSpot = vec3(//perf
+		(robit->p.position.X + (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2)),
+		(robit->p.position.Y - (robit->d.size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2)));
+	bool inPosition = (pos.distance(idealSpot) <= radius);
+	if (robit->c.grabbing && index < numCones && ( (robit->c.holding == index) || (robit->c.holding == -1) ) ) {
+		if (inPosition ){//&& abs(robit->c.liftPos - pos.Z) < height) {//makes sure lift is within grabbing distance
+			robit->c.holding = index;
+			pos.X = (robit->p.position.X + (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2));//works
+			pos.Y = (robit->p.position.Y - (robit->d.size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2));//works
+ 			if ((robit->c.liftUp && pos.Z < robit->c.maxHeight) || (robit->c.liftDown && pos.Z > 0)) {
 				pos.Z = robit->c.liftPos;//LATER: add something to try to pickyp from center
 				landed = false;
 			}
@@ -411,7 +417,7 @@ void field::fallingOn(cone *fall, robot *robit, int index) {
 		if (!fall->landed) fall->pos.Z -= 32 / 12;
 	}
 	else if (fall->landed && fall->fellOn != -1) {
-		float moveX, moveY;
+		float moveX, moveY;//centers cone after landing
 		if (fall->fellOn <= numCones) {//if it fell on a cone
 			moveX = 0.5*(fall->pos.X - c[fall->fellOn - CONE * 100].pos.X);
 			moveY = 0.5*(fall->pos.Y - c[fall->fellOn - CONE * 100].pos.Y);

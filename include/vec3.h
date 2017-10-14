@@ -12,6 +12,9 @@ public:
 		return vec3(X*f, Y*f, Z*f);
 	}
 	float distance(vec3 v) {
+		return sqrt(sqr(v.X - X) + sqr(v.Y - Y));
+	}
+	float distanceV3(vec3 v) {
 		return sqrt(sqr(v.X - X) + sqr(v.Y - Y) + sqr(v.Z - Z));
 	}
 	vec3 operator+(vec3 v) {

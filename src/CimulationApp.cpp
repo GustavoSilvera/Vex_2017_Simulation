@@ -192,10 +192,10 @@ void CimulationApp::update() {
 			ACTION_ROTATE,
 			ACTION_FWDS
 		};
-		if (v.r.commands.size() > 0) {
+		if (v.r.commands.size() > 0) {//make this more accriate
 			if (v.r.commands[0].amnt != 0) {//at least 
 				if (v.r.commands[0].a == ACTION_ROTATE) {//for rotate
-					if (abs(v.r.db.rotDist) <= 0.6*abs(v.r.commands[0].amnt)) {
+					if (abs(v.r.db.rotDist) <= 0.65*abs(v.r.commands[0].amnt)) {
 						v.r.rotate(getSign(v.r.commands[0].amnt) * 127);
 					}
 					else {
@@ -204,7 +204,7 @@ void CimulationApp::update() {
 					}
 				}
 				else if (v.r.commands[0].a == ACTION_FWDS) {//for fwds
-					if (abs(v.r.db.distance) <= abs(v.r.commands[0].amnt)) {
+					if (abs(v.r.db.distance) <= 0.9*abs(v.r.commands[0].amnt)) {
 						v.r.forwards(getSign(v.r.commands[0].amnt) * 127);
 					}
 					else {
