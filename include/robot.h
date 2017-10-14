@@ -22,6 +22,7 @@ public:
 	bool driveFor(float inches);
 	bool rotFor(float degrees);
 	bool readyToRun = false;
+	bool thinking = false;
 	enum action  {
 		ACTION_ROTATE,
 		ACTION_FWDS
@@ -97,6 +98,5 @@ public:
 	ci::gl::Texture TankBase;
 	ci::gl::Texture CChanel;
 	struct position current;
-	float encoderLast = 0;//last encoder value after a rotation
 };
 #endif  // ROBOT_H

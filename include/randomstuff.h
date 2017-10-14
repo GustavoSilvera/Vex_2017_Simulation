@@ -27,11 +27,12 @@
 #define moGoWeight 0.8
 #define coefMag 1.0//e.e
 #define RESET 0
+#define MAXSPEED 127
 //TYPES
 #define CONE 0
 #define MOGO 1
 #define STAT 2
-
+#define CONENUM 50
 #define gAngle -robit->p.mRot * (PI / 180)
 #define renderRad 1//amount of the robot's radii that are used to calculate cone distance, smaller is more optimized (but calculates for less cones)
 inline float getSign(float value) {//returns whether a number is negative or positive.
@@ -52,6 +53,11 @@ inline void drawText(float text, vec3I pos, vec3I colour, int size) {//simplifie
 	dummyText << text;
 	dummyText >> PRINT;
 	ci::gl::drawString(PRINT, ci::Vec2f(pos.X, pos.Y), ci::Color(colour.X, colour.Y, colour.Z), ci::Font("Arial", size));
+}
+inline float limitSpeed(float noMoreThan, float value) {
+	if (abs(value) <= noMoreThan)
+		return value;
+	else return getSign(value) * noMoreThan;
 }
 inline float limitSmall(float noLessThan, float value) {//not really working anyways. idk
 	if (abs(value) >= noLessThan)

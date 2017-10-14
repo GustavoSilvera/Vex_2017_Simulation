@@ -84,7 +84,7 @@ void CimulationApp::setup() {
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
 	setWindowSize(WindowWidth, WindowHeight);
-	v.r2.p.position = vec3(100, 100, 0);
+	v.r2.p.position = vec3(117, 117, 0);
 }
 //cinder::functions
 void CimulationApp::mouseDown(MouseEvent event) {
@@ -119,9 +119,8 @@ void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getChar() == 'm' || event.getChar() == 'M') v.debugText = !v.debugText;
 	if (event.getChar() == 'n' || event.getChar() == 'N') v.r.forwards(100);//works as of rn for ~1" 
 	if (event.getChar() == 'B' || event.getChar() == 'b') v.r.rotate(-100);//works as of rn as ~1°
-	if (event.getChar() == 'c') {
-		v.r.readScript();
-	}
+	if (event.getChar() == 'c') v.r.readScript();
+	if (event.getChar() == 'q') v.r2.thinking = true;
 }
 void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_DOWN) v.r.ctrl.ArrowKeyDown = false;
@@ -130,6 +129,15 @@ void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_LEFT) v.r.ctrl.RotLeft = false;
 	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.c.liftUp = false;
 	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r.c.liftDown = false;//left Z button
+}
+bool directlyInVerticalPath(robot *robit, vec3 pos) {//vertical lines
+	vec3 origin = pos;//calculattes yintercepts for each cone relative to their position
+	float x = 0;//finds the y intercept
+	robit->db.slopeV = (robit->db.vertices[0].Y - robit->db.vertices[3].Y) / (robit->db.vertices[0].X - robit->db.vertices[3].X);//should be identical to slope[1] kinda redundant i guess
+	robit->db.YintV[0] = robit->db.slopeV * (x - (robit->db.vertices[0].X - origin.X)) + (robit->db.vertices[0].Y - origin.Y);
+	robit->db.YintV[1] = robit->db.slopeV * (x - (robit->db.vertices[1].X - origin.X)) + (robit->db.vertices[1].Y - origin.Y);
+	//with the y intrcepts, checks if the y intercepts are not the same sign, thus the cone (origin) is between them
+	return(getSign(robit->db.YintV[0]) != getSign(robit->db.YintV[1]));//works for telling me if between the two lines
 }
 void CimulationApp::update() {
 	int pastRot = v.r.p.mRot;
@@ -188,6 +196,30 @@ void CimulationApp::update() {
 		v.pid.pid.isRunning = false;
 		v.r.moveAround(v.j.analogX, v.j.analogY);
 		break;
+	}
+	if (v.r2.thinking) {
+		int i = CONENUM;
+		vec3 goal(v.r.p.position);//go to nth cone
+		float d2V[4];
+		for (int ver = 0; ver < 4; ver++) {
+			d2V[ver] = goal.distance(v.r2.db.vertices[ver]);
+		}
+		int dir = 1;
+		bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
+		bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
+		if (onRight) dir = -1;
+
+		if (!directlyInVerticalPath(&v.r2, goal)) 
+			v.r2.rotate(dir * MAXSPEED);
+		else v.r2.rotate(0);
+		if (v.r2.p.position.distance(goal) > v.r2.d.size && inFront) {
+			v.r2.c.grabbing = false;
+			v.r2.forwards(MAXSPEED + 50);
+		}
+		else {
+			v.r2.c.grabbing = true;
+			v.r2.forwards(0);
+		}
 	}
 	v.r.db.distance += getSign(v.r.d.basePower)*v.r.p.position.distance(pastPos);
 	v.r.db.rotDist += getSign(v.r.p.rotVel)*(v.r.p.mRot - pastRot);
@@ -508,7 +540,7 @@ void CimulationApp::draw() {
 	else drawRobot(&v.r);
 	
 	gl::color(1, 0, 0);
-	gl::drawSolidCircle(Vec2f(v.f.mg[2].pos.X*ppi, v.f.f.poleEquation(140.5, 23.2, -1, v.f.mg[2].pos.X)*ppi), 5);
+	gl::drawSolidCircle(R2S2(vec3(v.f.c[CONENUM].pos.X, v.f.c[CONENUM].pos.Y) ), 5);
 	if (v.recording) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1010, 660), vec3I(1, 1, 1), 30);

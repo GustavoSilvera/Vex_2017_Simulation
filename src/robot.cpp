@@ -185,13 +185,13 @@ void robot::update() {
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {
-	if (ctrl.ArrowKeyUp && !d.frontStop) forwards(127);//checking up key
-	else if (ctrl.ArrowKeyDown && ! d.backStop) forwards(-127);//checking down key
+	if (ctrl.ArrowKeyUp && !d.frontStop) forwards(MAXSPEED);//checking up key
+	else if (ctrl.ArrowKeyDown && ! d.backStop) forwards(-MAXSPEED);//checking down key
 	else if (jAnalogY != 0) forwards(truSpeed(3, -jAnalogY));//chacking analog drawing
 	else forwards(0);//welp, no movement
 
-	if (ctrl.RotLeft) rotate(127);//checking left key
-	else if (ctrl.RotRight) rotate(-127);//checking right key
+	if (ctrl.RotLeft) rotate(MAXSPEED);//checking left key
+	else if (ctrl.RotRight) rotate(-MAXSPEED);//checking right key
 	else if (abs(jAnalogX) > 10) rotate(-jAnalogX);//checking analog drawing
 	else rotate(0);//welp, no rotation
 }

@@ -54,9 +54,9 @@ void field::initialize(robot *r, robot *r2) {
 	r->p.position.Y = 35;
 	r->p.mRot = 45;
 	r2->reset();
-	r2->p.position.X = 100;
-	r2->p.position.Y = 100;
-	r2->p.mRot = 45+180;
+	r2->p.position.X = 117;
+	r2->p.position.Y = 117;
+	r2->p.mRot = 225;
 	fieldInit = false;
 	isInit = true;//so that this only gets called ONCE when the field tab is running
 }
@@ -133,7 +133,7 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 	if (pos.Z < height && d2Robot < renderRad * robit->d.size) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
 		for (int v = 0; v < 4; v++) {
 			d2V[v] = pos.distance(robit->db.vertices[v]);
-		}		
+		}
 		float d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
 		vec3 closestPoint;
 		bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if cone is closer to the front side
@@ -277,7 +277,7 @@ void field::fence::wallPush(robot *robit) {
 			robit->p.position.Y -= (depthIn)-d2Top;
 			robit->p.velocity.Y = 0;
 			if (withinAngle(robit->p.mRot, 90, 180) || withinAngle(robit->p.mRot, 270, 360))  robit->p.mRot += 1.5*sin(gAngle);
-			else if (withinAngle(robit->p.mRot, 0, 90) || withinAngle(robit->p.mRot, 0, 90)) robit->p.mRot -= 1.5*sin(gAngle);
+			else if (withinAngle(robit->p.mRot, 0, 90) || withinAngle(robit->p.mRot, 180, 270)) robit->p.mRot -= 1.5*sin(gAngle);
 		}
 		else if (robit->db.vertices[i].Y <= (depthIn)) {//checking bottom side
 			robit->p.position.Y += (depthIn)-robit->db.vertices[i].Y;
@@ -478,11 +478,13 @@ void field::MoGo::zoneScore(fence *f, int index) {
 	}
 }
 //function for having a 'grabbed' element lock in place
+
 void field::FieldUpdate(robot *robit, robot *r2) {
 	if (!isInit) initialize(robit, r2);
 	f.wallPush(robit);
 	f.wallPush(r2);
-	f.robotPole(robit); f.robotPole(r2);
+	f.robotPole(robit); 
+	f.robotPole(r2);
 	for (int i = 0; i < c.size(); i++) {
 		//type for "cone" is 0
 		int type = CONE;
