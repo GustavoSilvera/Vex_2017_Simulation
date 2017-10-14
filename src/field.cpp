@@ -300,8 +300,8 @@ void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 		}
 		else if (pl->directlyInHorizontalPath(robit)) {//DONT NEED HORIZONTAL CHECKING
 			bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if cone is closer to the right side
-			if (onRight) closestPoint = vec3(pl->pos.X + (d2Edge)*sin(gAngle), pl->pos.Y - (d2Edge)*cos(gAngle));//does work
-			else closestPoint = vec3(pl->pos.X - (d2Edge)*sin(gAngle), pl->pos.Y + (d2Edge)*cos(gAngle));//does work
+			if (onRight) closestPoint = vec3(pl->pos.X + (d2Edge)*sin(gAngle), pl->pos.Y + (d2Edge)*cos(gAngle));//does work
+			else closestPoint = vec3(pl->pos.X - (d2Edge)*sin(gAngle), pl->pos.Y - (d2Edge)*cos(gAngle));//does work
 		}
 		else {//not directly in path finds which vertice is the closest to the cone
 			int smallest_vertice = sortSmallVER(d2V[0], d2V[1], d2V[2], d2V[3]);
@@ -314,29 +314,26 @@ void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 			robit->p.position.Y += (R.Y - closestPoint.Y);
 			robit->p.velocity = vec3(0, 0, 0);
 			//rotation when hits the stationary goal
-			int thresh = 2;//degrees of freedom
-			if (inFront) {
-				if (abs(d2V[0] - d2V[1]) > thresh) {
-					if (d2V[0] < d2V[1])//checking which way to rotate
-						robit->p.mRot += 0.1*largest(d2V[0], d2V[1]);
-					else if (d2V[0] > d2V[1])
-						robit->p.mRot -= 0.1*largest(d2V[0], d2V[1]);
+			int thresh = 3;//degrees of freedom
+			if (pl->directlyInVerticalPath(robit)) {
+				float rotScale = 0.065; //constant for rotation scaling when hits pole smaller == smoother but slower
+				if (inFront) {
+					if (abs(d2V[0] - d2V[1]) > thresh) {
+						if (d2V[0] < d2V[1])//checking which way to rotate
+							robit->p.mRot += rotScale*largest(d2V[0], d2V[1]);
+						else if (d2V[0] > d2V[1])
+							robit->p.mRot -= rotScale*largest(d2V[0], d2V[1]);
+					}
 				}
-				//robit->d.frontStop = true;
-			}
-			else {
-				if (abs(d2V[2] - d2V[3]) > thresh) {
-					if (d2V[2] > d2V[3])
-						robit->p.mRot -= 0.1*largest(d2V[2], d2V[3]);
-					else if (d2V[2] < d2V[3])
-						robit->p.mRot += 0.1*largest(d2V[2], d2V[3]);
+				else {
+					if (abs(d2V[2] - d2V[3]) > thresh) {
+						if (d2V[2] > d2V[3])
+							robit->p.mRot -= rotScale*largest(d2V[2], d2V[3]);
+						else if (d2V[2] < d2V[3])
+							robit->p.mRot += rotScale*largest(d2V[2], d2V[3]);
+					}
 				}
-				//robit->d.backStop = true;
 			}
-		}
-		else if (d2closestPoint > 1.05 * pl->radius) {//slightly out of range of touching
-			//robit->d.backStop = false;
-			//robit->d.frontStop = false;
 		}
 	}
 }
