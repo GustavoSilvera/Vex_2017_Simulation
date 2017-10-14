@@ -91,26 +91,6 @@ void field::element::calcD2Vertices(robot *robit) {
 	**********************/
 }
 //calculates distance between the cone's centre and each vertice
-bool field::element::directlyInVerticalPath(robot *robit) {//vertical lines
-	vec3 origin = pos;//calculattes yintercepts for each cone relative to their position
-	float x = 0;//finds the y intercept
-	robit->db.slopeV = (robit->db.vertices[0].Y - robit->db.vertices[3].Y) / (robit->db.vertices[0].X - robit->db.vertices[3].X);//should be identical to slope[1] kinda redundant i guess
-	robit->db.YintV[0] = robit->db.slopeV * (x - (robit->db.vertices[0].X - origin.X)) + (robit->db.vertices[0].Y - origin.Y);
-	robit->db.YintV[1] = robit->db.slopeV * (x - (robit->db.vertices[1].X - origin.X)) + (robit->db.vertices[1].Y - origin.Y);
-	//with the y intrcepts, checks if the y intercepts are not the same sign, thus the cone (origin) is between them
-	return(getSign(robit->db.YintV[0]) != getSign(robit->db.YintV[1]));//works for telling me if between the two lines
-}
-//checking if cone is directly in front of or behind the robit
-bool field::element::directlyInHorizontalPath(robot *robit) {//horizontal lines
-	vec3 origin = pos;//calculattes yintercepts for each cone relative to their position
-	float x = 0;//finds the y intercept
-	robit->db.slopeH = (robit->db.vertices[0].Y - robit->db.vertices[1].Y) / (robit->db.vertices[0].X - robit->db.vertices[1].X);
-	robit->db.YintH[0] = robit->db.slopeH * (x - (robit->db.vertices[0].X - origin.X)) + (robit->db.vertices[0].Y - origin.Y);
-	robit->db.YintH[1] = robit->db.slopeH * (x - (robit->db.vertices[3].X - origin.X)) + (robit->db.vertices[3].Y - origin.Y);
-	//with the y intrcepts, checks if the y intercepts are not the same sign, thus the cone (origin) is between them
-	return(getSign(robit->db.YintH[0]) != getSign(robit->db.YintH[1]));//works for telling me if between the two lines
-}
-//checking if cone is directly to the right of or left of the robit
 void field::element::fencePush(fence *f) {
 	float d2Top = f->fieldSizeIn - pos.Y;
 	float d2Right = f->fieldSizeIn - pos.X;
@@ -137,12 +117,12 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 		float d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
 		vec3 closestPoint;
 		bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if cone is closer to the front side
-		if (directlyInVerticalPath(robit)) {//either directly in front or behing based off center x and y position
+		if (robit->directlyInPath(true, robit->d.size, pos)) {//either directly in front or behing based off center x and y position
 			if (inFront) closestPoint = vec3(pos.X - (d2RobotEdge)*cos(gAngle), pos.Y + (d2RobotEdge)*sin(gAngle));//does work
 			else closestPoint = vec3(pos.X + (d2RobotEdge)*cos(gAngle), pos.Y - (d2RobotEdge)*sin(gAngle));//does work
 		}
 		//had to inverse x and y because horiontal lines
-		else if (directlyInHorizontalPath(robit)) {
+		else if (robit->directlyInPath(false, robit->d.size, pos)) {
 			bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if cone is closer to the right side
 			if (onRight) closestPoint = vec3(pos.X + (d2RobotEdge)*sin(gAngle), pos.Y + (d2RobotEdge)*cos(gAngle));//does work
 			else closestPoint = vec3(pos.X - (d2RobotEdge)*sin(gAngle), pos.Y - (d2RobotEdge)*cos(gAngle));//does work
@@ -297,12 +277,12 @@ void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 		bool inFront, onRight;
 		vec3 closestPoint;
 		float d2Edge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
-		if (pl->directlyInVerticalPath(robit)) {
+		if (robit->directlyInPath(true, robit->d.size, pl->pos)) {
 			inFront = (d2V[0] + d2V[1] < d2V[2] + d2V[3]);//checking if cone is closer to the front side
 			if (inFront) closestPoint = vec3(pl->pos.X - (d2Edge)*cos(gAngle), pl->pos.Y + (d2Edge)*sin(gAngle));//does work
 			else closestPoint = vec3(pl->pos.X + (d2Edge)*cos(gAngle), pl->pos.Y - (d2Edge)*sin(gAngle));//does work
 		}
-		else if (pl->directlyInHorizontalPath(robit)) {//DONT NEED HORIZONTAL CHECKING
+		else if (robit->directlyInPath(false, robit->d.size, pl->pos)) {//DONT NEED HORIZONTAL CHECKING
 			bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if cone is closer to the right side
 			if (onRight) closestPoint = vec3(pl->pos.X + (d2Edge)*sin(gAngle), pl->pos.Y + (d2Edge)*cos(gAngle));//does work
 			else closestPoint = vec3(pl->pos.X - (d2Edge)*sin(gAngle), pl->pos.Y - (d2Edge)*cos(gAngle));//does work
@@ -319,7 +299,7 @@ void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 			robit->p.velocity = vec3(0, 0, 0);
 			//rotation when hits the stationary goal
 			int thresh = 3;//degrees of freedom
-			if (pl->directlyInVerticalPath(robit)) {
+			if (robit->directlyInPath(true, robit->d.size, pl->pos)) {
 				float rotScale = 0.065; //constant for rotation scaling when hits pole smaller == smoother but slower
 				if (inFront) {
 					if (abs(d2V[0] - d2V[1]) > thresh) {

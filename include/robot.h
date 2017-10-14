@@ -19,6 +19,7 @@ public:
 	void moveAround(float jAnalogX, float jAnalogY);
 	void setVertices();
 	void readScript();
+	bool directlyInPath(bool vertical, int range, vec3 pos);
 	bool driveFor(float inches);
 	bool rotFor(float degrees);
 	bool readyToRun = false;
@@ -38,12 +39,8 @@ public:
 	};
 	struct debug {;
 	//lines
-		//vertical
-		float slopeV;//only need 1 slope, both sides of a square are parallel
-		float YintV[2];
-		//horizontal
-		float slopeH;//only need 1 slope, both sides of a square are parallel
-		float YintH[2];
+		float slope;//only need 1 slope, both sides of a square are parallel
+		float Yint[2];
 		vec3 vertices[4];
 	//output text
 		float distance;//simulating a real worl vex encoder shaft

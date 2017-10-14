@@ -138,6 +138,21 @@ void robot::reset() {
 	p.velocity.X = 0;
 	p.velocity.Y = 0;
 }
+bool robot::directlyInPath(bool vertical, int range, vec3 pos) {//vertical lines
+	vec3 origin = pos;//calculattes yintercepts for each cone relative to their position
+	float x = 0;//finds the y intercept
+	if (vertical) {
+		db.slope = (db.vertices[0].Y - db.vertices[3].Y) / (db.vertices[0].X - db.vertices[3].X);//checks for vertical y intercepts
+		db.Yint[1] = db.slope * (x - (db.vertices[1].X - origin.X)) + (db.vertices[1].Y - origin.Y);
+	}
+	else {
+		db.slope = (db.vertices[0].Y - db.vertices[1].Y) / (db.vertices[0].X - db.vertices[1].X);//checks for horizontal y intercepts
+		db.Yint[1] = db.slope * (x - (db.vertices[3].X - origin.X)) + (db.vertices[3].Y - origin.Y);
+	}	
+	db.Yint[0] = db.slope * (x - (db.vertices[0].X - origin.X)) + (db.vertices[0].Y - origin.Y);//both vertical and horizontal use vertices 0
+	//with the y intrcepts, checks if the y intercepts are not the same sign, thus the cone (origin) is between them
+	return(getSign(db.Yint[0]) != getSign(db.Yint[1]));//works for telling me if between the two lines
+}
 void robot::setVertices() {
 	//gross i know, but its for calculating each vertice of the robot based off its current angle;
 	//math behind is based off basic trig and 45 45 90° triangle analytic geometry

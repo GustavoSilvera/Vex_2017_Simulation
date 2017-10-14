@@ -68,6 +68,7 @@ public:
 	void clicky(int num_buttons);
 	void buttons();
 	void textDraw();
+	void goGrab(robot *r2, vec3 pos, int index);
 	void drawClaw(robot *r);
 	void drawRobot(robot *r);
 	void draw();
@@ -130,15 +131,6 @@ void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.c.liftUp = false;
 	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r.c.liftDown = false;//left Z button
 }
-bool directlyInVerticalPath(robot *robit, vec3 pos) {//vertical lines
-	vec3 origin = pos;//calculattes yintercepts for each cone relative to their position
-	float x = 0;//finds the y intercept
-	robit->db.slopeV = (robit->db.vertices[0].Y - robit->db.vertices[3].Y) / (robit->db.vertices[0].X - robit->db.vertices[3].X);//should be identical to slope[1] kinda redundant i guess
-	robit->db.YintV[0] = robit->db.slopeV * (x - (robit->db.vertices[0].X - origin.X)) + (robit->db.vertices[0].Y - origin.Y);
-	robit->db.YintV[1] = robit->db.slopeV * (x - (robit->db.vertices[1].X - origin.X)) + (robit->db.vertices[1].Y - origin.Y);
-	//with the y intrcepts, checks if the y intercepts are not the same sign, thus the cone (origin) is between them
-	return(getSign(robit->db.YintV[0]) != getSign(robit->db.YintV[1]));//works for telling me if between the two lines
-}
 void CimulationApp::update() {
 	int pastRot = v.r.p.mRot;
 	vec3 pastPos(v.r.p.position);
@@ -198,28 +190,7 @@ void CimulationApp::update() {
 		break;
 	}
 	if (v.r2.thinking) {
-		int i = CONENUM;
-		vec3 goal(v.r.p.position);//go to nth cone
-		float d2V[4];
-		for (int ver = 0; ver < 4; ver++) {
-			d2V[ver] = goal.distance(v.r2.db.vertices[ver]);
-		}
-		int dir = 1;
-		bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
-		bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
-		if (onRight) dir = -1;
-
-		if (!directlyInVerticalPath(&v.r2, goal)) 
-			v.r2.rotate(dir * MAXSPEED);
-		else v.r2.rotate(0);
-		if (v.r2.p.position.distance(goal) > v.r2.d.size && inFront) {
-			v.r2.c.grabbing = false;
-			v.r2.forwards(MAXSPEED + 50);
-		}
-		else {
-			v.r2.c.grabbing = true;
-			v.r2.forwards(0);
-		}
+		goGrab(&v.r2, v.f.c[CONENUM].pos, CONENUM);
 	}
 	v.r.db.distance += getSign(v.r.d.basePower)*v.r.p.position.distance(pastPos);
 	v.r.db.rotDist += getSign(v.r.p.rotVel)*(v.r.p.mRot - pastRot);
@@ -292,6 +263,33 @@ void CimulationApp::update() {
 	}
 }
 //for buttons
+void CimulationApp::goGrab(robot *r, vec3 goal, int index) {
+	float d2V[4];
+	for (int ver = 0; ver < 4; ver++) {
+		d2V[ver] = goal.distance(r->db.vertices[ver]);
+	}
+	int dir = 1;
+	bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
+	bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
+	if (onRight) dir = -1;
+
+	if (!r->directlyInPath(true, r->d.size, goal))
+		r->rotate(dir * MAXSPEED);
+	else r->rotate(0);
+	if (r->p.position.distance(goal) > r->d.size && inFront) {
+		r->c.grabbing = false;
+		r->forwards(MAXSPEED + 50);
+	}
+	else {
+		r->c.grabbing = true;
+		r->forwards(0);
+	}
+	if (r->c.holding == index) {//holding the cone
+		if (r->c.liftPos< v.f.pl[1].height + 4) r->c.liftUp = true;
+		else r->c.liftUp = false;
+	}
+}
+
 void CimulationApp::clicky(int AMOUNT_BUTTON) {//function for clicking the buttons
 	for (int i = 0; i < AMOUNT_BUTTON; i++) {//for each button in the array 
 		if (mousePos.X > 100 * (i + 1) - (50) + (25 * i) &&

@@ -51,8 +51,6 @@ public:
 		float radius;//size of the object;
 		/*const*/ float height;
 		void calcD2Vertices(robot *r);
-		bool directlyInVerticalPath(robot *r);
-		bool directlyInHorizontalPath(robot *r);
 		void fencePush(fence *f);
 		void robotColl(int index, robot *r, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f);
 		void collision(element *e);
