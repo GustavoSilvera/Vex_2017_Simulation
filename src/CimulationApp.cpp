@@ -195,18 +195,16 @@ void CimulationApp::update() {
 		if (v.r.commands.size() > 0) {//make this more accriate
 			if (v.r.commands[0].amnt != 0) {//at least 
 				if (v.r.commands[0].a == ACTION_ROTATE) {//for rotate
-					if (abs(v.r.db.rotDist) <= 0.65*abs(v.r.commands[0].amnt)) {
+					if (abs(v.r.db.rotDist) <= 0.8*abs(v.r.commands[0].amnt))
 						v.r.rotate(getSign(v.r.commands[0].amnt) * 127);
-					}
 					else {
 						v.r.db.rotDist = RESET;
 						v.r.commands.erase(v.r.commands.begin());//removes first element of vector
 					}
 				}
 				else if (v.r.commands[0].a == ACTION_FWDS) {//for fwds
-					if (abs(v.r.db.distance) <= 0.9*abs(v.r.commands[0].amnt)) {
+					if (abs(v.r.db.distance) <= abs(v.r.commands[0].amnt))
 						v.r.forwards(getSign(v.r.commands[0].amnt) * 127);
-					}
 					else {
 						v.r.db.distance = RESET;
 						v.r.commands.erase(v.r.commands.begin());//removes first element of vector

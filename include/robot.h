@@ -77,7 +77,7 @@ public:
 		int frictionC = 0;
 		int frictionM = 0;
 		void speedMult(float base, float rot);
-		float amountOfFriction = 3;	//constant changing the amount of friction for the robot
+		float amountOfFriction = 5;	//constant changing the amount of friction for the robot
 	};
 		physics p;
 	struct details {

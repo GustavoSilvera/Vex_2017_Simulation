@@ -33,7 +33,7 @@ void robot::forwards(float power) {
 	//konstants that should be changed later
 	if(power != 0) d.basePower = power;
 	
-	float rateOfChange = 56.15;//constant changing the amount of initial change the acceleration goes through? maibe
+	float rateOfChange = 40;//constant changing the amount of initial change the acceleration goes through? maibe
 	//calculate acceleration taking friction into account
 	float Xaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.X);
 	float Yaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.Y);
@@ -72,7 +72,7 @@ void robot::readScript() {
 }
 void robot::rotate(float power) {
 	//konstants that should be changed later
-	float rateOfChange = 23.35;//constant changing the amount of initial change the acceleration goes through? maibe
+	float rateOfChange = 10;//constant changing the amount of initial change the acceleration goes through? maibe
 							//calculate acceleration taking friction into account
 	float rotAccel = 2 * (power / rateOfChange) - (p.amountOfFriction*p.rotVel);
 	//limiting acceleration to 0.01, no need for further acceleration rly
