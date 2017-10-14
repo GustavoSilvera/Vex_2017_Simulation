@@ -66,12 +66,12 @@ public:
 		cone(vec3 pos) : element(pos, cRad, cHeight), fellOn(0), landed(false) {}
 		int fellOn;
 		bool landed;
-		void coneGrab(robot *robit, int index, int type);
+		void coneGrab(robot *robit, int index);
 	};
 	struct MoGo : public element {
 		MoGo(vec3 pos, int initColour) : element(pos, MGRad, mgHeight), colour(initColour) {}
 		int colour;//0 is yellow, 1 is red, 2 is blue 
-		void mogoGrab(robot *robit, int index, int type);
+		void mogoGrab(robot *robit, int index);
 		void zoneScore(fence *f, int index);
 		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
 	};

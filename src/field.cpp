@@ -341,38 +341,33 @@ void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 	}
 }
 //function for making sure the robot cannot move past the fence
-void field::element::grabbed(robot *robit, int index, int type) {
-	vec3 idealSpot;
-	int mult = 1;
-	if (type == MOGO) mult = -1;
-	idealSpot = vec3(//perf
-		(robit->p.position.X + mult * (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2)),
-		(robit->p.position.Y - mult * (robit->d.size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2)));
-	bool inPosition = (pos.distance(idealSpot) <= radius);
-	if (type == CONE && (index < numCones && robit->c.grabbing && robit->c.holding == index) || (robit->c.grabbing && robit->c.holding == -1) || 
-		type == MOGO && ((robit->mg.grabbing && robit->mg.holding == index + 100) || (robit->mg.grabbing && robit->mg.holding == -101))) {
-		if ((type == MOGO && inPosition) || (type == CONE && inPosition && abs(pos.Z - robit->c.liftPos) < height)) {
-			if (type == CONE) robit->c.holding = index; //+ 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
-			else if (type == MOGO) robit->mg.holding = index + 100; //+ 100 * type;//does not affect cones (as type is 0), but makes it so that mogos have an "index" of something between 100 and 108 (out of range of cones)
-			pos.X = (robit->p.position.X + mult * (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2));//works
-			pos.Y = (robit->p.position.Y - mult * (robit->d.size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2));//works
-		}
-	}
-}
-void field::cone::coneGrab(robot *robit, int index, int type) {
+void field::cone::coneGrab(robot *robit, int index) {
 	vec3 idealSpot = vec3(//perf
 		(robit->p.position.X + (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2)),
 		(robit->p.position.Y - (robit->d.size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2)));
-	bool inPosition = (pos.distance(idealSpot) <= radius);
-	if (robit->c.grabbing && index < numCones && ( (robit->c.holding == index) || (robit->c.holding == -1) ) ) {
-		if (inPosition ){//&& abs(robit->c.liftPos - pos.Z) < height) {//makes sure lift is within grabbing distance
+	bool inPosition = (pos.distance(idealSpot) <= radius*0.5);//within range of in frontness
+	if (robit->c.grabbing && index < numCones && ((robit->c.holding == index) || (robit->c.holding == -1))) {
+		if (inPosition && abs(robit->c.liftPos - pos.Z) < height) {//makes sure lift is within grabbing distance
 			robit->c.holding = index;
 			pos.X = (robit->p.position.X + (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2));//works
 			pos.Y = (robit->p.position.Y - (robit->d.size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2));//works
- 			if ((robit->c.liftUp && pos.Z < robit->c.maxHeight) || (robit->c.liftDown && pos.Z > 0)) {
+			if ((robit->c.liftUp && pos.Z < robit->c.maxHeight) || (robit->c.liftDown && pos.Z > 0)) {
 				pos.Z = robit->c.liftPos;//LATER: add something to try to pickyp from center
 				landed = false;
 			}
+		}
+	}
+}
+void field::MoGo::mogoGrab(robot *robit, int index) {
+	vec3 idealSpot = vec3(//perf
+		(robit->p.position.X - (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2)),
+		(robit->p.position.Y + (robit->d.size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2)));
+	bool inPosition = (pos.distance(idealSpot) <= radius*0.7);//within range of behindness
+	if (robit->mg.grabbing  && ((robit->mg.holding == index + 100) || (robit->mg.holding == -101))) {
+		if (inPosition) {//makes sure lift is within grabbing distance
+			robit->mg.holding = index+100;
+			pos.X = (robit->p.position.X - (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2));//works
+			pos.Y = (robit->p.position.Y + (robit->d.size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2));//works
 		}
 	}
 }
@@ -490,7 +485,7 @@ void field::FieldUpdate(robot *robit) {
 		//type for "cone" is 0
 		int type = CONE;
 		c[i].radius = 0.1*c[i].pos.Z + cRad;//changes radius to enlargen when gets taller
-		c[i].coneGrab(robit, i, CONE);
+		c[i].coneGrab(robit, i);
 		if(c[i].pos.Z < c[i].height) physics(i, &c[i], robit, type);//only affect objects when on ground (or low enough)
 		if (c[i].pos.Z > 0) {
 			fallingOn(&c[i], robit, i);//noice
@@ -500,7 +495,7 @@ void field::FieldUpdate(robot *robit) {
 		//type for "mogo" is 1
 		int type = MOGO;
 		//mg[i].radius = 0.1*mg[i].pos.Z + MGRad;//use better scalar than 0.1, but eventually remove this (because dont rly want to pick up mogos
-		mg[i].grabbed(robit, i, MOGO);
+		mg[i].mogoGrab(robit, i);
 		mg[i].zoneScore(&f, i);
 		physics(i, &mg[i], robit, type);//dont affect things if being lifted into the air
 	}
