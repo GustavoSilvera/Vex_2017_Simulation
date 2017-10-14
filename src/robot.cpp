@@ -47,7 +47,7 @@ void robot::forwards(float power) {
 	//if (abs(power) > 0.01)
 	//	encoder1 += power;//increments the encoder while going forwards or backwards
 }
-void robot::readScript() {
+void robot::readScript() {//script parser
 	#define MAX_LINE 100
 	readyToRun = false;
 	std::ifstream file("script.txt");

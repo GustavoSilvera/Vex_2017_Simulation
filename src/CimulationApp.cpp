@@ -186,25 +186,58 @@ void CimulationApp::update() {
 	}
 	v.r.db.distance += getSign(v.r.d.basePower)*v.r.p.position.distance(pastPos);
 	v.r.db.rotDist += getSign(v.r.p.rotVel)*(v.r.p.mRot - pastRot);
-
+	/*
+	if (v.r.commands.size() > 0) {//make this more accriate
+			float maxSpeed = 127;
+			if (v.r.commands[0].amnt != 0) {//at least 
+				if (v.r.commands[0].a == ACTION_ROTATE) {//for rotate
+					if (abs(v.r.db.rotDist) <= 0.65*abs(v.r.commands[0].amnt)) {
+						v.r.p.amountOfFriction = 10;
+						v.r.rotate(getSign(v.r.commands[0].amnt) * 127);
+					}
+					else {
+						v.r.db.rotDist = RESET;
+						v.r.p.amountOfFriction = 5;
+						v.r.commands.erase(v.r.commands.begin());//removes first element of vector
+					}
+				}
+				else if (v.r.commands[0].a == ACTION_FWDS) {//for fwds
+					if (abs(v.r.db.distance) <= abs(v.r.commands[0].amnt)) {
+						v.r.p.amountOfFriction = 7.5;
+						v.r.forwards(getSign(v.r.commands[0].amnt) * 127);
+					}
+					else {
+						v.r.db.distance = RESET;
+						v.r.p.amountOfFriction = 5;
+						v.r.commands.erase(v.r.commands.begin());//removes first element of vector
+					}
+				}
+			}
+			else v.r.commands.erase(v.r.commands.begin());
+		}*/
 	if (v.r.readyToRun) {
 		enum action {
 			ACTION_ROTATE,
 			ACTION_FWDS
 		};
 		if (v.r.commands.size() > 0) {//make this more accriate
+			float maxSpeed = 127;
 			if (v.r.commands[0].amnt != 0) {//at least 
 				if (v.r.commands[0].a == ACTION_ROTATE) {//for rotate
-					if (abs(v.r.db.rotDist) <= 0.8*abs(v.r.commands[0].amnt))
+					if (abs(v.r.db.rotDist) <= 0.65*abs(v.r.commands[0].amnt)) {
+						v.r.p.amountOfFriction = 10;//decreases uncontrolled rotation
 						v.r.rotate(getSign(v.r.commands[0].amnt) * 127);
+					}
 					else {
 						v.r.db.rotDist = RESET;
+						v.r.p.amountOfFriction = 5;//resets to normal
 						v.r.commands.erase(v.r.commands.begin());//removes first element of vector
 					}
 				}
 				else if (v.r.commands[0].a == ACTION_FWDS) {//for fwds
-					if (abs(v.r.db.distance) <= abs(v.r.commands[0].amnt))
+					if (abs(v.r.db.distance) <= abs(v.r.commands[0].amnt)) {
 						v.r.forwards(getSign(v.r.commands[0].amnt) * 127);
+					}
 					else {
 						v.r.db.distance = RESET;
 						v.r.commands.erase(v.r.commands.begin());//removes first element of vector
@@ -220,30 +253,29 @@ void CimulationApp::update() {
 		if ((v.r.p.velocity.X == 0 && v.r.p.velocity.Y == 0) ||
 			(getSign(v.r.p.velocity.X) != signVX &&
 				getSign(v.r.p.velocity.Y) != signVY)) {//stopped or changed direction
-			if (abs(v.r.db.distance) >= 0.01) {//but still moved 
+			if (abs(((int)(v.r.db.distance * 100)) / 100) >= 0.01) {//but still moved 
 				std::stringstream dummyText2;
 				std::string distance;
-				dummyText2 << (v.r.db.distance);
+				dummyText2 << (((int)(v.r.db.distance * 100)) / 100);
 				dummyText2 >> distance;
 				scriptFile << "driveFor( " + distance + ");\n";//used for scripting
 
 				v.r.db.distance = RESET;//resets change in position after a while
 			}
 		}
-		if ((int)pastRot != (int)v.r.p.mRot) {//rotation changed
-			if (v.r.db.distance != 0) {//difference in distance trav
+		if ((int)pastRot != (int)v.r.p.mRot || getSign(v.r.p.rotVel) != signRot) {//rotation changed
+			if (((int)(v.r.db.distance * 100)) / 100 != 0) {//difference in distance trav
 				std::stringstream dummyText2;
 				std::string distance;
-				dummyText2 << (v.r.db.distance);
+				dummyText2 << (((int)(v.r.db.distance * 100)) / 100);
 				dummyText2 >> distance;
 				scriptFile << "driveFor( " + distance + ");\n";//used for scripting
 				v.r.db.distance = RESET;//resets change in position after a while
 			}
-
-			if (abs((int)v.r.db.rotDist) > 0) {//difference in rotation
+			if (((int)(v.r.db.rotDist * 100)) / 100 != 0) {//difference in rotation
 				std::stringstream dummyText;
 				std::string newAngle;
-				dummyText << getSign(v.r.p.rotVel)*v.r.db.rotDist;//difference in angle
+				dummyText << getSign(v.r.p.rotVel)*((int)(v.r.db.rotDist * 100)) / 100;//difference in angle
 				dummyText >> newAngle;
 				scriptFile << "rotFor( " + newAngle + ");\n";//used for scripting
 				v.r.db.rotDist = RESET;//resets change in position after a while
