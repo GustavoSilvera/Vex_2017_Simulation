@@ -326,7 +326,7 @@ void field::cone::coneGrab(robot *robit, int index) {
 	vec3 idealSpot = vec3(//perf
 		(robit->p.position.X + (robit->d.size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2)),
 		(robit->p.position.Y - (robit->d.size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2)));
-	bool inPosition = (pos.distance(idealSpot) <= radius*0.5);//within range of in frontness
+	bool inPosition = (pos.distance(idealSpot) <= radius);//within range of in frontness
 	if (robit->c.grabbing && index < numCones && ((robit->c.holding == index) || (robit->c.holding == -1))) {
 		if (inPosition && abs(robit->c.liftPos - pos.Z) < height) {//makes sure lift is within grabbing distance
 			robit->c.holding = index;

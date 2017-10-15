@@ -40,7 +40,7 @@ public:
 	vex() : tS(&r[0]), pid(&r[0]), n(&r[0]), f(&r[0], &r[1]){}
 	bool debugText = true;
 	bool recording = false;
-	int goal = 25;
+	int goal = 32;
 };
 //begin
 int tX = 1200;
@@ -68,7 +68,8 @@ public:
 	void clicky(int num_buttons);
 	void buttons();
 	void textDraw();
-	void goGrab(robot *r2, vec3 pos, int index);
+	void goGrab(robot *r, vec3 pos, int index);
+	void stackOn(robot *r, vec3 pos, float height);
 	void drawClaw(robot *r);
 	void drawRobot(robot *r);
 	void draw();
@@ -191,7 +192,14 @@ void CimulationApp::update() {
 		break;
 	}
 	if (v.r[1].thinking) {
-		goGrab(&v.r[1], v.f.c[v.goal].pos, v.goal);
+		if(v.r[1].c.holding != v.goal) goGrab(&v.r[1], v.f.c[v.goal].pos, v.goal);
+		else {
+			int poleNum = 0;//assuming robot is closer to pole0 than pole1
+			if (v.r[1].p.position.distance(v.f.pl[0].pos) > v.r[1].p.position.distance(v.f.pl[1].pos)) {
+				poleNum = 1;//robot is closer to pole1 than pole0
+			}
+			stackOn(&v.r[1], v.f.pl[poleNum].pos, v.f.pl[poleNum].height);
+		}
 	}
 	v.r[0].db.distance += getSign(v.r[0].d.basePower)*v.r[0].p.position.distance(pastPos);
 	v.r[0].db.rotDist += getSign(v.r[0].p.rotVel)*(v.r[0].p.mRot - pastRot);
@@ -228,8 +236,7 @@ void CimulationApp::update() {
 		}
 	}
 
-	if (v.recording) {//macro recording
-		//less accurate (straight line running)
+	if (v.recording) {//macro recording		//less accurate (straight line running)
 		if ((v.r[0].p.velocity.X == 0 && v.r[0].p.velocity.Y == 0) ||
 			(getSign(v.r[0].p.velocity.X) != signVX &&
 				getSign(v.r[0].p.velocity.Y) != signVY)) {//stopped or changed direction
@@ -274,15 +281,15 @@ void CimulationApp::goGrab(robot *r, vec3 goal, int index) {
 	bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
 	if (onRight) dir = -1;
 
-	if (!r->directlyInPath(true, r->d.size, goal))
+	if (!r->directlyInPath(true, r->d.size, goal) || !inFront)//angle is not pointing towards goal
 		r->rotate(dir * MAXSPEED);
 	else r->rotate(0);
-	if (r->p.position.distance(goal) > r->d.size && inFront) {
+	if (r->p.position.distance(goal) > r->d.size && inFront) {//drive fwds towards goal
 		r->c.grabbing = false;
-		r->forwards(MAXSPEED + 50);
+		r->forwards(MAXSPEED);
 	}
 	else {
-		r->c.grabbing = true;
+		if(abs(r->c.liftPos - goal.Z) < 7) r->c.grabbing = true;//only closes claw if on same level (height wise)
 		r->forwards(0);
 	}
 	if (r->c.grabbing && r->c.holding == index) {//holding the cone
@@ -290,13 +297,56 @@ void CimulationApp::goGrab(robot *r, vec3 goal, int index) {
 		else r->c.liftUp = false;
 	}
 	else {
+		r->c.liftUp = false;
 		r->rotate(dir * 50);//just do a simple rotation to try and minimize error, gets it closer to the center 
 	}
 	if (r->c.holding == -1) { // not holding the cone
 		if (r->c.liftPos > 0) r->c.liftDown = true;
 		else r->c.liftDown = false;
 	}
+	else {
+		r->c.liftDown = false;
+	}
 }
+void CimulationApp::stackOn(robot *r, vec3 goal, float height) {
+	float d2V[4];
+	for (int ver = 0; ver < 4; ver++) {
+		d2V[ver] = goal.distance(r->db.vertices[ver]);
+	}
+	int dir = 1;
+	bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
+	bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
+	if (onRight) dir = -1;
+	if (!r->directlyInPath(true, r->d.size, goal) || !inFront)//angle is not pointing towards goal
+		r->rotate(dir * MAXSPEED);
+	else r->rotate(0);
+	if (r->c.grabbing) {//holding the cone
+		if (r->c.liftPos< height + 4) r->c.liftUp = true;
+		else r->c.liftUp = false;
+	}
+	else {
+		r->c.liftUp = false;
+		r->rotate(dir * 50);//just do a simple smaller rotation to try and minimize error, gets it closer to the center 
+	}
+	if (r->p.position.distance(goal) > r->d.size && inFront) {//drive fwds towards goal
+		r->forwards(MAXSPEED*0.7);//slower since carrying object? eh idk
+	}
+	else {
+		r->forwards(0);
+		if (r->p.position.distance(goal) < r->d.size*0.5 + 5) {//reall close to the goal
+			if (r->c.liftPos >= height && r->c.grabbing) {
+				r->rotate(0);
+				r->c.grabbing = false;//opens claw
+				r->p.velocity = vec3(0, 0, 0);
+				r->p.acceleration = vec3(0, 0, 0);
+				r->p.rotVel = 0;
+				r->p.rotAcceleration = 0;
+				r->thinking = false;//basically turns off autonomous thing
+			}
+		}
+	}
+}
+
 
 void CimulationApp::clicky(int AMOUNT_BUTTON) {//function for clicking the buttons
 	for (int i = 0; i < AMOUNT_BUTTON; i++) {//for each button in the array 
