@@ -30,17 +30,17 @@ vec3 startPos;
 vec3 mousePos;
 class vex {
 public:
-	robot r;
-	robot r2;
+	robot r[2];
 	tSpeed tS;
 	PID pid;
 	nav n;
 	field f;
 	joystick j;
 
-	vex() : tS(&r), pid(&r), n(&r), f(&r, &r2){}
+	vex() : tS(&r[0]), pid(&r[0]), n(&r[0]), f(&r[0], &r[1]){}
 	bool debugText = true;
 	bool recording = false;
+	int goal = 25;
 };
 //begin
 int tX = 1200;
@@ -77,15 +77,15 @@ public:
 void CimulationApp::setup() {
 	srand(time(NULL));//seeds random number generator
 	//gl::enableVerticalSync();
-	v.r.TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
-	v.r.CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
-	v.r2.TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
-	v.r2.CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
+	v.r[0].TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
+	v.r[0].CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
+	v.r[1].TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
+	v.r[1].CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
 	v.f.fieldBare = gl::Texture(loadImage(loadAsset("InTheZoneFieldBare.jpg")));
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
 	setWindowSize(WindowWidth, WindowHeight);
-	v.r2.p.position = vec3(117, 117, 0);
+	v.r[1].p.position = vec3(117, 117, 0);
 }
 //cinder::functions
 void CimulationApp::mouseDown(MouseEvent event) {
@@ -101,44 +101,45 @@ void CimulationApp::mouseMove(MouseEvent event) {
 	if (mousePos.X >= v.j.drawX) {//optimization check, rather than going through withinanalogrange everytime
 		if (v.j.withinAnalogRange(mousePos)) {
 			if (s.SimRunning == s.TRUSPEED) {
-				v.tS.activate(&v.r, &v.j);
+				v.tS.activate(&v.r[0], &v.j);
 			}
 		}
 	}
 }
 void CimulationApp::keyDown(KeyEvent event) {
-	if (event.getCode() == KeyEvent::KEY_UP)	v.r.ctrl.ArrowKeyUp = true;
-	if (event.getCode() == KeyEvent::KEY_DOWN)	v.r.ctrl.ArrowKeyDown = true;
-	if (event.getCode() == KeyEvent::KEY_LEFT)	v.r.ctrl.RotLeft = true;
-	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.ctrl.RotRight = true;
-	if (event.getChar() == 'e' || event.getChar() == 'E') v.r.c.grabbing = !v.r.c.grabbing;//if want toggling, else look at a while ago
-	if (event.getChar() == 'r' || event.getChar() == 'R') v.r.mg.grabbing = !v.r.mg.grabbing;//if want toggling, else look at a while ago
-	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.c.liftUp = true;
-	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r.c.liftDown = true;//left Z button
+	if (event.getCode() == KeyEvent::KEY_UP)	v.r[0].ctrl.ArrowKeyUp = true;
+	if (event.getCode() == KeyEvent::KEY_DOWN)	v.r[0].ctrl.ArrowKeyDown = true;
+	if (event.getCode() == KeyEvent::KEY_LEFT)	v.r[0].ctrl.RotLeft = true;
+	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r[0].ctrl.RotRight = true;
+	if (event.getChar() == 'e' || event.getChar() == 'E') v.r[0].c.grabbing = !v.r[0].c.grabbing;//if want toggling, else look at a while ago
+	if (event.getChar() == 'r' || event.getChar() == 'R') v.r[0].mg.grabbing = !v.r[0].mg.grabbing;//if want toggling, else look at a while ago
+	if (event.getCode() == KeyEvent::KEY_SPACE) v.r[0].c.liftUp = true;
+	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r[0].c.liftDown = true;//left Z button
 	if (event.getChar() == 'p' || event.getChar() == 'P') v.pid.pidVel = !v.pid.pidVel;//right P button
-	if (event.getChar() == 'o' || event.getChar() == 'O') v.pid.reset(&v.r);
+	if (event.getChar() == 'o' || event.getChar() == 'O') v.pid.reset(&v.r[0]);
 	if (event.getChar() == 'm' || event.getChar() == 'M') v.debugText = !v.debugText;
-	if (event.getChar() == 'n' || event.getChar() == 'N') v.r.forwards(100);//works as of rn for ~1" 
-	if (event.getChar() == 'B' || event.getChar() == 'b') v.r.rotate(-100);//works as of rn as ~1°
-	if (event.getChar() == 'c') v.r.readScript();
-	if (event.getChar() == 'q') v.r2.thinking = true;
+	if (event.getChar() == 'n' || event.getChar() == 'N') v.r[0].forwards(100);//works as of rn for ~1" 
+	if (event.getChar() == 'B' || event.getChar() == 'b') v.r[0].rotate(-100);//works as of rn as ~1°
+	if (event.getChar() == 'c') v.r[0].readScript();
+	if (event.getChar() == 'q') v.r[1].thinking = true;
+	if (event.getChar() == 'l') v.goal = rand()%numCones;
 }
 void CimulationApp::keyUp(KeyEvent event) {
-	if (event.getCode() == KeyEvent::KEY_DOWN) v.r.ctrl.ArrowKeyDown = false;
-	if (event.getCode() == KeyEvent::KEY_UP) v.r.ctrl.ArrowKeyUp = false;
-	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r.ctrl.RotRight = false;
-	if (event.getCode() == KeyEvent::KEY_LEFT) v.r.ctrl.RotLeft = false;
-	if (event.getCode() == KeyEvent::KEY_SPACE) v.r.c.liftUp = false;
-	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r.c.liftDown = false;//left Z button
+	if (event.getCode() == KeyEvent::KEY_DOWN) v.r[0].ctrl.ArrowKeyDown = false;
+	if (event.getCode() == KeyEvent::KEY_UP) v.r[0].ctrl.ArrowKeyUp = false;
+	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r[0].ctrl.RotRight = false;
+	if (event.getCode() == KeyEvent::KEY_LEFT) v.r[0].ctrl.RotLeft = false;
+	if (event.getCode() == KeyEvent::KEY_SPACE) v.r[0].c.liftUp = false;
+	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r[0].c.liftDown = false;//left Z button
 }
 void CimulationApp::update() {
-	int pastRot = v.r.p.mRot;
-	vec3 pastPos(v.r.p.position);
+	int pastRot = v.r[0].p.mRot;
+	vec3 pastPos(v.r[0].p.position);
 	float pastTime = ci::app::getElapsedSeconds();
-	int signVX = getSign(v.r.p.velocity.X), signVY = getSign(v.r.p.velocity.Y), signRot = getSign(v.r.p.rotVel);
+	int signVX = getSign(v.r[0].p.velocity.X), signVY = getSign(v.r[0].p.velocity.Y), signRot = getSign(v.r[0].p.rotVel);
 	v.j.getAnalog(mousePos);
-	v.r.update();//calls robot update function
-	v.r2.update();//calls enemy robot update function
+	v.r[0].update();//calls robot update function
+	v.r[1].update();//calls enemy robot update function
 	switch (s.SimRunning) {
 	case simulation::NAVIGATION:
 		tX = 1200;
@@ -149,7 +150,7 @@ void CimulationApp::update() {
 		v.f.isInit = false;
 		v.tS.isInit = false;
 		v.n.isInit = true;
-		v.r.moveAround(v.j.analogX, v.j.analogY);
+		v.r[0].moveAround(v.j.analogX, v.j.analogY);
 		v.pid.pid.isRunning = false;
 		break;
 	case simulation::PIDCTRL:
@@ -161,7 +162,7 @@ void CimulationApp::update() {
 		v.f.isInit = false;
 		v.tS.isInit = false;
 		v.n.isInit = false;
-		v.pid.PIDUpdate(&v.r);
+		v.pid.PIDUpdate(&v.r[0]);
 		break;
 	case simulation::TRUSPEED:
 		tX = 1400;
@@ -172,7 +173,7 @@ void CimulationApp::update() {
 		v.f.isInit = false;
 		v.tS.isInit = true;
 		v.n.isInit = false;
-		v.tS.TruSpeedUpdate(&v.r);
+		v.tS.TruSpeedUpdate(&v.r[0]);
 		v.pid.pid.isRunning = false;
 		break;
 	case simulation::FIELD:
@@ -184,80 +185,80 @@ void CimulationApp::update() {
 		v.f.isInit = true;
 		v.tS.isInit = false;
 		v.n.isInit = false;
-		v.f.FieldUpdate(&v.r, &v.r2);
+		v.f.FieldUpdate(&v.r[0], &v.r[1]);
 		v.pid.pid.isRunning = false;
-		v.r.moveAround(v.j.analogX, v.j.analogY);
+		v.r[0].moveAround(v.j.analogX, v.j.analogY);
 		break;
 	}
-	if (v.r2.thinking) {
-		goGrab(&v.r2, v.f.c[CONENUM].pos, CONENUM);
+	if (v.r[1].thinking) {
+		goGrab(&v.r[1], v.f.c[v.goal].pos, v.goal);
 	}
-	v.r.db.distance += getSign(v.r.d.basePower)*v.r.p.position.distance(pastPos);
-	v.r.db.rotDist += getSign(v.r.p.rotVel)*(v.r.p.mRot - pastRot);
-	if (v.r.readyToRun) {
+	v.r[0].db.distance += getSign(v.r[0].d.basePower)*v.r[0].p.position.distance(pastPos);
+	v.r[0].db.rotDist += getSign(v.r[0].p.rotVel)*(v.r[0].p.mRot - pastRot);
+	if (v.r[0].readyToRun) {
 		enum action {
 			ACTION_ROTATE,
 			ACTION_FWDS
 		};
-		if (v.r.commands.size() > 0) {//make this more accriate
+		if (v.r[0].commands.size() > 0) {//make this more accriate
 			float maxSpeed = 127;
-			if (v.r.commands[0].amnt != 0) {//at least 
-				if (v.r.commands[0].a == ACTION_ROTATE) {//for rotate
-					if (abs(v.r.db.rotDist) <= 0.65*abs(v.r.commands[0].amnt)) {
-						v.r.p.amountOfFriction = 10;//decreases uncontrolled rotation
-						v.r.rotate(getSign(v.r.commands[0].amnt) * 127);
+			if (v.r[0].commands[0].amnt != 0) {//at least 
+				if (v.r[0].commands[0].a == ACTION_ROTATE) {//for rotate
+					if (abs(v.r[0].db.rotDist) <= 0.65*abs(v.r[0].commands[0].amnt)) {
+						v.r[0].p.amountOfFriction = 10;//decreases uncontrolled rotation
+						v.r[0].rotate(getSign(v.r[0].commands[0].amnt) * 127);
 					}
 					else {
-						v.r.db.rotDist = RESET;
-						v.r.p.amountOfFriction = 5;//resets to normal
-						v.r.commands.erase(v.r.commands.begin());//removes first element of vector
+						v.r[0].db.rotDist = RESET;
+						v.r[0].p.amountOfFriction = 5;//resets to normal
+						v.r[0].commands.erase(v.r[0].commands.begin());//removes first element of vector
 					}
 				}
-				else if (v.r.commands[0].a == ACTION_FWDS) {//for fwds
-					if (abs(v.r.db.distance) <= abs(v.r.commands[0].amnt)) {
-						v.r.forwards(getSign(v.r.commands[0].amnt) * 127);
+				else if (v.r[0].commands[0].a == ACTION_FWDS) {//for fwds
+					if (abs(v.r[0].db.distance) <= abs(v.r[0].commands[0].amnt)) {
+						v.r[0].forwards(getSign(v.r[0].commands[0].amnt) * 127);
 					}
 					else {
-						v.r.db.distance = RESET;
-						v.r.commands.erase(v.r.commands.begin());//removes first element of vector
+						v.r[0].db.distance = RESET;
+						v.r[0].commands.erase(v.r[0].commands.begin());//removes first element of vector
 					}
 				}
 			}
-			else v.r.commands.erase(v.r.commands.begin());
+			else v.r[0].commands.erase(v.r[0].commands.begin());
 		}
 	}
 
 	if (v.recording) {//macro recording
 		//less accurate (straight line running)
-		if ((v.r.p.velocity.X == 0 && v.r.p.velocity.Y == 0) ||
-			(getSign(v.r.p.velocity.X) != signVX &&
-				getSign(v.r.p.velocity.Y) != signVY)) {//stopped or changed direction
-			if (abs(((int)(v.r.db.distance * 100)) / 100) >= 0.01) {//but still moved 
+		if ((v.r[0].p.velocity.X == 0 && v.r[0].p.velocity.Y == 0) ||
+			(getSign(v.r[0].p.velocity.X) != signVX &&
+				getSign(v.r[0].p.velocity.Y) != signVY)) {//stopped or changed direction
+			if (abs(((int)(v.r[0].db.distance * 100)) / 100) >= 0.01) {//but still moved 
 				std::stringstream dummyText2;
 				std::string distance;
-				dummyText2 << (((int)(v.r.db.distance * 100)) / 100);
+				dummyText2 << (((int)(v.r[0].db.distance * 100)) / 100);
 				dummyText2 >> distance;
 				scriptFile << "driveFor( " + distance + ");\n";//used for scripting
 
-				v.r.db.distance = RESET;//resets change in position after a while
+				v.r[0].db.distance = RESET;//resets change in position after a while
 			}
 		}
-		if ((int)pastRot != (int)v.r.p.mRot || getSign(v.r.p.rotVel) != signRot) {//rotation changed
-			if (((int)(v.r.db.distance * 100)) / 100 != 0) {//difference in distance trav
+		if ((int)pastRot != (int)v.r[0].p.mRot || getSign(v.r[0].p.rotVel) != signRot) {//rotation changed
+			if (((int)(v.r[0].db.distance * 100)) / 100 != 0) {//difference in distance trav
 				std::stringstream dummyText2;
 				std::string distance;
-				dummyText2 << (((int)(v.r.db.distance * 100)) / 100);
+				dummyText2 << (((int)(v.r[0].db.distance * 100)) / 100);
 				dummyText2 >> distance;
 				scriptFile << "driveFor( " + distance + ");\n";//used for scripting
-				v.r.db.distance = RESET;//resets change in position after a while
+				v.r[0].db.distance = RESET;//resets change in position after a while
 			}
-			if (((int)(v.r.db.rotDist * 100)) / 100 != 0) {//difference in rotation
+			if (((int)(v.r[0].db.rotDist * 100)) / 100 != 0) {//difference in rotation
 				std::stringstream dummyText;
 				std::string newAngle;
-				dummyText << getSign(v.r.p.rotVel)*((int)(v.r.db.rotDist * 100)) / 100;//difference in angle
+				dummyText << getSign(v.r[0].p.rotVel)*((int)(v.r[0].db.rotDist * 100)) / 100;//difference in angle
 				dummyText >> newAngle;
 				scriptFile << "rotFor( " + newAngle + ");\n";//used for scripting
-				v.r.db.rotDist = RESET;//resets change in position after a while
+				v.r[0].db.rotDist = RESET;//resets change in position after a while
 			}
 		}
 	}
@@ -284,9 +285,16 @@ void CimulationApp::goGrab(robot *r, vec3 goal, int index) {
 		r->c.grabbing = true;
 		r->forwards(0);
 	}
-	if (r->c.holding == index) {//holding the cone
+	if (r->c.grabbing && r->c.holding == index) {//holding the cone
 		if (r->c.liftPos< v.f.pl[1].height + 4) r->c.liftUp = true;
 		else r->c.liftUp = false;
+	}
+	else {
+		r->rotate(dir * 50);//just do a simple rotation to try and minimize error, gets it closer to the center 
+	}
+	if (r->c.holding == -1) { // not holding the cone
+		if (r->c.liftPos > 0) r->c.liftDown = true;
+		else r->c.liftDown = false;
 	}
 }
 
@@ -339,17 +347,17 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 		float f;
 	};
 	text t[] = { 
-		{ "Angle:", v.r.p.mRot},
-		{ "X Pos:", v.r.p.position.X},
-		{ "Y Pos:", v.r.p.position.Y},
-		{ "X-Vel:", v.r.p.velocity.X},
-		{ "Y-Vel:", v.r.p.velocity.X},
-		{ "X-Acc:", v.r.p.acceleration.X},//same as y accel
-		{ "Y-Acc:", v.r.p.acceleration.Y},//same as X accel
-		{ "R-Vel:", v.r.p.rotVel},
-		{ "R-Acc:", v.r.p.rotAcceleration},
-		{ "L-Pos:", v.r.c.liftPos},
-		{ "L-Acc:", v.r.p.rotAcceleration}
+		{ "Angle:", v.r[0].p.mRot},
+		{ "X Pos:", v.r[0].p.position.X},
+		{ "Y Pos:", v.r[0].p.position.Y},
+		{ "X-Vel:", v.r[0].p.velocity.X},
+		{ "Y-Vel:", v.r[0].p.velocity.X},
+		{ "X-Acc:", v.r[0].p.acceleration.X},//same as y accel
+		{ "Y-Acc:", v.r[0].p.acceleration.Y},//same as X accel
+		{ "R-Vel:", v.r[0].p.rotVel},
+		{ "R-Acc:", v.r[0].p.rotAcceleration},
+		{ "L-Pos:", v.r[0].c.liftPos},
+		{ "L-Acc:", v.r[0].p.rotAcceleration}
 	};
 	int i = 0;
 	for (text& ti : t) {
@@ -377,39 +385,39 @@ Rectf R2S4(float p1X, float p1Y, float p2X, float p2Y) {//for rectangular coords
 void robotDebug(vex *v, bool reversed) {
 	gl::color(1, 0, 0);
 	for (int i = 0; i < 4; i++) {//simplified version of drawing the vertices
-		gl::drawSolidCircle(R2S2(v->r.db.vertices[i]), 5 + i);
-		//else gl::drawSolidCircle(Vec2f(ppi * v->r.db.vertices[i].X, ppi * v->r.db.vertices[i].Y), 5 + i);
+		gl::drawSolidCircle(R2S2(v->r[0].db.vertices[i]), 5 + i);
+		//else gl::drawSolidCircle(Vec2f(ppi * v->r[0].db.vertices[i].X, ppi * v->r[0].db.vertices[i].Y), 5 + i);
 	}
 		//vertice rectangles
-		gl::drawStrokedRect(Area(v->f.f.inFromEnd*ppi + v->r.db.vertices[0].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[0].Y*ppi, v->f.f.inFromEnd*ppi + v->r.db.vertices[1].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[1].Y*ppi));
-		gl::drawStrokedRect(Area(v->f.f.inFromEnd*ppi + v->r.db.vertices[2].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[2].Y*ppi, v->f.f.inFromEnd*ppi +v->r.db.vertices[3].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[3].Y*ppi));
+		gl::drawStrokedRect(Area(v->f.f.inFromEnd*ppi + v->r[0].db.vertices[0].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].db.vertices[0].Y*ppi, v->f.f.inFromEnd*ppi + v->r[0].db.vertices[1].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].db.vertices[1].Y*ppi));
+		gl::drawStrokedRect(Area(v->f.f.inFromEnd*ppi + v->r[0].db.vertices[2].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].db.vertices[2].Y*ppi, v->f.f.inFromEnd*ppi +v->r[0].db.vertices[3].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].db.vertices[3].Y*ppi));
 		//vertical lines
-		gl::drawLine(cinder::Vec2f(v->f.f.inFromEnd*ppi +(v->r.db.vertices[1].X + 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
-			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[1].Y + 300 * sin((v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r.db.vertices[2].X - 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
-				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[2].Y - 300 * sin((v->r.p.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f( v->f.f.inFromEnd*ppi + (v->r.db.vertices[0].X + 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
-			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[0].Y + 300 * sin((v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r.db.vertices[3].X - 300 * cos((v->r.p.mRot) * PI / 180))*ppi,
-				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[3].Y - 300 * sin((v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(v->f.f.inFromEnd*ppi +(v->r[0].db.vertices[1].X + 300 * cos((v->r[0].p.mRot) * PI / 180))*ppi,
+			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[1].Y + 300 * sin((v->r[0].p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[2].X - 300 * cos((v->r[0].p.mRot) * PI / 180))*ppi,
+				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[2].Y - 300 * sin((v->r[0].p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f( v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[0].X + 300 * cos((v->r[0].p.mRot) * PI / 180))*ppi,
+			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[0].Y + 300 * sin((v->r[0].p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[3].X - 300 * cos((v->r[0].p.mRot) * PI / 180))*ppi,
+				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[3].Y - 300 * sin((v->r[0].p.mRot) * PI / 180))*ppi));
 		//horizontal lines
-		gl::drawLine(cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r.db.vertices[0].X + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
-			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[0].Y + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r.db.vertices[1].X - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
-				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[1].Y - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r.db.vertices[2].X + 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
-			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[2].Y + 300 * cos((-v->r.p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r.db.vertices[3].X - 300 * sin((-v->r.p.mRot) * PI / 180))*ppi,
-				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r.db.vertices[3].Y - 300 * cos((-v->r.p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[0].X + 300 * sin((-v->r[0].p.mRot) * PI / 180))*ppi,
+			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[0].Y + 300 * cos((-v->r[0].p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[1].X - 300 * sin((-v->r[0].p.mRot) * PI / 180))*ppi,
+				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[1].Y - 300 * cos((-v->r[0].p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[2].X + 300 * sin((-v->r[0].p.mRot) * PI / 180))*ppi,
+			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[2].Y + 300 * cos((-v->r[0].p.mRot) * PI / 180))*ppi),
+			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[3].X - 300 * sin((-v->r[0].p.mRot) * PI / 180))*ppi,
+				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[3].Y - 300 * cos((-v->r[0].p.mRot) * PI / 180))*ppi));
 		//draw circle
-		gl::drawStrokedCircle(Vec2f(v->f.f.inFromEnd*ppi + v->r.p.position.X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.p.position.Y*ppi), renderRad * v->r.d.size*ppi);
-		gl::drawStrokedRect(Area(v->f.f.inFromEnd*ppi + v->r.db.vertices[0].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[0].Y*ppi, v->f.f.inFromEnd*ppi + v->r.db.vertices[2].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r.db.vertices[2].Y*ppi));
+		gl::drawStrokedCircle(Vec2f(v->f.f.inFromEnd*ppi + v->r[0].p.position.X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].p.position.Y*ppi), renderRad * v->r[0].d.size*ppi);
+		gl::drawStrokedRect(Area(v->f.f.inFromEnd*ppi + v->r[0].db.vertices[0].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].db.vertices[0].Y*ppi, v->f.f.inFromEnd*ppi + v->r[0].db.vertices[2].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].db.vertices[2].Y*ppi));
 		
-		gl::drawSolidCircle(Vec2f(v->f.f.inFromEnd*ppi+ppi*(v->r.p.position.X + (v->r.d.size / 2) * cos((-v->r.p.mRot) * PI / 180) * sqrt(2)),
-			v->f.f.inFromEnd*ppi+v->f.f.fieldSizeIn*ppi - ppi*(v->r.p.position.Y - (v->r.d.size / 2) * sin((-v->r.p.mRot) * PI / 180) * sqrt(2))), 5);
+		gl::drawSolidCircle(Vec2f(v->f.f.inFromEnd*ppi+ppi*(v->r[0].p.position.X + (v->r[0].d.size / 2) * cos((-v->r[0].p.mRot) * PI / 180) * sqrt(2)),
+			v->f.f.inFromEnd*ppi+v->f.f.fieldSizeIn*ppi - ppi*(v->r[0].p.position.Y - (v->r[0].d.size / 2) * sin((-v->r[0].p.mRot) * PI / 180) * sqrt(2))), 5);
 }
 void CimulationApp::drawClaw(robot *r) {
-	gl::draw(v.r.CChanel, Area((r->c.clawSize)*ppi, (r->d.size*.5 + r->c.baseSize)*ppi, (-r->c.clawSize)*ppi, (r->d.size*.5)*ppi));
+	gl::draw(v.r[0].CChanel, Area((r->c.clawSize)*ppi, (r->d.size*.5 + r->c.baseSize)*ppi, (-r->c.clawSize)*ppi, (r->d.size*.5)*ppi));
 	gl::color(222.0 / 225, 229.0 / 225, 34.0 / 225);
 	gl::drawSolidRect(Area(Vec2d((r->c.clawPos + r->c.clawThick)*ppi, (r->d.size*.5 + r->c.clawHeight + r->c.baseSize)*ppi), Vec2d((r->c.clawPos - r->c.clawThick)*ppi, (r->d.size*.5 + r->c.baseSize)*ppi)));
 	gl::drawSolidRect(Area(Vec2d((-r->c.clawPos - r->c.clawThick)*ppi, (r->d.size*.5 + r->c.clawHeight + r->c.baseSize)*ppi), Vec2d((-r->c.clawPos + r->c.clawThick)*ppi, (r->d.size*.5 + r->c.baseSize)*ppi)));
@@ -459,15 +467,15 @@ void CimulationApp::draw() {
 			v.j.drawY = 500;
 			//robotDebug(&v, false);
 		}
-		drawJoystick(&v.r, &v.j);
+		drawJoystick(&v.r[0], &v.j);
 	}
 	if (s.SimRunning == s.PIDCTRL) {
-		v.pid.textOutput(&v.r);
+		v.pid.textOutput(&v.r[0]);
 		v.pid.graphPlot();
 	}
 	if (s.SimRunning == s.TRUSPEED) {
 		v.tS.graphPlot();//draws the graph
-		v.tS.textOutput(&v.r, &v.j);//draws the text for the graph
+		v.tS.textOutput(&v.r[0], &v.j);//draws the text for the graph
 	}
 	if (s.SimRunning == s.FIELD) {//when field button is pressed
 		if (v.recording) {
@@ -480,8 +488,8 @@ void CimulationApp::draw() {
 			gl::color(1, 1, 1);//reset to white
 		}
 		ci::gl::draw(v.f.fieldBare, ci::Area(v.f.f.inFromEnd*ppi, v.f.f.inFromEnd*ppi, v.f.f.inFromEnd*ppi + v.f.f.fieldSizeIn*ppi, v.f.f.inFromEnd*ppi + v.f.f.fieldSizeIn*ppi ));
-		drawRobot(&v.r);//drawing robot 1
-		drawRobot(&v.r2);//drawing oppposing robot
+		drawRobot(&v.r[0]);//drawing robot 1
+		drawRobot(&v.r[1]);//drawing oppposing robot
 		gl::drawString("Score:", Vec2f(700, 50), Color(1, 1, 1), Font("Arial", 50));
 		drawText(v.f.calculateScore(), vec3I(850, 50), vec3I(1, 1, 1), 50);
 
@@ -495,26 +503,26 @@ void CimulationApp::draw() {
 				(v.f.mg[i].pos.Y - MGRad),
 				(v.f.mg[i].pos.X + v.f.mg[i].radius),
 				(v.f.mg[i].pos.Y + v.f.mg[i].radius)))
-				);
+			);
 		}
 		//drawing each individual cone. oh my
 		for (int i = 0; i < v.f.c.size(); i++) {
 			gl::color(1, 1, 1);
-			if (i != v.r.c.holding)	gl::draw(v.f.coneTexture, Area(R2S4(
+			if (i != v.r[0].c.holding)	gl::draw(v.f.coneTexture, Area(R2S4(
 				(v.f.c[i].pos.X - v.f.c[i].radius),
 				(v.f.c[i].pos.Y - v.f.c[i].radius),
 				(v.f.c[i].pos.X + v.f.c[i].radius),
 				(v.f.c[i].pos.Y + v.f.c[i].radius)))
 			);
 		}
-		if (v.r.c.holding != -1 && v.r.c.holding < numCones) { //if actually holding something (the index exists [!= -1])
-			float coneX = v.f.c[v.r.c.holding].pos.X;
-			float coneY = v.f.c[v.r.c.holding].pos.Y;
+		if (v.r[0].c.holding != -1 && v.r[0].c.holding < numCones) { //if actually holding something (the index exists [!= -1])
+			float coneX = v.f.c[v.r[0].c.holding].pos.X;
+			float coneY = v.f.c[v.r[0].c.holding].pos.Y;
 			gl::draw(v.f.coneTexture, Area(R2S4(
-				(coneX - v.f.c[v.r.c.holding].radius),
-				(coneY - v.f.c[v.r.c.holding].radius),
-				(coneX + v.f.c[v.r.c.holding].radius),
-				(coneY + v.f.c[v.r.c.holding].radius)))
+				(coneX - v.f.c[v.r[0].c.holding].radius),
+				(coneY - v.f.c[v.r[0].c.holding].radius),
+				(coneX + v.f.c[v.r[0].c.holding].radius),
+				(coneY + v.f.c[v.r[0].c.holding].radius)))
 			);
 		}
 		for (int i = 0; i < v.f.mg.size(); i++) {//drawing how many are stacked
@@ -535,15 +543,15 @@ void CimulationApp::draw() {
 		}
 		gl::color(1, 1, 1);
 	}
-	else drawRobot(&v.r);
+	else drawRobot(&v.r[0]);
 	
 	gl::color(1, 0, 0);
-	gl::drawSolidCircle(R2S2(vec3(v.f.c[CONENUM].pos.X, v.f.c[CONENUM].pos.Y) ), 5);
+	gl::drawSolidCircle(R2S2(vec3(v.f.c[v.goal].pos.X, v.f.c[v.goal].pos.Y) ), 5);
 	if (v.recording) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1010, 660), vec3I(1, 1, 1), 30);
-	drawText(v.r.db.distance, vec3I(1010, 500), vec3I(1, 1, 1), 30);
-	drawText(v.r.db.rotDist, vec3I(1010, 400), vec3I(1, 1, 1), 30);
+	drawText(v.r[0].db.distance, vec3I(1010, 500), vec3I(1, 1, 1), 30);
+	drawText(v.r[0].db.rotDist, vec3I(1010, 400), vec3I(1, 1, 1), 30);
 	drawText(ci::app::getElapsedSeconds(), vec3I(1010, 200), vec3I(1, 1, 1), 30);
 
 	gl::color(1, 1, 1);
