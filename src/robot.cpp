@@ -139,17 +139,25 @@ void robot::reset() {
 	p.velocity.Y = 0;
 }
 bool robot::directlyInPath(bool vertical, int range, vec3 pos) {//vertical lines
-	vec3 origin = pos;//calculattes yintercepts for each cone relative to their position
+	vec3 origin = pos, topLeft, topRight, bottomLeft;//calculattes yintercepts for each cone relative to their position
 	float x = 0;//finds the y intercept
+	float cosDist = (range / 2) * cos((-p.mRot + 135) * PI / 180) * sqrt(2);
+	float sinDist = (range / 2) * sin((-p.mRot + 135) * PI / 180) * sqrt(2);
+	topLeft.X = p.position.X - cosDist;
+	topLeft.Y = p.position.Y + sinDist;
+	topRight.X = p.position.X + sinDist;//flipped sin and cos
+	topRight.Y = p.position.Y + cosDist;
+	bottomLeft.X = p.position.X - sinDist;//flipped sin and cos
+	bottomLeft.Y = p.position.Y - cosDist;
 	if (vertical) {
-		db.slope = (db.vertices[0].Y - db.vertices[3].Y) / (db.vertices[0].X - db.vertices[3].X);//checks for vertical y intercepts
-		db.Yint[1] = db.slope * (x - (db.vertices[1].X - origin.X)) + (db.vertices[1].Y - origin.Y);
+		db.slope = (topLeft.Y - bottomLeft.Y) / (topLeft.X - bottomLeft.X);//checks for vertical y intercepts
+		db.Yint[1] = db.slope * (x - (topRight.X - origin.X)) + (topRight.Y - origin.Y);
 	}
 	else {
-		db.slope = (db.vertices[0].Y - db.vertices[1].Y) / (db.vertices[0].X - db.vertices[1].X);//checks for horizontal y intercepts
-		db.Yint[1] = db.slope * (x - (db.vertices[3].X - origin.X)) + (db.vertices[3].Y - origin.Y);
+		db.slope = (topLeft.Y - topRight.Y) / (topLeft.X - topRight.X);//checks for horizontal y intercepts
+		db.Yint[1] = db.slope * (x - (bottomLeft.X - origin.X)) + (bottomLeft.Y - origin.Y);
 	}	
-	db.Yint[0] = db.slope * (x - (db.vertices[0].X - origin.X)) + (db.vertices[0].Y - origin.Y);//both vertical and horizontal use vertices 0
+	db.Yint[0] = db.slope * (x - (topLeft.X - origin.X)) + (topLeft.Y - origin.Y);//both vertical and horizontal use vertices 0
 	//with the y intrcepts, checks if the y intercepts are not the same sign, thus the cone (origin) is between them
 	return(getSign(db.Yint[0]) != getSign(db.Yint[1]));//works for telling me if between the two lines
 }

@@ -493,8 +493,8 @@ void field::FieldUpdate(robot *robit, robot *r2) {
 	for (int i = 0; i < pl.size(); i++) {
 		//type for stationary goal is 2
 		int type = STAT;
-		pl[0].pos = initPoleConfig[0].pos; //  vec3(93, 47.3);//stationary goal (not moving)
-		pl[1].pos = initPoleConfig[1].pos; //  vec3(46.9, 94);//stationary goal (not moving)
+		pl[0].pos = initPoleConfig[0].pos; //stationary goal (not moving)
+		pl[1].pos = initPoleConfig[1].pos; //stationary goal (not moving)
 		statGoalPush(&pl[i], robit, &f);
 		physics(i, &pl[i], robit, type);
 		statGoalPush(&pl[i], r2, &f);

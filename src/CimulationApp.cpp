@@ -40,7 +40,7 @@ public:
 	vex() : tS(&r[0]), pid(&r[0]), n(&r[0]), f(&r[0], &r[1]){}
 	bool debugText = true;
 	bool recording = false;
-	int goal = 32;
+	int goal = 32;//defaulted first cone
 };
 //begin
 int tX = 1200;
@@ -123,7 +123,7 @@ void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getChar() == 'B' || event.getChar() == 'b') v.r[0].rotate(-100);//works as of rn as ~1°
 	if (event.getChar() == 'c') v.r[0].readScript();
 	if (event.getChar() == 'q') v.r[1].thinking = true;
-	if (event.getChar() == 'l') v.goal = rand()%numCones;
+	if (event.getChar() == 'l') v.goal = 0;
 }
 void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_DOWN) v.r[0].ctrl.ArrowKeyDown = false;
@@ -190,6 +190,16 @@ void CimulationApp::update() {
 		v.pid.pid.isRunning = false;
 		v.r[0].moveAround(v.j.analogX, v.j.analogY);
 		break;
+	}
+	if (v.goal == 0) {//waiting for cone to grabbb
+		int closest = 0;//assumes cone 0 is closest
+		for (int i = 0; i < v.f.c.size()-1; i++) {
+			if (v.r[1].p.position.distance(v.f.c[i].pos) < v.r[1].p.position.distance(v.f.c[closest].pos)) {
+				if (v.f.c[i].pos.Z <= cHeight)//so long as not already stacked or in the air
+					closest = i;//updates "closest" to whichever cone is closest
+			}
+		}
+		v.goal = closest;
 	}
 	if (v.r[1].thinking) {
 		if(v.r[1].c.holding != v.goal) goGrab(&v.r[1], v.f.c[v.goal].pos, v.goal);
@@ -281,10 +291,10 @@ void CimulationApp::goGrab(robot *r, vec3 goal, int index) {
 	bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
 	if (onRight) dir = -1;
 
-	if (!r->directlyInPath(true, r->d.size, goal) || !inFront)//angle is not pointing towards goal
+	if (!r->directlyInPath(true, r->d.size/2, goal) || !inFront)//angle is not pointing towards goal
 		r->rotate(dir * MAXSPEED);
 	else r->rotate(0);
-	if (r->p.position.distance(goal) > r->d.size && inFront) {//drive fwds towards goal
+	if (r->p.position.distance(goal) > r->d.size/2+MGRad && inFront) {//drive fwds towards goal
 		r->c.grabbing = false;
 		r->forwards(MAXSPEED);
 	}
@@ -317,7 +327,7 @@ void CimulationApp::stackOn(robot *r, vec3 goal, float height) {
 	bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
 	bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
 	if (onRight) dir = -1;
-	if (!r->directlyInPath(true, r->d.size, goal) || !inFront)//angle is not pointing towards goal
+	if (!r->directlyInPath(true, r->d.size/2, goal) || !inFront)//angle is not pointing towards goal
 		r->rotate(dir * MAXSPEED);
 	else r->rotate(0);
 	if (r->c.grabbing) {//holding the cone
@@ -328,22 +338,32 @@ void CimulationApp::stackOn(robot *r, vec3 goal, float height) {
 		r->c.liftUp = false;
 		r->rotate(dir * 50);//just do a simple smaller rotation to try and minimize error, gets it closer to the center 
 	}
-	if (r->p.position.distance(goal) > r->d.size && inFront) {//drive fwds towards goal
-		r->forwards(MAXSPEED*0.7);//slower since carrying object? eh idk
-	}
-	else {
-		r->forwards(0);
-		if (r->p.position.distance(goal) < r->d.size*0.5 + 5) {//reall close to the goal
-			if (r->c.liftPos >= height && r->c.grabbing) {
-				r->rotate(0);
-				r->c.grabbing = false;//opens claw
-				r->p.velocity = vec3(0, 0, 0);
-				r->p.acceleration = vec3(0, 0, 0);
-				r->p.rotVel = 0;
-				r->p.rotAcceleration = 0;
-				r->thinking = false;//basically turns off autonomous thing
+	if (r->c.liftPos >= height + 2) {//wait until lift is reasonably high
+		if (r->p.position.distance(goal) > r->d.size/2+MGRad && inFront) {//drive fwds towards goal
+			r->forwards(MAXSPEED*0.7);//slower since carrying object? eh idk
+		}
+		else {
+			r->forwards(0);
+			if (r->p.position.distance(goal) < r->d.size*0.5 + 5) {//reall close to the goal
+				if (r->c.liftPos >= height && r->c.grabbing) {
+					r->rotate(0);
+					r->p.acceleration = vec3(0, 0, 0);
+					r->p.velocity = vec3(0, 0, 0);
+					r->p.rotAcceleration= 0;
+					r->p.rotVel = 0;					
+					if (r->directlyInPath(true, r->d.size / 4, goal)) {
+						r->c.grabbing = false;//opens claw
+						//r->thinking = false;//basically turns off autonomous thing
+						v.goal = 0;
+					}
+					else r->rotate(dir * 70);//just do a simple smaller rotation to try and minimize error, gets it closer to the center 
+				}
 			}
 		}
+	}
+	else {//stop moving
+		r->forwards(0);
+		r->rotate(0);
 	}
 }
 
@@ -600,7 +620,7 @@ void CimulationApp::draw() {
 	if (v.recording) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1010, 660), vec3I(1, 1, 1), 30);
-	drawText(v.r[0].db.distance, vec3I(1010, 500), vec3I(1, 1, 1), 30);
+	drawText(v.f.pl[0].height, vec3I(1010, 500), vec3I(1, 1, 1), 30);
 	drawText(v.r[0].db.rotDist, vec3I(1010, 400), vec3I(1, 1, 1), 30);
 	drawText(ci::app::getElapsedSeconds(), vec3I(1010, 200), vec3I(1, 1, 1), 30);
 
