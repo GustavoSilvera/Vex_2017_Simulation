@@ -191,11 +191,17 @@ void CimulationApp::update() {
 		v.r[0].moveAround(v.j.analogX, v.j.analogY);
 		break;
 	}
-	if (v.goal == 0) {//waiting for cone to grabbb
+	if (v.r[1].c.holding != v.goal) {//dynamically refreshes which cone is best in position to be picked up
+	//if(v.goal == 0)//used to be for waiting for cone, sets definitive target FOREVER, not the best
 		int closest = 0;//assumes cone 0 is closest
 		for (int i = 0; i < v.f.c.size()-1; i++) {
 			if (v.r[1].p.position.distance(v.f.c[i].pos) < v.r[1].p.position.distance(v.f.c[closest].pos)) {
-				if (v.f.c[i].pos.Z <= cHeight)//so long as not already stacked or in the air
+				float d2V[4];//can comment this stuff to get nearest cone. but better to get nearest cone IN FRONT (SLIGHTLY better score wise/time), gets stuck sometimes
+				for (int ver = 0; ver < 4; ver++) {
+					d2V[ver] = v.f.c[i].pos.distance(v.r[1].db.vertices[ver]);
+				}
+				bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
+				if (v.f.c[i].pos.Z <= cHeight && inFront )//so long as not already stacked or in the air
 					closest = i;//updates "closest" to whichever cone is closest
 			}
 		}
