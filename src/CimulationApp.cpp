@@ -41,6 +41,7 @@ public:
 	bool debugText = true;
 	bool recording = false;
 	int goal = 32;//defaulted first cone
+	bool reRouting = false;
 };
 //begin
 int tX = 1200;
@@ -307,42 +308,54 @@ void CimulationApp::goGrab(robot *r, field::element *c, int index) {
 	bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
 	bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
 	if (onRight) dir = -1;
-
-	if (!r->directlyInPath(true, r->d.size / 2, c->pos) || !inFront)//angle is not pointing towards goal
-		r->rotate(dir * MAXSPEED);
-	else r->rotate(0);
-	float offset = 0.5;//dosent update fast enough for small cones, needed little offset heuristic
-	if (r->p.position.distance(c->pos) > (r->d.size / 2 + c->radius) + offset && inFront) {//drive fwds towards goal
-		r->c.grabbing = false;
-		r->forwards(MAXSPEED);
+	if (!v.reRouting) {
+		if (!r->directlyInPath(true, r->d.size / 2, c->pos) || !inFront)//angle is not pointing towards goal
+			r->rotate(dir * MAXSPEED);
+		else r->rotate(0);
+		float offset = 0.5;//dosent update fast enough for small cones, needed little offset heuristic
+		if (r->p.position.distance(c->pos) > (r->d.size / 2 + c->radius) + offset && inFront) {//drive fwds towards goal
+			r->c.grabbing = false;
+			r->forwards(MAXSPEED);
+		}
+		else {
+			if (abs(r->c.liftPos - c->pos.Z) < c->height) r->c.grabbing = true;//only closes claw if on same level (height wise)
+			r->forwards(0);
+		}
+		if (r->c.grabbing && r->c.holding == index) {//holding the cone
+			if (r->c.liftPos < v.f.pl[1].height + 4) r->c.liftUp = true;
+			else r->c.liftUp = false;
+		}
+		else {
+			r->c.liftUp = false;
+			r->rotate(dir * 50);//just do a simple rotation to try and minimize error, gets it closer to the center 
+		}
+		if (r->c.holding == -1) { // not holding the cone
+			if (r->c.liftPos > 0) r->c.liftDown = true;
+			else r->c.liftDown = false;
+		}
+		else {
+			r->c.liftDown = false;
+		}
+		if (v.r[1].p.velocity.X == 0 && v.r[1].p.velocity.Y == 0 && v.r[1].d.touchingPole) {
+			v.reRouting = true;
+		}
 	}
 	else {
-		if (abs(r->c.liftPos - c->pos.Z) < c->height) r->c.grabbing = true;//only closes claw if on same level (height wise)
-		r->forwards(0);
-	}
-	if (r->c.grabbing && r->c.holding == index) {//holding the cone
-		if (r->c.liftPos< v.f.pl[1].height + 4) r->c.liftUp = true;
-		else r->c.liftUp = false;
-	}
-	else {
-		r->c.liftUp = false;
-		r->rotate(dir * 50);//just do a simple rotation to try and minimize error, gets it closer to the center 
-	}
-	if (r->c.holding == -1) { // not holding the cone
-		if (r->c.liftPos > 0) r->c.liftDown = true;
-		else r->c.liftDown = false;
-	}
-	else {
-		r->c.liftDown = false;
-	}
-	if (v.r[1].p.velocity.X == 0 && v.r[1].p.velocity.Y == 0 && v.r[1].d.touchingPole) {
 		reRoute(&v.r[1], &v.f.c[v.goal], dir);
 	}
 }
 void CimulationApp::reRoute(robot *r, field::element *e, int dir) {
-	if(r->p.position.distance(e->pos) < (2 * r->d.size )) r->forwards(-MAXSPEED);
-	else r->forwards(0);
-	if (!r->directlyInPath(true, r->d.size / 2, e->pos)) r->rotate(dir * 127);
+	int poleNum = 0;//assuming robot is closer to pole0 than pole1
+	if (v.r[1].p.position.distance(v.f.pl[0].pos) > v.r[1].p.position.distance(v.f.pl[1].pos)) {
+		poleNum = 1;//robot is closer to pole1 than pole0
+	}
+	if(r->p.position.distance(v.f.pl[poleNum].pos) < (r->d.size )) r->forwards(-100);
+	else {
+		r->forwards(0);
+		//v.reRouting = false;
+		if (!r->directlyInPath(true, r->d.size / 2, e->pos)) r->rotate(dir * 90);//moving to horizontal path (turning like 90°)
+		else v.reRouting = false;
+	}
 }
 void CimulationApp::stackOn(robot *r, field::element *e) {
 	float d2V[4];
@@ -353,44 +366,46 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 	bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
 	bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
 	if (onRight) dir = -1;
-	if (!r->directlyInPath(true, r->d.size/2, e->pos) || !inFront)//angle is not pointing towards goal
-		r->rotate(dir * MAXSPEED);
-	else r->rotate(0);
-	if (r->c.grabbing) {//holding the cone
-		if (r->c.liftPos< e->height + 4) r->c.liftUp = true;
-		else r->c.liftUp = false;
-	}
-	else {
-		r->c.liftUp = false;
-		r->rotate(dir * 50);//just do a simple smaller rotation to try and minimize error, gets it closer to the center 
-	}
-	if (r->c.liftPos >= e->height + 2 /*+ADD STACKED POS CHANGER HERE*/) {//wait until lift is reasonably high
-		if (r->p.position.distance(e->pos) > r->d.size*0.5 + e->radius + 2 && inFront) {//drive fwds towards goal
-			r->forwards(MAXSPEED*0.7);//slower since carrying object? eh idk
+	if (!v.reRouting) {
+		if (!r->directlyInPath(true, r->d.size / 2, e->pos) || !inFront)//angle is not pointing towards goal
+			r->rotate(dir * MAXSPEED);
+		else r->rotate(0);
+		if (r->c.grabbing) {//holding the cone
+			if (r->c.liftPos < e->height + 4) r->c.liftUp = true;
+			else r->c.liftUp = false;
 		}
 		else {
-			r->forwards(0);
-			if (r->p.position.distance(e->pos) <= r->d.size*0.5 + e->radius+2) {//reall close to the goal
-				if (r->c.liftPos >= e->height && r->c.grabbing) {
-					r->rotate(0);
-					r->p.acceleration = vec3(0, 0, 0);
-					r->p.velocity = vec3(0, 0, 0);
-					r->p.rotAcceleration= 0;
-					r->p.rotVel = 0;					
-					if (r->directlyInPath(true, r->d.size / 4, e->pos)) {
-						r->c.grabbing = false;//opens claw
-						//r->thinking = false;//basically turns off autonomous thing
-						v.goal = 0;
-					}
-					else r->rotate(dir * 127);//just do a simple smaller rotation to try and minimize error, gets it closer to the center 
-				}
-			}
-			//else r->rotate(dir * 127);//just do a simple smaller rotation to try and minimize error, gets it closer to the center 
+			r->c.liftUp = false;
+			r->rotate(dir * 50);//just do a simple smaller rotation to try and minimize error, gets it closer to the center 
 		}
-	}
-	else {//stop moving
-		r->forwards(0);
-		r->rotate(0);
+		if (r->c.liftPos >= e->height + 2 /*+ADD STACKED POS CHANGER HERE*/) {//wait until lift is reasonably high
+			if (r->p.position.distance(e->pos) > r->d.size*0.5 + e->radius + 2 && inFront) {//drive fwds towards goal
+				r->forwards(MAXSPEED*0.7);//slower since carrying object? eh idk
+			}
+			else {
+				r->forwards(0);
+				if (r->p.position.distance(e->pos) <= r->d.size*0.5 + e->radius + 2) {//reall close to the goal
+					if (r->c.liftPos >= e->height && r->c.grabbing) {
+						r->rotate(0);
+						r->p.acceleration = vec3(0, 0, 0);
+						r->p.velocity = vec3(0, 0, 0);
+						r->p.rotAcceleration = 0;
+						r->p.rotVel = 0;
+						if (r->directlyInPath(true, r->d.size / 4, e->pos)) {
+							r->c.grabbing = false;//opens claw
+							//r->thinking = false;//basically turns off autonomous thing
+							v.goal = 0;
+						}
+						else r->rotate(dir * 127);//just do a simple smaller rotation to try and minimize error, gets it closer to the center 
+					}
+				}
+				//else r->rotate(dir * 127);//just do a simple smaller rotation to try and minimize error, gets it closer to the center 
+			}
+		}
+		else {//stop moving
+			r->forwards(0);
+			r->rotate(0);
+		}
 	}
 }
 
