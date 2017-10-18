@@ -81,6 +81,7 @@ public:
 	struct details {
 		float basePower;
 		int size = 18;
+		bool touchingPole = false;
 		bool frontStop = false, backStop = false;
 	};
 		details d;

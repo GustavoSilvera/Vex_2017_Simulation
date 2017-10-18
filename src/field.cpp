@@ -294,6 +294,7 @@ void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 		float d2closestPoint = closestPoint.distance(pl->pos);
 		vec3 R = (closestPoint + pl->pos.times(-1)).times(pl->radius / d2closestPoint) + pl->pos;
 		if (d2closestPoint <= pl->radius) {//touching
+			robit->d.touchingPole = true;
 			robit->p.position.X += (R.X - closestPoint.X);
 			robit->p.position.Y += (R.Y - closestPoint.Y);
 			robit->p.velocity = vec3(0, 0, 0);
@@ -319,6 +320,7 @@ void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 				}
 			}
 		}
+		else robit->d.touchingPole = false;
 	}
 }
 //function for making sure the robot cannot move past the fence
