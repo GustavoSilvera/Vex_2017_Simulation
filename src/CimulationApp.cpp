@@ -305,10 +305,10 @@ void CimulationApp::goGrab(robot *r, field::element *c, int index) {
 		d2V[ver] = c->pos.distance(r->db.vertices[ver]);
 	}
 	int dir = 1;
-	bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
-	bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
-	if (onRight) dir = -1;
 	if (!v.reRouting) {
+		bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
+		bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
+		if (onRight) dir = -1;
 		if (!r->directlyInPath(true, r->d.size / 2, c->pos) || !inFront)//angle is not pointing towards goal
 			r->rotate(dir * MAXSPEED);
 		else r->rotate(0);
@@ -349,12 +349,14 @@ void CimulationApp::reRoute(robot *r, field::element *e, int dir) {
 	if (v.r[1].p.position.distance(v.f.pl[0].pos) > v.r[1].p.position.distance(v.f.pl[1].pos)) {
 		poleNum = 1;//robot is closer to pole1 than pole0
 	}
-	if(r->p.position.distance(v.f.pl[poleNum].pos) < (r->d.size )) r->forwards(-100);
+	if (r->p.position.distance(v.f.pl[poleNum].pos) < (r->d.size)) {
+		r->forwards(-100);
+	}
 	else {
+		if (r->directlyInPath(true, r->d.size, v.f.pl[poleNum].pos)) r->rotate(dir * 127);//moving to horizontal path (turning like 90°)
+		else v.reRouting = false;
 		r->forwards(0);
 		//v.reRouting = false;
-		if (!r->directlyInPath(true, r->d.size / 2, e->pos)) r->rotate(dir * 90);//moving to horizontal path (turning like 90°)
-		else v.reRouting = false;
 	}
 }
 void CimulationApp::stackOn(robot *r, field::element *e) {
@@ -371,7 +373,7 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 			r->rotate(dir * MAXSPEED);
 		else r->rotate(0);
 		if (r->c.grabbing) {//holding the cone
-			if (r->c.liftPos < e->height + 4) r->c.liftUp = true;
+			if (r->c.liftPos < e->height + e->stacked.size() + 4) r->c.liftUp = true;
 			else r->c.liftUp = false;
 		}
 		else {
@@ -618,7 +620,7 @@ void CimulationApp::draw() {
 			);
 		}
 		//drawing each individual cone. oh my
-		for (int i = 0; i < v.f.c.size(); i++) {
+		for (int i = 0; i < v.f.c.size(); i++) {//find a way to draw based off z distance
 			gl::color(1, 1, 1);
 			if (i != v.r[0].c.holding)	gl::draw(v.f.coneTexture, Area(R2S4(
 				(v.f.c[i].pos.X - v.f.c[i].radius),

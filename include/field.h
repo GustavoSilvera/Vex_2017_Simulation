@@ -55,6 +55,7 @@ public:
 		void robotColl(int index, robot *r, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f);
 		void collision(element *e);
 		void grabbed(robot *r, int index, int type);
+		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
 	};
 	struct cone : public element {
 		cone(vec3 pos) : element(pos, cRad, cHeight), fellOn(0), landed(false) {}
@@ -67,11 +68,9 @@ public:
 		int colour;//0 is yellow, 1 is red, 2 is blue 
 		void mogoGrab(robot *robit, int index);
 		void zoneScore(fence *f, int index);
-		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
 	};
 	struct stat : public element {
 		stat(vec3 pos, float initRad, float initHeight) : element(pos, initRad, initHeight) {}
-		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
 	};
 	std::vector<cone> c;
 	std::vector<MoGo> mg;
