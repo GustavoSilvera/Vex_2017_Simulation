@@ -601,7 +601,7 @@ void CimulationApp::draw() {
 			gl::drawSolidRect(Area(getWindowWidth() - size, 0, getWindowWidth(), getWindowHeight()));
 			gl::color(1, 1, 1);//reset to white
 		}
-		ci::gl::draw(v.f.fieldBare, ci::Area(v.f.f.inFromEnd*ppi, v.f.f.inFromEnd*ppi, v.f.f.inFromEnd*ppi + v.f.f.fieldSizeIn*ppi, v.f.f.inFromEnd*ppi + v.f.f.fieldSizeIn*ppi ));
+		ci::gl::draw(v.f.fieldBare, ci::Area(v.f.f.inFromEnd*ppi, v.f.f.inFromEnd*ppi, v.f.f.inFromEnd*ppi + v.f.f.fieldSizeIn*ppi, v.f.f.inFromEnd*ppi + v.f.f.fieldSizeIn*ppi));
 		drawRobot(&v.r[0]);//drawing robot 1
 		drawRobot(&v.r[1]);//drawing oppposing robot
 		gl::drawString("Score:", Vec2f(700, 50), Color(1, 1, 1), Font("Arial", 50));
@@ -620,23 +620,18 @@ void CimulationApp::draw() {
 			);
 		}
 		//drawing each individual cone. oh my
-		for (int i = 0; i < v.f.c.size(); i++) {//find a way to draw based off z distance
+		std::vector<field::cone> sortedCones(v.f.c);//created copy of v.f.c to not directly affect anything badly
+		std::sort(sortedCones.begin(), sortedCones.end(),//lambda function for sorting new cone vector based off pos.Z position
+			[](const field::cone &c1, const field::cone &c2){
+			return c1.pos.Z < c2.pos.Z;
+		});
+		for (int i = 0; i < sortedCones.size(); i++) {//find a way to draw based off z distance
 			gl::color(1, 1, 1);
-			if (i != v.r[0].c.holding)	gl::draw(v.f.coneTexture, Area(R2S4(
-				(v.f.c[i].pos.X - v.f.c[i].radius),
-				(v.f.c[i].pos.Y - v.f.c[i].radius),
-				(v.f.c[i].pos.X + v.f.c[i].radius),
-				(v.f.c[i].pos.Y + v.f.c[i].radius)))
-			);
-		}
-		if (v.r[0].c.holding != -1 && v.r[0].c.holding < numCones) { //if actually holding something (the index exists [!= -1])
-			float coneX = v.f.c[v.r[0].c.holding].pos.X;
-			float coneY = v.f.c[v.r[0].c.holding].pos.Y;
 			gl::draw(v.f.coneTexture, Area(R2S4(
-				(coneX - v.f.c[v.r[0].c.holding].radius),
-				(coneY - v.f.c[v.r[0].c.holding].radius),
-				(coneX + v.f.c[v.r[0].c.holding].radius),
-				(coneY + v.f.c[v.r[0].c.holding].radius)))
+				(sortedCones[i].pos.X - sortedCones[i].radius),
+				(sortedCones[i].pos.Y - sortedCones[i].radius),
+				(sortedCones[i].pos.X + sortedCones[i].radius),
+				(sortedCones[i].pos.Y + sortedCones[i].radius)))
 			);
 		}
 		for (int i = 0; i < v.f.mg.size(); i++) {//drawing how many are stacked
