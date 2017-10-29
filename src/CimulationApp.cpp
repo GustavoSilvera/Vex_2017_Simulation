@@ -42,6 +42,7 @@ public:
 	bool recording = false;
 	int goal = 32;//defaulted first cone
 	bool reRouting = false;
+	float scalar;
 };
 //begin
 int tX = 1200;
@@ -66,12 +67,16 @@ public:
 	void keyDown(KeyEvent event);
 	void keyUp(KeyEvent event);
 	void update();
-	void clicky(int num_buttons);
-	void buttons();
+	void clicky(int num_buttons, int size);
+	void buttons(int size);
 	void textDraw();
 	void goGrab(robot *r, field::element *e, int index);
 	void stackOn(robot *r, field::element *e);
 	void reRoute(robot *r, field::element *e, int dir);
+	Vec2f R2S2(vec3 robot_coord);
+	Vec3f R2S3(float robot_coordX, float robot_coordY, float robot_coordZ);
+	Rectf R2S4(float p1X, float p1Y, float p2X, float p2Y);
+	void CimulationApp::robotDebug();
 	void drawClaw(robot *r);
 	void drawRobot(robot *r);
 	void draw();
@@ -89,6 +94,7 @@ void CimulationApp::setup() {
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
 	setWindowSize(WindowWidth, WindowHeight);
 	v.r[1].p.position = vec3(117, 117, 0);
+	v.scalar = (float)getWindowWidth() / (float)WindowWidth;
 }
 //cinder::functions
 void CimulationApp::mouseDown(MouseEvent event) {
@@ -136,6 +142,7 @@ void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r[0].c.liftDown = false;//left Z button
 }
 void CimulationApp::update() {
+	v.scalar = ((float)getWindowWidth() + (float)getWindowHeight()) / (float)(WindowWidth+WindowHeight);
 	int pastRot = v.r[0].p.mRot;
 	vec3 pastPos(v.r[0].p.position);
 	float pastTime = ci::app::getElapsedSeconds();
@@ -146,9 +153,9 @@ void CimulationApp::update() {
 	switch (s.SimRunning) {
 	case simulation::NAVIGATION:
 		tX = 1200;
-		v.j.drawX = 300;
-		v.j.drawY = 300;
-		v.j.drawSize = 150;
+		v.j.drawX = 300 * v.scalar;
+		v.j.drawY = 300 * v.scalar;
+		v.j.drawSize = 150 * v.scalar;
 		v.pid.isInit = false;
 		v.f.isInit = false;
 		v.tS.isInit = false;
@@ -158,9 +165,9 @@ void CimulationApp::update() {
 		break;
 	case simulation::PIDCTRL:
 		tX = 1200;
-		v.j.drawX = 600;
-		v.j.drawY = 500;
-		v.j.drawSize = 150;
+		v.j.drawX = 600 * v.scalar;
+		v.j.drawY = 500 * v.scalar;
+		v.j.drawSize = 150 * v.scalar;
 		v.pid.isInit = true;
 		v.f.isInit = false;
 		v.tS.isInit = false;
@@ -169,9 +176,9 @@ void CimulationApp::update() {
 		break;
 	case simulation::TRUSPEED:
 		tX = 1400;
-		v.j.drawX = 300;
-		v.j.drawY = 300;
-		v.j.drawSize = 300;
+		v.j.drawX = 300*v.scalar;
+		v.j.drawY = 300 * v.scalar;
+		v.j.drawSize = 300 * v.scalar;
 		v.pid.isInit = false;
 		v.f.isInit = false;
 		v.tS.isInit = true;
@@ -181,9 +188,9 @@ void CimulationApp::update() {
 		break;
 	case simulation::FIELD:
 		tX = 1200;
-		v.j.drawX = v.f.f.fieldSizeIn + 100;
-		v.j.drawY = 500;
-		v.j.drawSize = 150;
+		v.j.drawX = v.scalar*(ppi*(v.f.f.fieldSizeIn + v.f.f.inFromEnd)+50);
+		v.j.drawY = 650 * v.scalar;
+		v.j.drawSize = 150 * v.scalar;
 		v.pid.isInit = false;
 		v.f.isInit = true;
 		v.tS.isInit = false;
@@ -412,11 +419,11 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 }
 
 
-void CimulationApp::clicky(int AMOUNT_BUTTON) {//function for clicking the buttons
+void CimulationApp::clicky(int AMOUNT_BUTTON, int buttonSize) {//function for clicking the buttons
 	for (int i = 0; i < AMOUNT_BUTTON; i++) {//for each button in the array 
-		if (mousePos.X > 100 * (i + 1) - (50) + (25 * i) &&
-			mousePos.X < 100 * (i + 1) + (50) + (25 * i) &&
-			mousePos.Y > 25 && mousePos.Y < 75) {//within boundaries for each button based off their index
+		if (mousePos.X > v.scalar * ( buttonSize* (i + 1) - (50) + (25 * i)) &&
+			mousePos.X < v.scalar * (buttonSize* (i + 1) + (50) + (25 * i)) &&
+			mousePos.Y > v.scalar *25 && mousePos.Y < v.scalar * 75) {//within boundaries for each button based off their index
 			s.hovering = i;
 			if (s.mouseClicked && i <=3 ) {
 				s.SimRunning = simulation::SimulationType(i);
@@ -433,24 +440,25 @@ void CimulationApp::clicky(int AMOUNT_BUTTON) {//function for clicking the butto
 		}
 	}
 }
-void CimulationApp::buttons() {//function for drawing the buttons
+void CimulationApp::buttons(int buttonSize) {//function for drawing the buttons
 	#define BUTTON_AMOUNT 6//number of buttons
+
 	int bX[BUTTON_AMOUNT], bY = 50, dInBtw = 25;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
 	for (int i = 0; i < BUTTON_AMOUNT; i++) {
 		bX[0] = 0;//initialize first button
-		bX[i] = (i + 1) * 100;//increment x position for each button based off index
+		bX[i] = (i + 1) * buttonSize;//increment x position for each button based off index
 		if (i == s.SimRunning) { gl::color(0, 1, 0); }//if the button's index is equal to whichever button's index is being hovered over
 		else if (i == s.hovering) { gl::color(1, 0, 0); }//if the button's index is equal to whichever button's index is being hovered over
 		else { gl::color(1, 1, 1); }
-		gl::drawStrokedRoundedRect(Area(bX[i] - 50 + dInBtw*i, bY - 25, bX[i] + 50 + dInBtw*i, bY + 25), 5);//ROUNDED rectangle with corner rad of 7
+		gl::drawStrokedRoundedRect(Area(v.scalar *(bX[i] - 50 + dInBtw*i), v.scalar*(bY - 25), v.scalar*(bX[i] + 50 + dInBtw*i), v.scalar*( bY + 25)), 5);//ROUNDED rectangle with corner rad of 7
 		gl::color(1, 1, 1);//resets colour 
-		if (i == 0)gl::drawString("PID", Vec2f(bX[i] - 20, bY - 12.5), Color(1, 1, 1), Font("Arial", 25));
-		else if (i == 1)gl::drawString("NAV", Vec2f(bX[i] - 18 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 25));
-		else if (i == 2)gl::drawString("TRUSpeed", Vec2f(bX[i] - 49 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 25));
-		else if (i == 3)gl::drawString("Auton", Vec2f(bX[i] - 35 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 29));
-		else if (i == 4)gl::drawString("Macro", Vec2f(bX[i] - 35 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 29));
-		else if (i == 5)gl::drawString("noRec", Vec2f(bX[i] - 35 + dInBtw*i, bY - 10), Color(1, 1, 1), Font("Arial", 29));
-		clicky(BUTTON_AMOUNT);//function for if a button is being hovered of pressed
+		if (i == 0)gl::drawString("PID", Vec2f(v.scalar*(bX[i] - 20), v.scalar*(bY - 12.5)), Color(1, 1, 1), Font("Arial", v.scalar * 25));
+		else if (i == 1)gl::drawString("NAV", Vec2f(v.scalar*(bX[i] - 18 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar*25));
+		else if (i == 2)gl::drawString("TRUSpeed", Vec2f(v.scalar*(bX[i] - 49 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar * 25));
+		else if (i == 3)gl::drawString("Auton", Vec2f(v.scalar*(bX[i] - 35 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar * 29));
+		else if (i == 4)gl::drawString("Macro", Vec2f(v.scalar*(bX[i] - 35 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar * 29));
+		else if (i == 5)gl::drawString("noRec", Vec2f(v.scalar*(bX[i] - 35 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar * 29));
+		clicky(BUTTON_AMOUNT, buttonSize);//function for if a button is being hovered of pressed
 	}
 }
 void CimulationApp::textDraw() {//function for drawing the buttons 
@@ -476,65 +484,62 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 	int i = 0;
 	for (text& ti : t) {
 		int tY = (i + 1) * dInBtw;//increment x position for each button based off index
-		gl::drawString(ti.s, Vec2f(tX - 70, tY), Color(1, 1, 1), Font("Arial", 30));
-		drawText(ti.f, vec3I(tX, tY), vec3I(1, 1, 1), 30);
+		gl::drawString(ti.s, Vec2f(v.scalar*(tX - 70), v.scalar*(tY)), Color(1, 1, 1), Font("Arial", v.scalar * 30));
+		drawText(ti.f, vec3I(v.scalar*(tX), v.scalar*(tY)), vec3I(1, 1, 1), v.scalar * 30);
 		++i;
 	}
 }
 
 // Map robot coordinates to screen coordinates.
-Vec2f R2S2(vec3 robot_coord) {
-	const double fieldSizeIn = 141.05;
-	return Vec2f(100 + ppi * robot_coord.X, 100 + fieldSizeIn * ppi - ppi * robot_coord.Y);
+Vec2f CimulationApp::R2S2(vec3 robot_coord) {
+	return Vec2f(ppi * v.scalar * (v.f.f.inFromEnd + robot_coord.X), ppi * v.scalar * (v.f.f.inFromEnd + v.f.f.fieldSizeIn - robot_coord.Y) );
 }
-Vec3f R2S3(float robot_coordX, float robot_coordY, float robot_coordZ) {//for 3d coords, usually z is 0 coords
-	const double fieldSizeIn = 141.05;
-	return Vec3f(100 + ppi * robot_coordX, 100 + fieldSizeIn * ppi - ppi * robot_coordY, robot_coordZ);
+Vec3f CimulationApp::R2S3(float robot_coordX, float robot_coordY, float robot_coordZ) {//for 3d coords, usually z is 0 coords
+	return Vec3f(ppi * v.scalar * (v.f.f.inFromEnd + robot_coordX), ppi * v.scalar * (v.f.f.inFromEnd + v.f.f.fieldSizeIn - robot_coordY), robot_coordZ);
 }
-Rectf R2S4(float p1X, float p1Y, float p2X, float p2Y) {//for rectangular coords
-	const double fieldSizeIn = 141.05;
-	return Rectf(100 + ppi * p1X, 100 + fieldSizeIn * ppi - ppi * p1Y, 100 + ppi * p2X, 100 + fieldSizeIn * ppi - ppi * p2Y);
+Rectf CimulationApp::R2S4(float p1X, float p1Y, float p2X, float p2Y) {//for rectangular coords
+	return Rectf(ppi * v.scalar * (v.f.f.inFromEnd + p1X), ppi * v.scalar * (v.f.f.inFromEnd + v.f.f.fieldSizeIn - p1Y), ppi * v.scalar * (v.f.f.inFromEnd + p2X), ppi * v.scalar * (v.f.f.inFromEnd + v.f.f.fieldSizeIn - p2Y));
 }
 
-void robotDebug(vex *v, bool reversed) {
+void CimulationApp::robotDebug() {
 	gl::color(1, 0, 0);
 	for (int i = 0; i < 4; i++) {//simplified version of drawing the vertices
-		gl::drawSolidCircle(R2S2(v->r[0].db.vertices[i]), 5 + i);
-		//else gl::drawSolidCircle(Vec2f(ppi * v->r[0].db.vertices[i].X, ppi * v->r[0].db.vertices[i].Y), 5 + i);
+		gl::drawSolidCircle(R2S2(v.r[0].db.vertices[i]), 5 + i);
+		//else gl::drawSolidCircle(Vec2f(ppi*v.scalar * v.r[0].db.vertices[i].X, ppi*v.scalar * v.r[0].db.vertices[i].Y), 5 + i);
 	}
 		//vertice rectangles
-		gl::drawStrokedRect(Area(v->f.f.inFromEnd*ppi + v->r[0].db.vertices[0].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].db.vertices[0].Y*ppi, v->f.f.inFromEnd*ppi + v->r[0].db.vertices[1].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].db.vertices[1].Y*ppi));
-		gl::drawStrokedRect(Area(v->f.f.inFromEnd*ppi + v->r[0].db.vertices[2].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].db.vertices[2].Y*ppi, v->f.f.inFromEnd*ppi +v->r[0].db.vertices[3].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].db.vertices[3].Y*ppi));
+		gl::drawStrokedRect(Area(v.f.f.inFromEnd*ppi*v.scalar + v.r[0].db.vertices[0].X*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - v.r[0].db.vertices[0].Y*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.r[0].db.vertices[1].X*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - v.r[0].db.vertices[1].Y*ppi*v.scalar));
+		gl::drawStrokedRect(Area(v.f.f.inFromEnd*ppi*v.scalar + v.r[0].db.vertices[2].X*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - v.r[0].db.vertices[2].Y*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar +v.r[0].db.vertices[3].X*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - v.r[0].db.vertices[3].Y*ppi*v.scalar));
 		//vertical lines
-		gl::drawLine(cinder::Vec2f(v->f.f.inFromEnd*ppi +(v->r[0].db.vertices[1].X + 300 * cos((v->r[0].p.mRot) * PI / 180))*ppi,
-			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[1].Y + 300 * sin((v->r[0].p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[2].X - 300 * cos((v->r[0].p.mRot) * PI / 180))*ppi,
-				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[2].Y - 300 * sin((v->r[0].p.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f( v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[0].X + 300 * cos((v->r[0].p.mRot) * PI / 180))*ppi,
-			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[0].Y + 300 * sin((v->r[0].p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[3].X - 300 * cos((v->r[0].p.mRot) * PI / 180))*ppi,
-				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[3].Y - 300 * sin((v->r[0].p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(v.f.f.inFromEnd*ppi*v.scalar +(v.r[0].db.vertices[1].X + 300 * cos((v.r[0].p.mRot) * PI / 180))*ppi*v.scalar,
+			v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - (v.r[0].db.vertices[1].Y + 300 * sin((v.r[0].p.mRot) * PI / 180))*ppi*v.scalar),
+			cinder::Vec2f(v.f.f.inFromEnd*ppi*v.scalar + (v.r[0].db.vertices[2].X - 300 * cos((v.r[0].p.mRot) * PI / 180))*ppi*v.scalar,
+				v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - (v.r[0].db.vertices[2].Y - 300 * sin((v.r[0].p.mRot) * PI / 180))*ppi*v.scalar));
+		gl::drawLine(cinder::Vec2f( v.f.f.inFromEnd*ppi*v.scalar + (v.r[0].db.vertices[0].X + 300 * cos((v.r[0].p.mRot) * PI / 180))*ppi*v.scalar,
+			v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - (v.r[0].db.vertices[0].Y + 300 * sin((v.r[0].p.mRot) * PI / 180))*ppi*v.scalar),
+			cinder::Vec2f(v.f.f.inFromEnd*ppi*v.scalar + (v.r[0].db.vertices[3].X - 300 * cos((v.r[0].p.mRot) * PI / 180))*ppi*v.scalar,
+				v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - (v.r[0].db.vertices[3].Y - 300 * sin((v.r[0].p.mRot) * PI / 180))*ppi*v.scalar));
 		//horizontal lines
-		gl::drawLine(cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[0].X + 300 * sin((-v->r[0].p.mRot) * PI / 180))*ppi,
-			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[0].Y + 300 * cos((-v->r[0].p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[1].X - 300 * sin((-v->r[0].p.mRot) * PI / 180))*ppi,
-				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[1].Y - 300 * cos((-v->r[0].p.mRot) * PI / 180))*ppi));
-		gl::drawLine(cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[2].X + 300 * sin((-v->r[0].p.mRot) * PI / 180))*ppi,
-			v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[2].Y + 300 * cos((-v->r[0].p.mRot) * PI / 180))*ppi),
-			cinder::Vec2f(v->f.f.inFromEnd*ppi + (v->r[0].db.vertices[3].X - 300 * sin((-v->r[0].p.mRot) * PI / 180))*ppi,
-				v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - (v->r[0].db.vertices[3].Y - 300 * cos((-v->r[0].p.mRot) * PI / 180))*ppi));
+		gl::drawLine(cinder::Vec2f(v.f.f.inFromEnd*ppi*v.scalar + (v.r[0].db.vertices[0].X + 300 * sin((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar,
+			v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - (v.r[0].db.vertices[0].Y + 300 * cos((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar),
+			cinder::Vec2f(v.f.f.inFromEnd*ppi*v.scalar + (v.r[0].db.vertices[1].X - 300 * sin((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar,
+				v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - (v.r[0].db.vertices[1].Y - 300 * cos((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar));
+		gl::drawLine(cinder::Vec2f(v.f.f.inFromEnd*ppi*v.scalar + (v.r[0].db.vertices[2].X + 300 * sin((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar,
+			v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - (v.r[0].db.vertices[2].Y + 300 * cos((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar),
+			cinder::Vec2f(v.f.f.inFromEnd*ppi*v.scalar + (v.r[0].db.vertices[3].X - 300 * sin((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar,
+				v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - (v.r[0].db.vertices[3].Y - 300 * cos((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar));
 		//draw circle
-		gl::drawStrokedCircle(Vec2f(v->f.f.inFromEnd*ppi + v->r[0].p.position.X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].p.position.Y*ppi), renderRad * v->r[0].d.size*ppi);
-		gl::drawStrokedRect(Area(v->f.f.inFromEnd*ppi + v->r[0].db.vertices[0].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].db.vertices[0].Y*ppi, v->f.f.inFromEnd*ppi + v->r[0].db.vertices[2].X*ppi, v->f.f.inFromEnd*ppi + v->f.f.fieldSizeIn*ppi - v->r[0].db.vertices[2].Y*ppi));
+		gl::drawStrokedCircle(Vec2f(v.f.f.inFromEnd*ppi*v.scalar + v.r[0].p.position.X*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - v.r[0].p.position.Y*ppi*v.scalar), renderRad * v.r[0].d.size*ppi*v.scalar);
+		gl::drawStrokedRect(Area(v.f.f.inFromEnd*ppi*v.scalar + v.r[0].db.vertices[0].X*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - v.r[0].db.vertices[0].Y*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.r[0].db.vertices[2].X*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - v.r[0].db.vertices[2].Y*ppi*v.scalar));
 		
-		gl::drawSolidCircle(Vec2f(v->f.f.inFromEnd*ppi+ppi*(v->r[0].p.position.X + (v->r[0].d.size / 2) * cos((-v->r[0].p.mRot) * PI / 180) * sqrt(2)),
-			v->f.f.inFromEnd*ppi+v->f.f.fieldSizeIn*ppi - ppi*(v->r[0].p.position.Y - (v->r[0].d.size / 2) * sin((-v->r[0].p.mRot) * PI / 180) * sqrt(2))), 5);
+		gl::drawSolidCircle(Vec2f(v.f.f.inFromEnd*ppi*v.scalar+ppi*v.scalar*(v.r[0].p.position.X + (v.r[0].d.size / 2) * cos((-v.r[0].p.mRot) * PI / 180) * sqrt(2)),
+			v.f.f.inFromEnd*ppi*v.scalar+v.f.f.fieldSizeIn*ppi*v.scalar - ppi*v.scalar*(v.r[0].p.position.Y - (v.r[0].d.size / 2) * sin((-v.r[0].p.mRot) * PI / 180) * sqrt(2))), 5);
 }
 void CimulationApp::drawClaw(robot *r) {
-	gl::draw(v.r[0].CChanel, Area((r->c.clawSize)*ppi, (r->d.size*.5 + r->c.baseSize)*ppi, (-r->c.clawSize)*ppi, (r->d.size*.5)*ppi));
+	gl::draw(v.r[0].CChanel, Area((r->c.clawSize)*ppi*v.scalar, (r->d.size*.5 + r->c.baseSize)*ppi*v.scalar, (-r->c.clawSize)*ppi*v.scalar, (r->d.size*.5)*ppi*v.scalar));
 	gl::color(222.0 / 225, 229.0 / 225, 34.0 / 225);
-	gl::drawSolidRect(Area(Vec2d((r->c.clawPos + r->c.clawThick)*ppi, (r->d.size*.5 + r->c.clawHeight + r->c.baseSize)*ppi), Vec2d((r->c.clawPos - r->c.clawThick)*ppi, (r->d.size*.5 + r->c.baseSize)*ppi)));
-	gl::drawSolidRect(Area(Vec2d((-r->c.clawPos - r->c.clawThick)*ppi, (r->d.size*.5 + r->c.clawHeight + r->c.baseSize)*ppi), Vec2d((-r->c.clawPos + r->c.clawThick)*ppi, (r->d.size*.5 + r->c.baseSize)*ppi)));
+	gl::drawSolidRect(Area(Vec2d((r->c.clawPos + r->c.clawThick)*ppi*v.scalar, (r->d.size*.5 + r->c.clawHeight + r->c.baseSize)*ppi*v.scalar), Vec2d((r->c.clawPos - r->c.clawThick)*ppi*v.scalar, (r->d.size*.5 + r->c.baseSize)*ppi*v.scalar)));
+	gl::drawSolidRect(Area(Vec2d((-r->c.clawPos - r->c.clawThick)*ppi*v.scalar, (r->d.size*.5 + r->c.clawHeight + r->c.baseSize)*ppi*v.scalar), Vec2d((-r->c.clawPos + r->c.clawThick)*ppi*v.scalar, (r->d.size*.5 + r->c.baseSize)*ppi*v.scalar)));
 	gl::color(1, 1, 1);//reset colour
 }
 void CimulationApp::drawRobot(robot *r) {
@@ -544,12 +549,12 @@ void CimulationApp::drawRobot(robot *r) {
 	gl::translate(Vec3f(R2S3(r->p.position.X, r->p.position.Y, 0.0)));//origin of rotation
 	gl::rotate(Vec3f(0, 0, -r->p.mRot - 90));//something for like 3D rotation.... ugh
 	gl::color(1, 1, 1);
-	gl::draw(r->TankBase, Area((-(r->d.size / 2))*ppi, (-(r->d.size / 2))*ppi, ((r->d.size / 2))*ppi, ((r->d.size / 2))*ppi));
+	gl::draw(r->TankBase, Area((-(r->d.size / 2))*ppi*v.scalar, (-(r->d.size / 2))*ppi*v.scalar, ((r->d.size / 2))*ppi*v.scalar, ((r->d.size / 2))*ppi*v.scalar));
 	//mogo
 	drawClaw(r);
 	gl::color(66.0 / 255, 135.0 / 255, 224.0 / 255);
-	gl::drawSolidRect(Area((-r->mg.clawPos - r->c.clawThick)*ppi, (-r->d.size*.5 - r->mg.clawHeight)*ppi, (-r->mg.clawPos + r->c.clawThick)*ppi, (-r->d.size*.5)*ppi));
-	gl::drawSolidRect(Area((r->mg.clawPos + r->c.clawThick)*ppi, (-r->d.size*.5 - r->mg.clawHeight)*ppi, (r->mg.clawPos - r->c.clawThick)*ppi, (-r->d.size*.5)*ppi));
+	gl::drawSolidRect(Area((-r->mg.clawPos - r->c.clawThick)*ppi*v.scalar, (-r->d.size*.5 - r->mg.clawHeight)*ppi*v.scalar, (-r->mg.clawPos + r->c.clawThick)*ppi*v.scalar, (-r->d.size*.5)*ppi*v.scalar));
+	gl::drawSolidRect(Area((r->mg.clawPos + r->c.clawThick)*ppi*v.scalar, (-r->d.size*.5 - r->mg.clawHeight)*ppi*v.scalar, (r->mg.clawPos - r->c.clawThick)*ppi*v.scalar, (-r->d.size*.5)*ppi*v.scalar));
 
 	glPopMatrix();//end of rotation code
 }
@@ -572,15 +577,6 @@ void CimulationApp::draw() {
 	glClearDepth(1.0f);*/
 	//joystick analog drawing
 	if (s.SimRunning == s.NAVIGATION || s.SimRunning == s.TRUSPEED || s.SimRunning == s.FIELD) {//only for navigation and truspeed sim
-		if (s.SimRunning == s.FIELD) {
-			v.j.drawX = 100 + v.f.f.fieldSizeIn*ppi + 20;
-			v.j.drawY = getWindowHeight() / 2;
-		}
-		else {
-			v.j.drawX = 600;
-			v.j.drawY = 500;
-			//robotDebug(&v, false);
-		}
 		drawJoystick(&v.r[0], &v.j);
 	}
 	if (s.SimRunning == s.PIDCTRL) {
@@ -601,11 +597,13 @@ void CimulationApp::draw() {
 			gl::drawSolidRect(Area(getWindowWidth() - size, 0, getWindowWidth(), getWindowHeight()));
 			gl::color(1, 1, 1);//reset to white
 		}
-		ci::gl::draw(v.f.fieldBare, ci::Area(v.f.f.inFromEnd*ppi, v.f.f.inFromEnd*ppi, v.f.f.inFromEnd*ppi + v.f.f.fieldSizeIn*ppi, v.f.f.inFromEnd*ppi + v.f.f.fieldSizeIn*ppi));
+		ci::gl::draw(v.f.fieldBare, ci::Area(v.f.f.inFromEnd*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar));
 		drawRobot(&v.r[0]);//drawing robot 1
 		drawRobot(&v.r[1]);//drawing oppposing robot
-		gl::drawString("Score:", Vec2f(700, 50), Color(1, 1, 1), Font("Arial", 50));
-		drawText(v.f.calculateScore(), vec3I(850, 50), vec3I(1, 1, 1), 50);
+		gl::drawString("Score:", Vec2f(v.scalar * 850, v.scalar * 50), Color(1, 1, 1), Font("Arial", v.scalar * 50));
+		drawText(v.f.calculateScore(), vec3I(v.scalar * 1000, v.scalar * 50), vec3I(1, 1, 1), v.scalar * 50);
+		gl::drawString("Time(s):", Vec2f(v.scalar * 1350, v.scalar * 100), Color(1, 1, 1), Font("Arial", v.scalar * 40));
+		drawText(ci::app::getElapsedSeconds(), vec3I(v.scalar * 1480, v.scalar * 100), vec3I(1, 1, 1), v.scalar*40);
 
 		for (int i = 0; i < v.f.mg.size(); i++) {
 			vec3 RGB;//true color value because cinder uses values from 0->1 for their colours
@@ -637,17 +635,17 @@ void CimulationApp::draw() {
 		for (int i = 0; i < v.f.mg.size(); i++) {//drawing how many are stacked
 			if (v.f.mg[i].stacked.size() > 0) {
 				drawText(v.f.mg[i].stacked.size(), vec3I(
-					70 + (int)((v.f.mg[i].pos.X - cRad) * (int)ppi),
-					50 + (int)((v.f.f.fieldSizeIn - v.f.mg[i].pos.Y + cRad) * (int)ppi)),
-					vec3I(1, 1, 1), 50);
+					(70 + (int)((v.f.mg[i].pos.X - cRad) * (int)ppi)*v.scalar),
+					(50 + (int)((v.f.f.fieldSizeIn - v.f.mg[i].pos.Y + cRad) * (int)ppi)*v.scalar)),
+					vec3I(1, 1, 1), v.scalar*50);
 			}
 		}
 		for (int i = 0; i < v.f.pl.size(); i++) {//drawing how many are stacked
 			if (v.f.pl[i].stacked.size() > 0) {
 				drawText(v.f.pl[i].stacked.size(), vec3I(
-					70 + (int)((v.f.pl[i].pos.X - cRad) * (int)ppi),
-					50 + (int)((v.f.f.fieldSizeIn - v.f.pl[i].pos.Y + cRad) * (int)ppi)),
-					vec3I(1, 1, 1), 50);
+					(70 + (int)((v.f.pl[i].pos.X - cRad) * (int)ppi)*v.scalar),
+					(50 + (int)((v.f.f.fieldSizeIn - v.f.pl[i].pos.Y + cRad) * (int)ppi)*v.scalar)),
+					vec3I(1, 1, 1), v.scalar*50);
 			}
 		}
 		gl::color(1, 1, 1);
@@ -655,20 +653,20 @@ void CimulationApp::draw() {
 	else drawRobot(&v.r[0]);
 	
 	gl::color(1, 0, 0);
-	gl::drawSolidCircle(R2S2(vec3(v.f.c[v.goal].pos.X, v.f.c[v.goal].pos.Y) ), 5);
+	gl::drawSolidCircle(R2S2(vec3(v.f.c[v.goal].pos.X, v.f.c[v.goal].pos.Y) ), v.scalar*5);
 
-	gl::drawSolidCircle(R2S2(vec3(v.r[1].p.position.X, v.r[1].p.position.Y)), 5);
+	gl::drawSolidCircle(R2S2(vec3(v.r[1].p.position.X, v.r[1].p.position.Y)), v.scalar*5);
 
-	if (v.recording) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
-	else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
+	//debug text
+//	if (v.recording) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
+//	else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1010, 660), vec3I(1, 1, 1), 30);
-	drawText(v.f.pl[0].height, vec3I(1010, 500), vec3I(1, 1, 1), 30);
-	drawText(v.r[0].db.rotDist, vec3I(1010, 400), vec3I(1, 1, 1), 30);
-	drawText(ci::app::getElapsedSeconds(), vec3I(1010, 200), vec3I(1, 1, 1), 30);
+//	drawText(v.f.pl[0].height, vec3I(1010, 500), vec3I(1, 1, 1), 30);
+//	drawText(v.r[0].db.rotDist, vec3I(1010, 400), vec3I(1, 1, 1), 30);
 
 	gl::color(1, 1, 1);
 	//USER INTERFACE
-	buttons();
+	buttons(100);//size in px
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
 	if(v.debugText) textDraw();//dont run on truspeed sim, unnecessary
