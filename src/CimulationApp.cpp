@@ -76,7 +76,7 @@ public:
 	Vec2f R2S2(vec3 robot_coord);
 	Vec3f R2S3(float robot_coordX, float robot_coordY, float robot_coordZ);
 	Rectf R2S4(float p1X, float p1Y, float p2X, float p2Y);
-	void CimulationApp::robotDebug();
+	void robotDebug();
 	void drawClaw(robot *r);
 	void drawRobot(robot *r);
 	void draw();
@@ -466,7 +466,7 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 	const int dInBtw = 50;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
 	struct text{
 		string s;
-		float f;
+		double f;
 	};
 	text t[] = { 
 		{ "Angle:", v.r[0].p.mRot},

@@ -10,6 +10,7 @@
 #include "cinder/Text.h"
 #include "cinder/Font.h"
 #include <string>
+#include <sstream>
 
 
 //random #defines and other things that are used throughout all the files

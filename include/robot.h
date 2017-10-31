@@ -4,8 +4,10 @@
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "vec3.h"
-
+#include <sstream>
+#include <fstream>
 #include <iostream>
+
 //declares the class for the robot and all the data that goes with it. 
 class robot {
 public:
