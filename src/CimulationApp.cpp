@@ -317,8 +317,10 @@ void CimulationApp::goGrab(robot *r, field::element *c, int index) {
 		bool inFront = ((d2V[0] + d2V[1]) < (d2V[2] + d2V[3]));//checking if goal is closer to the front side
 		bool onRight = ((d2V[1] + d2V[2]) < (d2V[0] + d2V[3]));//checking if goal is closer to the right side
 		if (onRight) dir = -1;
-		if (!r->directlyInPath(true, r->d.size / 2, c->pos) || !inFront)//angle is not pointing towards goal
+		if (!r->directlyInPath(true, r->d.size / 2, c->pos) || !inFront) {//angle is not pointing towards goal
 			r->rotate(dir * speed);
+			r->forwards(0);
+		}
 		else r->rotate(0);
 		float offset = 0.5;//dosent update fast enough for small cones, needed little offset heuristic
 		if (r->p.position.distance(c->pos) > (r->d.size / 2 + c->radius) + offset && inFront) {//drive fwds towards goal
@@ -344,7 +346,7 @@ void CimulationApp::goGrab(robot *r, field::element *c, int index) {
 		else {
 			r->c.liftDown = false;
 		}
-		if (v.r[1].p.velocity.X == 0 && v.r[1].p.velocity.Y == 0 && v.r[1].d.touchingPole) {
+		if (v.r[1].p.velocity.X == 0 && v.r[1].p.velocity.Y == 0 && v.r[1].d.touchingPole) {//get it to do the same if touching fence
 			v.reRouting = true;
 		}
 	}
