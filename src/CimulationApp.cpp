@@ -204,14 +204,16 @@ void CimulationApp::update() {
 	//if(v.goal == 0)//used to be for waiting for cone, sets definitive target FOREVER, not the best
 		int closest = 0;//assumes cone 0 is closest
 		for (int i = 0; i < v.f.c.size()-1; i++) {
-			if (v.r[1].p.position.distance(v.f.c[i].pos) < v.r[1].p.position.distance(v.f.c[closest].pos)) {
-				float d2V[4];//can comment this stuff to get nearest cone. but better to get nearest cone IN FRONT (SLIGHTLY better score wise/time), gets stuck sometimes
-				for (int ver = 0; ver < 4; ver++) {
-					d2V[ver] = v.f.c[i].pos.distance(v.r[1].db.vertices[ver]);
+			if (v.f.c[i].pos.distance(v.f.pl[0].pos) > v.f.c[i].radius * 4 && v.f.c[i].pos.distance(v.f.pl[1].pos) > v.f.c[i].radius * 4) {
+				if (v.r[1].p.position.distance(v.f.c[i].pos) < v.r[1].p.position.distance(v.f.c[closest].pos)) {
+					float d2V[4];//can comment this stuff to get nearest cone. but better to get nearest cone IN FRONT (SLIGHTLY better score wise/time), gets stuck sometimes
+					for (int ver = 0; ver < 4; ver++) {
+						d2V[ver] = v.f.c[i].pos.distance(v.r[1].db.vertices[ver]);
+					}
+					bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
+					if (v.f.c[i].pos.Z <= cHeight && inFront)//so long as not already stacked or in the air
+						closest = i;//updates "closest" to whichever cone is closest
 				}
-				bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
-				if (v.f.c[i].pos.Z <= cHeight && inFront )//so long as not already stacked or in the air
-					closest = i;//updates "closest" to whichever cone is closest
 			}
 		}
 		v.goal = closest;
@@ -355,6 +357,15 @@ void CimulationApp::goGrab(robot *r, field::element *c, int index) {
 	}
 }
 void CimulationApp::reRoute(robot *r, field::element *e, int dir) {
+	/*float d2V[4];
+	for (int ver = 0; ver < 4; ver++) {
+		d2V[ver] = (int)e->pos.distance(r->db.vertices[ver]);
+	}
+	int direct = 1;
+	bool inFront = ((d2V[0] + d2V[1]) < (d2V[2] + d2V[3]));//checking if goal is closer to the front side
+	bool onRight = ((d2V[1] + d2V[2] < 1.2*d2V[0] + d2V[3]) && !inFront);//checking if goal is closer to the right side
+	if (onRight) direct = -1;*/
+
 	int poleNum = 0;//assuming robot is closer to pole0 than pole1
 	if (v.r[1].p.position.distance(v.f.pl[0].pos) > v.r[1].p.position.distance(v.f.pl[1].pos)) {
 		poleNum = 1;//robot is closer to pole1 than pole0
@@ -419,6 +430,10 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 			r->forwards(0);
 			r->rotate(0);
 		}
+	}
+	else {//stop moving
+		r->forwards(0);
+		r->rotate(0);
 	}
 }
 
