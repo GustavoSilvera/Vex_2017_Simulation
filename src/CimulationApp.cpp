@@ -313,16 +313,17 @@ void CimulationApp::goGrab(robot *r, field::element *c, int index) {
 	}
 	int dir = 1;
 	if (!v.reRouting) {
-		bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
-		bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
+		float speed = limitTo(MAXSPEED, 3*r->p.position.distance(c->pos));
+		bool inFront = ((d2V[0] + d2V[1]) < (d2V[2] + d2V[3]));//checking if goal is closer to the front side
+		bool onRight = ((d2V[1] + d2V[2]) < (d2V[0] + d2V[3]));//checking if goal is closer to the right side
 		if (onRight) dir = -1;
 		if (!r->directlyInPath(true, r->d.size / 2, c->pos) || !inFront)//angle is not pointing towards goal
-			r->rotate(dir * MAXSPEED);
+			r->rotate(dir * speed);
 		else r->rotate(0);
 		float offset = 0.5;//dosent update fast enough for small cones, needed little offset heuristic
 		if (r->p.position.distance(c->pos) > (r->d.size / 2 + c->radius) + offset && inFront) {//drive fwds towards goal
 			r->c.grabbing = false;
-			r->forwards(MAXSPEED);
+			r->forwards(speed);
 		}
 		else {
 			if (abs(r->c.liftPos - c->pos.Z) < c->height) r->c.grabbing = true;//only closes claw if on same level (height wise)
@@ -356,11 +357,11 @@ void CimulationApp::reRoute(robot *r, field::element *e, int dir) {
 	if (v.r[1].p.position.distance(v.f.pl[0].pos) > v.r[1].p.position.distance(v.f.pl[1].pos)) {
 		poleNum = 1;//robot is closer to pole1 than pole0
 	}
-	if (r->p.position.distance(v.f.pl[poleNum].pos) < (r->d.size)) {
+	if (r->p.position.distance(v.f.pl[poleNum].pos) < (r->d.size)) {//far enough out of the way
 		r->forwards(-100);
 	}
 	else {
-		if (r->directlyInPath(true, r->d.size, v.f.pl[poleNum].pos)) r->rotate(dir * 127);//moving to horizontal path (turning like 90°)
+		if (r->directlyInPath(true, r->d.size, v.f.pl[poleNum].pos)) r->rotate(dir * MAXSPEED);//moving to horizontal path (turning like 90°)
 		else v.reRouting = false;
 		r->forwards(0);
 		//v.reRouting = false;
@@ -372,12 +373,13 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 		d2V[ver] = e->pos.distance(r->db.vertices[ver]);
 	}
 	int dir = 1;
-	bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
+	bool inFront = (d2V[0] + d2V[1] < d2V[2] + d2V[3]);//checking if goal is closer to the front side
 	bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
 	if (onRight) dir = -1;
 	if (!v.reRouting) {
+		float speed = limitTo(MAXSPEED, 3*r->p.position.distance(e->pos));
 		if (!r->directlyInPath(true, r->d.size / 2, e->pos) || !inFront)//angle is not pointing towards goal
-			r->rotate(dir * MAXSPEED);
+			r->rotate(dir * speed);
 		else r->rotate(0);
 		if (r->c.grabbing) {//holding the cone
 			if (r->c.liftPos < e->height + e->stacked.size() + 4) r->c.liftUp = true;
@@ -389,7 +391,7 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 		}
 		if (r->c.liftPos >= e->height + 2 /*+ADD STACKED POS CHANGER HERE*/) {//wait until lift is reasonably high
 			if (r->p.position.distance(e->pos) > r->d.size*0.5 + e->radius + 2 && inFront) {//drive fwds towards goal
-				r->forwards(MAXSPEED*0.7);//slower since carrying object? eh idk
+				r->forwards(speed*0.7);//slower since carrying object? eh idk
 			}
 			else {
 				r->forwards(0);
