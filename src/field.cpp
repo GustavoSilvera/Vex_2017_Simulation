@@ -76,9 +76,14 @@ int field::calculateScore() {
 	}
 	return score;
 }
-float calcD2Edge(float a, float b, robot *robit) {
+float calcD2EdgeFront(float a, float b, robot *robit) {/*not taking into account the protrusion of mogo*/
 	//EXPLANATION HERE:
-	float C1 = ( ( (sqr(a) - sqr(b)) / robit->d.size) + robit->d.size) / 2;
+	float C1 = ( ( (sqr(a) - sqr(b)) / (robit->d.size)) + (robit->d.size)) / 2;
+	return sqrt(abs(sqr(a) - sqr(C1)));
+}
+float calcD2EdgeSide(float a, float b, robot *robit) {/*YES taking into account the protrusion of mogo*/
+	//EXPLANATION HERE:
+	float C1 = (((sqr(a) - sqr(b)) / (robit->d.size + robit->mg.protrusion*0.75)) + (robit->d.size + 0.75*robit->mg.protrusion)) / 2;
 	return sqrt(abs(sqr(a) - sqr(C1)));
 }
 //calculate distance to edge of robot
@@ -114,18 +119,21 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 		for (int v = 0; v < 4; v++) {
 			d2V[v] = pos.distance(robit->db.vertices[v]);
 		}
-		float d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
-		vec3 closestPoint;
+		float d2RobotEdge;
 		bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if cone is closer to the front side
+		bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if cone is closer to the right side
+		
 		if (robit->directlyInPath(true, robit->d.size, pos)) {//either directly in front or behing based off center x and y position
+			d2RobotEdge = calcD2EdgeFront(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
 			if (inFront) closestPoint = vec3(pos.X - (d2RobotEdge)*cos(gAngle), pos.Y + (d2RobotEdge)*sin(gAngle));//does work
 			else closestPoint = vec3(pos.X + (d2RobotEdge)*cos(gAngle), pos.Y - (d2RobotEdge)*sin(gAngle));//does work
 		}
 		//had to inverse x and y because horiontal lines
 		else if (robit->directlyInPath(false, robit->d.size, pos)) {
-			bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if cone is closer to the right side
+			d2RobotEdge = calcD2EdgeSide(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
 			if (onRight) closestPoint = vec3(pos.X + (d2RobotEdge)*sin(gAngle), pos.Y + (d2RobotEdge)*cos(gAngle));//does work
 			else closestPoint = vec3(pos.X - (d2RobotEdge)*sin(gAngle), pos.Y - (d2RobotEdge)*cos(gAngle));//does work
+
 		}
 		else {//not directly in path finds which vertice is the closest to the cone
 			int smallest_vertice = sortSmallVER(d2V[0], d2V[1], d2V[2], d2V[3]);
@@ -276,13 +284,15 @@ void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 		}
 		bool inFront, onRight;
 		vec3 closestPoint;
-		float d2Edge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
-		if (robit->directlyInPath(true, robit->d.size, pl->pos)) {
+		float d2Edge;//different because of protrusion of mogo
+		if (robit->directlyInPath(true, robit->d.size, pl->pos)) {/*in front or behind*/
+			d2Edge = calcD2EdgeFront(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
 			inFront = (d2V[0] + d2V[1] < d2V[2] + d2V[3]);//checking if cone is closer to the front side
 			if (inFront) closestPoint = vec3(pl->pos.X - (d2Edge)*cos(gAngle), pl->pos.Y + (d2Edge)*sin(gAngle));//does work
 			else closestPoint = vec3(pl->pos.X + (d2Edge)*cos(gAngle), pl->pos.Y - (d2Edge)*sin(gAngle));//does work
 		}
-		else if (robit->directlyInPath(false, robit->d.size, pl->pos)) {//DONT NEED HORIZONTAL CHECKING
+		else if (robit->directlyInPath(false, robit->d.size, pl->pos)) {
+			d2Edge = calcD2EdgeSide(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
 			bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if cone is closer to the right side
 			if (onRight) closestPoint = vec3(pl->pos.X + (d2Edge)*sin(gAngle), pl->pos.Y + (d2Edge)*cos(gAngle));//does work
 			else closestPoint = vec3(pl->pos.X - (d2Edge)*sin(gAngle), pl->pos.Y - (d2Edge)*cos(gAngle));//does work

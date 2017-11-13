@@ -56,6 +56,7 @@ public:
 		void collision(element *e);
 		void grabbed(robot *r, int index, int type);
 		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
+		vec3 closestPoint;
 	};
 	struct cone : public element {
 		cone(vec3 pos) : element(pos, cRad, cHeight), fellOn(0), landed(false) {}

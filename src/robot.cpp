@@ -145,12 +145,16 @@ bool robot::directlyInPath(bool vertical, int range, vec3 pos) {//vertical lines
 	float x = 0;//finds the y intercept
 	float cosDist = (range / 2) * cos((-p.mRot + 135) * PI / 180) * sqrt(2);
 	float sinDist = (range / 2) * sin((-p.mRot + 135) * PI / 180) * sqrt(2);
+	float protrusionSin = mg.protrusion * sin((p.mRot + 90) * PI / 180)*0.75;
+	float protrusionCos = mg.protrusion * cos((p.mRot + 90) * PI / 180)*0.75;
+
 	topLeft.X = p.position.X - cosDist;
 	topLeft.Y = p.position.Y + sinDist;
 	topRight.X = p.position.X + sinDist;//flipped sin and cos
 	topRight.Y = p.position.Y + cosDist;
-	bottomLeft.X = p.position.X - sinDist;//flipped sin and cos
-	bottomLeft.Y = p.position.Y - cosDist;
+	//added protrusion snippet to account for size change of base as mogo is flipped out
+	bottomLeft.X = p.position.X - sinDist - protrusionSin;//flipped sin and cos
+	bottomLeft.Y = p.position.Y - cosDist + protrusionCos;
 	if (vertical) {
 		db.slope = (topLeft.Y - bottomLeft.Y) / (topLeft.X - bottomLeft.X);//checks for vertical y intercepts
 		db.Yint[1] = db.slope * (x - (topRight.X - origin.X)) + (topRight.Y - origin.Y);
