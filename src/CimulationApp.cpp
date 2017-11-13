@@ -87,8 +87,10 @@ void CimulationApp::setup() {
 	//gl::enableVerticalSync();
 	v.r[0].TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
 	v.r[0].CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
+	v.r[0].CChanelVERT = gl::Texture(loadImage(loadAsset("CChanelSmallVERT.png")));
 	v.r[1].TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
 	v.r[1].CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
+	v.r[1].CChanelVERT = gl::Texture(loadImage(loadAsset("CChanelSmallVERT.png")));
 	v.f.fieldBare = gl::Texture(loadImage(loadAsset("InTheZoneFieldBare.jpg")));
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
@@ -373,7 +375,7 @@ void CimulationApp::reRoute(robot *r, field::element *e, int dir) {
 	if (r->p.position.distance(v.f.pl[poleNum].pos) < (r->d.size)) {//far enough out of the way
 		r->forwards(-100);
 	}
-	else {
+	else {//fix this little "heuristic" make it actually detect when theres an obstacle before it and turn around it
 		if (r->directlyInPath(true, r->d.size, v.f.pl[poleNum].pos)) r->rotate(dir * MAXSPEED);//moving to horizontal path (turning like 90°)
 		else v.reRouting = false;
 		r->forwards(0);
@@ -553,6 +555,7 @@ void CimulationApp::robotDebug() {
 		
 		gl::drawSolidCircle(Vec2f(v.f.f.inFromEnd*ppi*v.scalar+ppi*v.scalar*(v.r[0].p.position.X + (v.r[0].d.size / 2) * cos((-v.r[0].p.mRot) * PI / 180) * sqrt(2)),
 			v.f.f.inFromEnd*ppi*v.scalar+v.f.f.fieldSizeIn*ppi*v.scalar - ppi*v.scalar*(v.r[0].p.position.Y - (v.r[0].d.size / 2) * sin((-v.r[0].p.mRot) * PI / 180) * sqrt(2))), 5);
+		gl::color(1, 1, 1);//resets colours to regular
 }
 void CimulationApp::drawClaw(robot *r) {
 	gl::draw(v.r[0].CChanel, Area((r->c.clawSize)*ppi*v.scalar, (r->d.size*.5 + r->c.baseSize)*ppi*v.scalar, (-r->c.clawSize)*ppi*v.scalar, (r->d.size*.5)*ppi*v.scalar));
@@ -571,9 +574,8 @@ void CimulationApp::drawRobot(robot *r) {
 	gl::draw(r->TankBase, Area((-(r->d.size / 2))*ppi*v.scalar, (-(r->d.size / 2))*ppi*v.scalar, ((r->d.size / 2))*ppi*v.scalar, ((r->d.size / 2))*ppi*v.scalar));
 	//mogo
 	drawClaw(r);
-	gl::color(66.0 / 255, 135.0 / 255, 224.0 / 255);
-	gl::drawSolidRect(Area((-r->mg.clawPos - r->c.clawThick)*ppi*v.scalar, (-r->d.size*.5 - r->mg.clawHeight)*ppi*v.scalar, (-r->mg.clawPos + r->c.clawThick)*ppi*v.scalar, (-r->d.size*.5)*ppi*v.scalar));
-	gl::drawSolidRect(Area((r->mg.clawPos + r->c.clawThick)*ppi*v.scalar, (-r->d.size*.5 - r->mg.clawHeight)*ppi*v.scalar, (r->mg.clawPos - r->c.clawThick)*ppi*v.scalar, (-r->d.size*.5)*ppi*v.scalar));
+	gl::draw(v.r[0].CChanelVERT, Area((-r->mg.clawPos - r->mg.clawThick)*ppi*v.scalar, -r->mg.protrusion*ppi*v.scalar, (-r->mg.clawPos + r->mg.clawThick)*ppi*v.scalar, (-r->mg.protrusion - r->mg.clawHeight)*ppi*v.scalar));
+	gl::draw(v.r[0].CChanelVERT, Area((r->mg.clawPos + r->mg.clawThick)*ppi*v.scalar, -r->mg.protrusion*ppi*v.scalar, (r->mg.clawPos - r->mg.clawThick)*ppi*v.scalar, (-r->mg.protrusion - r->mg.clawHeight)*ppi*v.scalar));
 
 	glPopMatrix();//end of rotation code
 }
@@ -686,6 +688,7 @@ void CimulationApp::draw() {
 	gl::color(1, 1, 1);
 	//USER INTERFACE
 	buttons(100);//size in px
+	robotDebug();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
 	if(v.debugText) textDraw();//dont run on truspeed sim, unnecessary

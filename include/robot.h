@@ -57,16 +57,18 @@ public:
 		float clawThick;
 		float clawHeight;
 		float clawSpeed;
+		float protrusion;//useful for mogo coming out
 		bool grabbing = false;
 		int holding = -1;//index for which element is being grabbed, to draw it above all the rest. 
-		void claw(float Robsize, int type);
+		void claw(float robSize);
+		void mogo(float robSize);
 		bool liftUp, liftDown;
 		float liftSpeed;
 		float liftPos;
 		double maxHeight = 50;//50 inches max height
 	};
 		intake c;
-		intake mg;
+		intake mg;/*mogo intake is not rly a claw tho*/
 	struct physics {
 		float mRot = 0;//drawing rotation
 		vec3 position;//X, Y, and Z
@@ -97,6 +99,7 @@ public:
 	//other stuffs
 	ci::gl::Texture TankBase;
 	ci::gl::Texture CChanel;
+	ci::gl::Texture CChanelVERT;
 	struct position current;
 };
 #endif  // ROBOT_H

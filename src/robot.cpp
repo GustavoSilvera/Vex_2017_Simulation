@@ -15,12 +15,14 @@ robot::robot() {
 	c.clawSpeed = 0.5;
 	c.liftSpeed = 0.1;//idk
 	c.liftPos = 0;
+	c.protrusion = 0;//not protruding from baseout
 	c.liftUp = false;
 	c.liftDown = false;
-	mg.clawSize = MGRad;
-	mg.clawThick = d.size / 18;
+	mg.clawSize = MGRad-0.5;
+	mg.clawThick = d.size/12 ;
 	mg.clawPos = mg.clawSize;
-	mg.clawHeight = 2.5;
+	mg.clawHeight = 7.5;
+	mg.protrusion = 0;
 	mg.clawSpeed = 0.5;
 	mg.liftPos = 0;
 	db.distance = RESET;
@@ -166,27 +168,40 @@ void robot::setVertices() {
 	//math behind is based off basic trig and 45 45 90° triangle analytic geometry
 	float cosDist = (d.size / 2) * cos((-p.mRot + 135) * PI / 180) * sqrt(2);
 	float sinDist = (d.size / 2) * sin((-p.mRot + 135) * PI / 180) * sqrt(2);
+	float protrusionSin = mg.protrusion * sin((p.mRot+90) * PI / 180)*0.75;
+	float protrusionCos = mg.protrusion * cos((p.mRot+90) * PI / 180)*0.75;
+
 		db.vertices[0].X = p.position.X - cosDist;
 		db.vertices[0].Y = p.position.Y + sinDist;
 		db.vertices[1].X = p.position.X + sinDist;//flipped sin and cos
 		db.vertices[1].Y = p.position.Y + cosDist;
-		db.vertices[2].X = p.position.X + cosDist;
-		db.vertices[2].Y = p.position.Y - sinDist;
-		db.vertices[3].X = p.position.X - sinDist;//flipped sin and cos
-		db.vertices[3].Y = p.position.Y - cosDist;
+		db.vertices[2].X = p.position.X + cosDist - protrusionSin;
+		db.vertices[2].Y = p.position.Y - sinDist + protrusionCos;
+		db.vertices[3].X = p.position.X - sinDist - protrusionSin;//flipped sin and cos
+		db.vertices[3].Y = p.position.Y - cosDist + protrusionCos;
 }
-void robot::intake::claw(float RobSize, int type) {
+void robot::intake::claw(float robSize) {
 	//janky animations for claw 
 	clawSize = 0.1*liftPos + cRad;
-	baseSize = 0.05*liftPos + RobSize / 18;
+	baseSize = 0.05*liftPos + robSize / 18;
 	clawHeight = 0.07*liftPos + 2;
-	clawThick= 0.01*liftPos + 0.5;
+	clawThick = 0.01*liftPos + 0.5;
 	clawSpeed = 0.051*liftPos + 0.5;
 
-	if (grabbing) { if (clawPos > RobSize / 18) clawPos -= clawSpeed; }//animation for claw close
+	if (grabbing) { if (clawPos > robSize / 18) clawPos -= clawSpeed; }//animation for claw close
 	else { if (clawPos < clawSize) clawPos += clawSpeed; }//animation for claw open
-	if (grabbing == false) holding = -1 - type*100;//reset index (TO EITHER -1 (for cones) or -101 (for MOGOS))
+	if (grabbing == false) holding = -1;//reset index (TO -1 (for cones) )
 	if (liftDown  && liftPos > 0 && clawPos > clawSize) clawPos -= clawSpeed;
+}
+
+void robot::intake::mogo(float robSize) {
+	//what i can do is change the back vertices of the robot to extend up to where the mogo protrudes to
+	//this would allow me to keep the same physics i have but also have the cones and stuff interact with the mogo thing
+	//k whatever ill do it below
+	
+	if (grabbing) { if (protrusion < clawHeight) protrusion += 0.2; }//animation for protrusion mogo
+	else { if (protrusion > 0) protrusion -= 0.1; }//animation for intruding mogo
+	if (grabbing == false) holding = -1;//reset index (TO -1 (for cones) )
 }
 
 void robot::update() {
@@ -201,8 +216,8 @@ void robot::update() {
 	p.mRot += p.rotVel;
 	p.mRot = ((p.mRot / 360) - (long)(p.mRot / 360)) * 360;//only within 360° and -360° (takes the decimal portion and discards the whole number)
 	robot::setVertices();
-	c.claw(d.size, 0);
-	mg.claw(d.size, 1);
+	c.claw(d.size);
+	mg.mogo(d.size);
 	if (c.liftUp && c.liftPos < c.maxHeight) { c.liftPos += 4.5*c.liftSpeed; }
 	else if (c.liftDown && c.liftPos > 0) { c.liftPos -= 8.5*c.liftSpeed; }//goes faster coming down
 }
