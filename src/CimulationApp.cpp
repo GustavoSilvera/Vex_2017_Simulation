@@ -690,7 +690,7 @@ void CimulationApp::draw() {
 	gl::color(1, 1, 1);
 	//USER INTERFACE
 	buttons(100);//size in px
-	robotDebug();
+	//robotDebug();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
 	if(v.debugText) textDraw();//dont run on truspeed sim, unnecessary

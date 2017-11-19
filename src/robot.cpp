@@ -19,7 +19,7 @@ robot::robot() {
 	c.liftUp = false;
 	c.liftDown = false;
 	mg.clawSize = MGRad-0.5;
-	mg.clawThick = d.size/12 ;
+	mg.clawThick = d.size/18 ;
 	mg.clawPos = mg.clawSize;
 	mg.clawHeight = 7.5;
 	mg.protrusion = 0;
