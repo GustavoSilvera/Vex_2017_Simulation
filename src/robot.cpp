@@ -84,33 +84,7 @@ void robot::rotate(float power) {
 	if (abs(p.rotVel) < 0.1) p.rotVel = 0;
 }
 
-bool robot::driveFor(float inches) {
-	float power = 100 * inches;
-	float rateOfChange = 56.15;//constant changing the amount of initial change the acceleration goes through? maibe
-							   //calculate acceleration taking friction into account
-	float Xaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.X);
-	float Yaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.Y);
-	//limiting acceleration to 0.01, no need for further acceleration rly
-	if (abs(Xaccel) > 0.01) p.acceleration.X = Xaccel;
-	else p.acceleration.X = 0;
-	if (abs(Yaccel) > 0.01) p.acceleration.Y = Yaccel;
-	else p.acceleration.Y = 0;
-	if (abs(p.velocity.X) < 0.01) p.velocity.X = 0;
-	if (abs(p.velocity.Y) < 0.01) p.velocity.Y = 0;
-	return true;
-}
-bool robot::rotFor(float degrees) {
-	float power = degrees * 100;
-	float rateOfChange = 23.35;//constant changing the amount of initial change the acceleration goes through? maibe
-							   //calculate acceleration taking friction into account
-	float rotAccel = 2 * (power / rateOfChange) - (p.amountOfFriction*p.rotVel);
-	//limiting acceleration to 0.01, no need for further acceleration rly
-	if (abs(rotAccel) > 0.3) p.rotAcceleration = rotAccel;
-	else p.rotAcceleration = 0;
-	if (abs(p.rotVel) < 0.1) p.rotVel = 0;
-	db.rotDist = (int)p.mRot;
-	return true;
-}
+
 void robot::physics::speedMult(float base, float rot) {
 	velocity.X = getSign(velocity.X) * abs(velocity.X*base);
 	velocity.Y = getSign(velocity.Y) * abs(velocity.Y*base);
@@ -203,9 +177,14 @@ void robot::intake::mogo(float robSize) {
 	//this would allow me to keep the same physics i have but also have the cones and stuff interact with the mogo thing
 	//k whatever ill do it below
 	
-	if (grabbing) { if (protrusion < clawHeight) protrusion += 0.2; }//animation for protrusion mogo
-	else { if (protrusion > 0) protrusion -= 0.1; }//animation for intruding mogo
-	if (grabbing == false) holding = -1;//reset index (TO -1 (for cones) )
+	if (grabbing) { 
+		if (protrusion < clawHeight) protrusion += 0.3; 
+		holding = -1;
+	}//animation for protrusion mogo
+	else { 
+		if (protrusion > 0) protrusion -= 0.3; 
+	}//animation for intruding mogo
+	//if (grabbing == false) holding = -1;//reset index (TO -1 (for mogos) )
 }
 
 void robot::update() {
@@ -216,7 +195,7 @@ void robot::update() {
 	p.velocity = p.velocity + p.acceleration.times(1.0/60.0);
 	p.position.Y += p.velocity.Y * sin((p.mRot)*(PI / 180));//velocity scaled because of rotation
 	p.position.X += p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
-	p.rotVel += p.rotAcceleration*(1.0 / 60.0);
+	p.rotVel += 2*p.rotAcceleration*(1.0 / 60.0);//constant is based off realistic tests
 	p.mRot += p.rotVel;
 	p.mRot = ((p.mRot / 360) - (long)(p.mRot / 360)) * 360;//only within 360° and -360° (takes the decimal portion and discards the whole number)
 	robot::setVertices();

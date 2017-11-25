@@ -674,15 +674,26 @@ void CimulationApp::draw() {
 	else drawRobot(&v.r[0]);
 	
 	gl::color(1, 0, 0);
-	gl::drawSolidCircle(R2S2(vec3(v.f.c[v.goal].pos.X, v.f.c[v.goal].pos.Y) ), v.scalar*5);
-
-	gl::drawSolidCircle(R2S2(vec3(v.r[1].p.position.X, v.r[1].p.position.Y)), v.scalar * 5);
-
-	gl::drawSolidCircle(R2S2(vec3(v.f.c[30].closestPoint.X, v.f.c[30].closestPoint.Y)), v.scalar * 5);
+	//indicator for cone goal
+	gl::drawSolidCircle(R2S2(vec3(v.f.c[v.goal].pos.X, v.f.c[v.goal].pos.Y)), v.scalar*4);
+	gl::drawStrokedCircle(R2S2(vec3(v.f.c[v.goal].pos.X, v.f.c[v.goal].pos.Y)), v.scalar*v.f.c[v.goal].radius*ppi, 10);
+	gl::drawStrokedCircle(R2S2(vec3(v.f.c[v.goal].pos.X, v.f.c[v.goal].pos.Y)), v.scalar*v.f.c[v.goal].radius*ppi+1, 10);
+	gl::drawStrokedCircle(R2S2(vec3(v.f.c[v.goal].pos.X, v.f.c[v.goal].pos.Y)), v.scalar*v.f.c[v.goal].radius*ppi+2, 10);
 
 	//debug text
-	if (v.r[0].directlyInPath(false, v.r[0].d.size, v.f.c[30].pos)) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
+	gl::drawSolidCircle(R2S2(vec3(
+		v.r[0].p.position.X - v.r[0].mg.protrusion * cos((v.r[0].p.mRot) * PI / 180)*2, 
+		v.r[0].p.position.Y - v.r[0].mg.protrusion * sin((v.r[0].p.mRot) * PI / 180)*2)), v.scalar * 5);
+
+	//gl::drawSolidCircle(R2S2(vec3(v.f.c[30].closestPoint.X, v.f.c[30].closestPoint.Y)), v.scalar * 5);
+
+	if (v.r[0].mg.grabbing) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
+	drawText(v.r[0].mg.holding, vec3I(1000, 800), vec3I(0, 1, 0), 30);
+
+	//if (v.r[0].directlyInPath(false, v.r[0].d.size, v.f.c[30].pos)) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
+	//else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
+
 	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1010, 660), vec3I(1, 1, 1), 30);
 //	drawText(v.f.pl[0].height, vec3I(1010, 500), vec3I(1, 1, 1), 30);
 //	drawText(v.r[0].db.rotDist, vec3I(1010, 400), vec3I(1, 1, 1), 30);

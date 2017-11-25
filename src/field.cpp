@@ -141,42 +141,57 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 		}
 		float d2closestPoint = pos.distance(closestPoint);
 		vec3 R = (closestPoint + pos.times(-1)).times(radius / d2closestPoint) + pos;
-		if (d2closestPoint <= radius) {//touching
-			pos.X -= R.X - closestPoint.X;
-			pos.Y -= R.Y - closestPoint.Y;
-			bool crushingCone = //NEED TO FIX CONDITIONALS, DOSENT WORK
-				/*replaces all the tSides with direct copy from the fencepush code*/
-				((pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 225, 315)) ||//checking bottom
-					((f->fieldSizeIn - pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 45, 135)) ||//checking top
-					((f->fieldSizeIn - pos.X <= (radius + f->depthIn)) && (withinAngle(robit->p.mRot, 0, 45) ||//checking right P1
-				withinAngle(robit->p.mRot, 315, 360))) || //checking right P2
-				((pos.X <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 135, 225));//checking Left
-			//could change crushingCone to be affected for a smaller angle, so that the reverse push only happens if almost directly crushing against the fence
-			if (crushingCone ) {//HAVE only affected when pushing further into fence
-				int thresh = 3;//degrees of freedom
-				float currentVel = sqrt(sqr(robit->p.velocity.X) + sqr(robit->p.velocity.Y));
-				if (inFront) {
-					if (abs(d2V[0] - d2V[1]) > thresh) {
-						if (d2V[0] < d2V[1])//checking which way to rotate
-							robit->p.mRot += abs(currentVel * sin(gAngle));//angle is kinda iffy still
-						else if (d2V[0] > d2V[1])
-							robit->p.mRot -= abs(currentVel * sin(gAngle));
-					}
-				}
-				else if (abs(d2V[2] - d2V[3]) > thresh) {
-					if (d2V[2] > d2V[3])
-						robit->p.mRot -= abs(currentVel * sin(gAngle));
-					else if (d2V[2] < d2V[3])
-						robit->p.mRot += abs(currentVel * sin(gAngle));
-				}
-				robit->p.velocity.X = (R.X - closestPoint.X);
-				robit->p.velocity.Y = (R.Y - closestPoint.Y);
-			}
-			if (index + type * 100 <= numCones) {//if the type it's touching is a cone
-				pushCone.insert(index);
+		if (d2closestPoint <= radius || inPossession) {//touching
+			if (type == MOGO &&//is mogo?
+				abs(robit->mg.protrusion - 7.5)<0.5 &&//mogo is ar low position
+				!inFront &&//behind
+				robit->directlyInPath(true, robit->d.size/4, pos) &&//in front or back
+				pos.distance(robit->p.position) <= (robit->d.size*0.5+robit->mg.protrusion+3)) {//close to robot
+				if(!robit->mg.grabbing)inPossession = true;//only locks in when bringing mogo up (grabbing == false)
 			}
 			else {
-				pushMoGo.insert(index);
+				pos.X -= R.X - closestPoint.X;
+				pos.Y -= R.Y - closestPoint.Y;
+				bool crushingCone = 
+					((pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 225, 315)) ||//checking bottom
+					((f->fieldSizeIn - pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 45, 135)) ||//checking top
+					((f->fieldSizeIn - pos.X <= (radius + f->depthIn)) && (withinAngle(robit->p.mRot, 0, 45) ||//checking right P1
+						withinAngle(robit->p.mRot, 315, 360))) || //checking right P2
+						((pos.X <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 135, 225));//checking Left
+					//could change crushingCone to be affected for a smaller angle, so that the reverse push only happens if almost directly crushing against the fence
+				if (crushingCone) {//HAVE only affected when pushing further into fence
+					int thresh = 3;//degrees of freedom
+					float currentVel = sqrt(sqr(robit->p.velocity.X) + sqr(robit->p.velocity.Y));
+					if (inFront) {
+						if (abs(d2V[0] - d2V[1]) > thresh) {
+							if (d2V[0] < d2V[1])//checking which way to rotate
+								robit->p.mRot += abs(currentVel * sin(gAngle));//angle is kinda iffy still
+							else if (d2V[0] > d2V[1])
+								robit->p.mRot -= abs(currentVel * sin(gAngle));
+						}
+					}
+					else if (abs(d2V[2] - d2V[3]) > thresh) {
+						if (d2V[2] > d2V[3])
+							robit->p.mRot -= abs(currentVel * sin(gAngle));
+						else if (d2V[2] < d2V[3])
+							robit->p.mRot += abs(currentVel * sin(gAngle));
+					}
+					robit->p.velocity.X = (R.X - closestPoint.X);
+					robit->p.velocity.Y = (R.Y - closestPoint.Y);
+				}
+				if (index + type * 100 <= numCones) {//if the type it's touching is a cone
+					pushCone.insert(index);
+				}
+				else {
+					pushMoGo.insert(index);
+				}
+			}
+			if (inPossession) {//when doing the fancy animations (brings mogo into robit)
+				pos.X = robit->p.position.X - robit->mg.protrusion * cos((robit->p.mRot) * PI / 180)*2;
+				pos.Y = robit->p.position.Y - robit->mg.protrusion * sin((robit->p.mRot) * PI / 180)*2;
+			}
+			if (abs(robit->mg.protrusion - 7.5) < 0.5 && robit->mg.grabbing) {//when bringing the mogo down
+				inPossession = false;//no longer locked onto mogo
 			}
 		}
 		else if(d2closestPoint >=radius * 1.05) 
