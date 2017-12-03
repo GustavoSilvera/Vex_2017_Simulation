@@ -76,16 +76,13 @@ int field::calculateScore() {
 	}
 	return score;
 }
-float calcD2EdgeFront(float a, float b, robot *robit) {/*not taking into account the protrusion of mogo*/
+float calcD2Edge(float a, float b, robot *robit, float prop) {/*not taking into account the protrusion of mogo*/
 	//EXPLANATION HERE:
-	float C1 = ( ( (sqr(a) - sqr(b)) / (robit->d.size)) + (robit->d.size)) / 2;
+	//prop is for proportion of size of the square, like mogo (clawsize/size)vs full robot base(1)
+	float C1 = ( ( (sqr(a) - sqr(b)) / (prop*robit->d.size)) + (prop*robit->d.size)) / 2;
 	return sqrt(abs(sqr(a) - sqr(C1)));
 }
-float calcD2EdgeSide(float a, float b, robot *robit) {/*YES taking into account the protrusion of mogo*/
-	//EXPLANATION HERE:
-	float C1 = (((sqr(a) - sqr(b)) / (robit->d.size + robit->mg.protrusion*0.75)) + (robit->d.size + 0.75*robit->mg.protrusion)) / 2;
-	return sqrt(abs(sqr(a) - sqr(C1)));
-}
+
 //calculate distance to edge of robot
 void field::element::calcD2Vertices(robot *robit) {
 	/******db.vertices:*******
@@ -120,17 +117,17 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 			d2V[v] = pos.distance(robit->db.vertices[v]);
 		}
 		float d2RobotEdge;
-		bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if cone is closer to the front side
+		bool inFront = (d2V[0] + d2V[1] < d2V[2] + d2V[3]);//checking if cone is closer to the front side
 		bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if cone is closer to the right side
-		
+
 		if (robit->directlyInPath(true, robit->d.size, pos)) {//either directly in front or behing based off center x and y position
-			d2RobotEdge = calcD2EdgeFront(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
+			d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit, 1);//calculates the distance to the edge of the robit
 			if (inFront) closestPoint = vec3(pos.X - (d2RobotEdge)*cos(gAngle), pos.Y + (d2RobotEdge)*sin(gAngle));//does work
 			else closestPoint = vec3(pos.X + (d2RobotEdge)*cos(gAngle), pos.Y - (d2RobotEdge)*sin(gAngle));//does work
 		}
 		//had to inverse x and y because horiontal lines
 		else if (robit->directlyInPath(false, robit->d.size, pos)) {
-			d2RobotEdge = calcD2EdgeSide(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
+			d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit, 1);//calculates the distance to the edge of the robit
 			if (onRight) closestPoint = vec3(pos.X + (d2RobotEdge)*sin(gAngle), pos.Y + (d2RobotEdge)*cos(gAngle));//does work
 			else closestPoint = vec3(pos.X - (d2RobotEdge)*sin(gAngle), pos.Y - (d2RobotEdge)*cos(gAngle));//does work
 
@@ -145,20 +142,21 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 			if (type == MOGO &&//is mogo?
 				abs(robit->mg.protrusion - 7.5)<0.5 &&//mogo is ar low position
 				!inFront &&//behind
-				robit->directlyInPath(true, robit->d.size/4, pos) &&//in front or back
-				pos.distance(robit->p.position) <= (robit->d.size*0.5+robit->mg.protrusion+3)) {//close to robot
-				if(!robit->mg.grabbing)inPossession = true;//only locks in when bringing mogo up (grabbing == false)
+				robit->directlyInPath(true, robit->d.size / 4, pos) && //in front or back
+																	   //pos.distance(robit->p.position) <= (robit->d.size*0.5+robit->mg.protrusion+3) && 
+				pos.distance(robit->p.position) > robit->d.size*0.7) {
+				if (!robit->mg.grabbing)inPossession = true;//only locks in when bringing mogo up (grabbing == false)
 			}
 			else {
 				pos.X -= R.X - closestPoint.X;
 				pos.Y -= R.Y - closestPoint.Y;
-				bool crushingCone = 
+				bool crushingCone =
 					((pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 225, 315)) ||//checking bottom
 					((f->fieldSizeIn - pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 45, 135)) ||//checking top
 					((f->fieldSizeIn - pos.X <= (radius + f->depthIn)) && (withinAngle(robit->p.mRot, 0, 45) ||//checking right P1
 						withinAngle(robit->p.mRot, 315, 360))) || //checking right P2
 						((pos.X <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 135, 225));//checking Left
-					//could change crushingCone to be affected for a smaller angle, so that the reverse push only happens if almost directly crushing against the fence
+																								   //could change crushingCone to be affected for a smaller angle, so that the reverse push only happens if almost directly crushing against the fence
 				if (crushingCone) {//HAVE only affected when pushing further into fence
 					int thresh = 3;//degrees of freedom
 					float currentVel = sqrt(sqr(robit->p.velocity.X) + sqr(robit->p.velocity.Y));
@@ -187,18 +185,111 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 				}
 			}
 			if (inPossession) {//when doing the fancy animations (brings mogo into robit)
-				pos.X = robit->p.position.X - robit->mg.protrusion * cos((robit->p.mRot) * PI / 180)*2;
-				pos.Y = robit->p.position.Y - robit->mg.protrusion * sin((robit->p.mRot) * PI / 180)*2;
+				pos.X = robit->p.position.X - robit->mg.protrusion * cos((robit->p.mRot) * PI / 180) * 2;
+				pos.Y = robit->p.position.Y - robit->mg.protrusion * sin((robit->p.mRot) * PI / 180) * 2;
 			}
 			if (abs(robit->mg.protrusion - 7.5) < 0.5 && robit->mg.grabbing) {//when bringing the mogo down
 				inPossession = false;//no longer locked onto mogo
 			}
 		}
-		else if(d2closestPoint >=radius * 1.05) 
+		else if (d2closestPoint >= radius * 1.05)
 			if (index + type * 100 <= numCones) pushCone.erase(index);
 			else pushMoGo.erase(index);
 	}
 }
+void field::element::mogoColl(int index, robot *robit, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f) {
+	//collisions from robot
+	float d2V[4];
+	float d2MoGo = pos.distance(
+	vec3(
+		robit->p.position.X - robit->mg.protrusion * cos((robit->p.mRot) * PI / 180),
+		robit->p.position.Y - robit->mg.protrusion * sin((robit->p.mRot) * PI / 180) 
+	));
+	if (pos.Z < height && d2MoGo < renderRad * robit->d.size/2) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
+		for (int v = 0; v < 4; v++) {
+			d2V[v] = pos.distance(robit->db.MGVert[v]);
+		}
+		float d2RobotEdge;
+		bool inFront = (d2V[0] + d2V[1] < d2V[2] + d2V[3]);//checking if cone is closer to the front side
+		bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if cone is closer to the right side
+		float mogoProp = 2.5*(robit->mg.clawSize) / robit->d.size;//proportion of MOGO size to robot
+		if (robit->directlyInPath(true, mogoProp*robit->d.size, pos)) {//either directly in front or behing based off center x and y position
+			d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit, mogoProp);//calculates the distance to the edge of the robit
+			if (inFront) closestPointMOGO = vec3(pos.X - (d2RobotEdge)*cos(gAngle), pos.Y + (d2RobotEdge)*sin(gAngle));//does work
+			else closestPointMOGO = vec3(pos.X + (d2RobotEdge)*cos(gAngle), pos.Y - (d2RobotEdge)*sin(gAngle));//does work
+		}
+		//had to inverse x and y because horiontal lines
+		else if (robit->directlyInPath(false, robit->d.size + robit->mg.protrusion*2, pos)) {
+			d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit, mogoProp);//calculates the distance to the edge of the robit
+			if (onRight) closestPointMOGO = vec3(pos.X + (d2RobotEdge)*sin(gAngle), pos.Y + (d2RobotEdge)*cos(gAngle));//does work
+			else closestPointMOGO = vec3(pos.X - (d2RobotEdge)*sin(gAngle), pos.Y - (d2RobotEdge)*cos(gAngle));//does work
+		}
+		else {//not directly in path finds which vertice is the closest to the cone
+			int smallest_vertice = sortSmallVER(d2V[0], d2V[1], d2V[2], d2V[3]);
+			closestPointMOGO = robit->db.MGVert[smallest_vertice];//closest point to center will then be the vertice
+		}
+		float d2closestPointMOGO = pos.distance(closestPointMOGO);
+		vec3 R = (closestPointMOGO + pos.times(-1)).times(radius / d2closestPointMOGO) + pos;
+		if (d2closestPointMOGO <= radius || inPossession) {//touching
+			if (type == MOGO &&//is mogo?
+				abs(robit->mg.protrusion - 7.5)<0.5 &&//mogo is ar low position
+				!inFront &&//behind
+				robit->directlyInPath(true, robit->d.size / 4, pos) && //in front or back
+																	   //pos.distance(robit->p.position) <= (robit->d.size*0.5+robit->mg.protrusion+3) && 
+				pos.distance(robit->p.position) > robit->d.size*0.7) {
+				if (!robit->mg.grabbing)inPossession = true;//only locks in when bringing mogo up (grabbing == false)
+			}
+			else {
+				pos.X -= R.X - closestPointMOGO.X;
+				pos.Y -= R.Y - closestPointMOGO.Y;
+				bool crushingCone =
+					((pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 225, 315)) ||//checking bottom
+					((f->fieldSizeIn - pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 45, 135)) ||//checking top
+					((f->fieldSizeIn - pos.X <= (radius + f->depthIn)) && (withinAngle(robit->p.mRot, 0, 45) ||//checking right P1
+						withinAngle(robit->p.mRot, 315, 360))) || //checking right P2
+						((pos.X <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 135, 225));//checking Left
+																								   //could change crushingCone to be affected for a smaller angle, so that the reverse push only happens if almost directly crushing against the fence
+				if (crushingCone) {//HAVE only affected when pushing further into fence
+					int thresh = 3;//degrees of freedom
+					float currentVel = sqrt(sqr(robit->p.velocity.X) + sqr(robit->p.velocity.Y));
+					if (inFront) {
+						if (abs(d2V[0] - d2V[1]) > thresh) {
+							if (d2V[0] < d2V[1])//checking which way to rotate
+								robit->p.mRot += abs(currentVel * sin(gAngle));//angle is kinda iffy still
+							else if (d2V[0] > d2V[1])
+								robit->p.mRot -= abs(currentVel * sin(gAngle));
+						}
+					}
+					else if (abs(d2V[2] - d2V[3]) > thresh) {
+						if (d2V[2] > d2V[3])
+							robit->p.mRot -= abs(currentVel * sin(gAngle));
+						else if (d2V[2] < d2V[3])
+							robit->p.mRot += abs(currentVel * sin(gAngle));
+					}
+					robit->p.velocity.X = (R.X - closestPointMOGO.X);
+					robit->p.velocity.Y = (R.Y - closestPointMOGO.Y);
+				}
+				if (index + type * 100 <= numCones) {//if the type it's touching is a cone
+					pushCone.insert(index);
+				}
+				else {
+					pushMoGo.insert(index);
+				}
+			}
+			if (inPossession) {//when doing the fancy animations (brings mogo into robit)
+				pos.X = robit->p.position.X - robit->mg.protrusion * cos((robit->p.mRot) * PI / 180) * 2;
+				pos.Y = robit->p.position.Y - robit->mg.protrusion * sin((robit->p.mRot) * PI / 180) * 2;
+			}
+			if (abs(robit->mg.protrusion - 7.5) < 0.5 && robit->mg.grabbing) {//when bringing the mogo down
+				inPossession = false;//no longer locked onto mogo
+			}
+		}
+		else if (d2closestPointMOGO >= radius * 1.05)
+			if (index + type * 100 <= numCones) pushCone.erase(index);
+			else pushMoGo.erase(index);
+	}
+}
+
 //functions for collisions between the element and the robot
 void field::element::collision(element *e) {//collisions from element->element
 	//ELEMENT *E IS WHAT IS BEING MOVED, NOT THE OTHER WAY AROUND
@@ -220,6 +311,7 @@ void field::physics(int index, element *e, robot *robit, int type) {
 			if (c[k].pos.Z < e->height){//had to add the landed, because the gravity would push it down further
 				e->fencePush(&f);//pushes the cone from the fence if touching
 				e->robotColl(index, robit, pushCones, pushMoGo, type, &f);
+				e->mogoColl(index, robit, pushCones, pushMoGo, type, &f);
 				if (k != index) e->collision(&c[k]);
 				else if (type != 0) e->collision(&c[k]);
 			}
@@ -230,6 +322,7 @@ void field::physics(int index, element *e, robot *robit, int type) {
 			if (mg[m].pos.Z < e->height) {//makes sure is within height of physics mattering
 				e->fencePush(&f);//pushes the mogo from the fence if touching
 				e->robotColl(index, robit, pushCones, pushMoGo, type, &f);
+				e->mogoColl(index, robit, pushCones, pushMoGo, type, &f);
 				if (m != index) e->collision(&mg[m]);
 				else if (type != 1) e->collision(&mg[m]);
 			}
@@ -301,13 +394,13 @@ void field::statGoalPush(stat *pl, robot *robit, fence *f) {
 		vec3 closestPoint;
 		float d2Edge;//different because of protrusion of mogo
 		if (robit->directlyInPath(true, robit->d.size, pl->pos)) {/*in front or behind*/
-			d2Edge = calcD2EdgeFront(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
+			d2Edge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit, 1);//calculates the distance to the edge of the robit
 			inFront = (d2V[0] + d2V[1] < d2V[2] + d2V[3]);//checking if cone is closer to the front side
 			if (inFront) closestPoint = vec3(pl->pos.X - (d2Edge)*cos(gAngle), pl->pos.Y + (d2Edge)*sin(gAngle));//does work
 			else closestPoint = vec3(pl->pos.X + (d2Edge)*cos(gAngle), pl->pos.Y - (d2Edge)*sin(gAngle));//does work
 		}
 		else if (robit->directlyInPath(false, robit->d.size, pl->pos)) {
-			d2Edge = calcD2EdgeSide(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit);//calculates the distance to the edge of the robit
+			d2Edge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit, 1);//calculates the distance to the edge of the robit
 			bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if cone is closer to the right side
 			if (onRight) closestPoint = vec3(pl->pos.X + (d2Edge)*sin(gAngle), pl->pos.Y + (d2Edge)*cos(gAngle));//does work
 			else closestPoint = vec3(pl->pos.X - (d2Edge)*sin(gAngle), pl->pos.Y - (d2Edge)*cos(gAngle));//does work

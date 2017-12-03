@@ -127,8 +127,8 @@ bool robot::directlyInPath(bool vertical, int range, vec3 pos) {//vertical lines
 	topRight.X = p.position.X + sinDist;//flipped sin and cos
 	topRight.Y = p.position.Y + cosDist;
 	//added protrusion snippet to account for size change of base as mogo is flipped out
-	bottomLeft.X = p.position.X - sinDist - protrusionSin;//flipped sin and cos
-	bottomLeft.Y = p.position.Y - cosDist + protrusionCos;
+	bottomLeft.X = p.position.X - sinDist;// -protrusionSin;//flipped sin and cos
+	bottomLeft.Y = p.position.Y - cosDist;// +protrusionCos;
 	if (vertical) {
 		db.slope = (topLeft.Y - bottomLeft.Y) / (topLeft.X - bottomLeft.X);//checks for vertical y intercepts
 		db.Yint[1] = db.slope * (x - (topRight.X - origin.X)) + (topRight.Y - origin.Y);
@@ -146,17 +146,29 @@ void robot::setVertices() {
 	//math behind is based off basic trig and 45 45 90° triangle analytic geometry
 	float cosDist = (d.size / 2) * cos((-p.mRot + 135) * PI / 180) * sqrt(2);
 	float sinDist = (d.size / 2) * sin((-p.mRot + 135) * PI / 180) * sqrt(2);
-	float protrusionSin = mg.protrusion * sin((p.mRot+90) * PI / 180)*0.75;
-	float protrusionCos = mg.protrusion * cos((p.mRot+90) * PI / 180)*0.75;
-
+	float protrusionSin = mg.protrusion * sin((p.mRot+90) * PI / 180);
+	float protrusionCos = mg.protrusion * cos((p.mRot+90) * PI / 180);
+	float mogoProp = 2.5*(mg.clawSize) / d.size;//proportion of MOGO size to robot
 		db.vertices[0].X = p.position.X - cosDist;
 		db.vertices[0].Y = p.position.Y + sinDist;
 		db.vertices[1].X = p.position.X + sinDist;//flipped sin and cos
 		db.vertices[1].Y = p.position.Y + cosDist;
-		db.vertices[2].X = p.position.X + cosDist - protrusionSin;
-		db.vertices[2].Y = p.position.Y - sinDist + protrusionCos;
-		db.vertices[3].X = p.position.X - sinDist - protrusionSin;//flipped sin and cos
-		db.vertices[3].Y = p.position.Y - cosDist + protrusionCos;
+		db.vertices[2].X = p.position.X + cosDist;
+		db.vertices[2].Y = p.position.Y - sinDist;
+		db.vertices[3].X = p.position.X - sinDist;//flipped sin and cos
+		db.vertices[3].Y = p.position.Y - cosDist;
+		//mogo verticies
+		float centerCos = cos((p.mRot) * PI / 180) * 2;
+		float centerSin = sin((p.mRot) * PI / 180) * 2;
+
+		db.MGVert[0].X = p.position.X - centerCos - mogoProp*cosDist - protrusionSin;
+		db.MGVert[0].Y = p.position.Y - centerSin + mogoProp*sinDist + protrusionCos;
+		db.MGVert[1].X = p.position.X - centerCos + mogoProp*sinDist - protrusionSin;//flipped sin and cos
+		db.MGVert[1].Y = p.position.Y - centerSin + mogoProp*cosDist + protrusionCos;
+		db.MGVert[2].X = p.position.X - centerCos + mogoProp*cosDist - protrusionSin;
+		db.MGVert[2].Y = p.position.Y - centerSin - mogoProp*sinDist + protrusionCos;
+		db.MGVert[3].X = p.position.X - centerCos - mogoProp*sinDist - protrusionSin;//flipped sin and cos
+		db.MGVert[3].Y = p.position.Y - centerSin - mogoProp*cosDist + protrusionCos;
 }
 void robot::intake::claw(float robSize) {
 	//janky animations for claw 

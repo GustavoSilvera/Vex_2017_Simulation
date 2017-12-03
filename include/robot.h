@@ -9,7 +9,7 @@
 #include <iostream>
 
 //declares the class for the robot and all the data that goes with it. 
-class robot {
+class robot{
 public:
 	robot();
 
@@ -22,8 +22,6 @@ public:
 	void setVertices();
 	void readScript();
 	bool directlyInPath(bool vertical, int range, vec3 pos);
-	bool driveFor(float inches);
-	bool rotFor(float degrees);
 	bool readyToRun = false;
 	bool thinking = false;
 	enum action  {
@@ -47,6 +45,9 @@ public:
 	//output text
 		float distance;//simulating a real worl vex encoder shaft
 		float rotDist;//simulating a real world vex gyro 
+	//mogo square
+		float MGYint[2];
+		vec3 MGVert[4];
 	};
 	debug db;
 	//claw

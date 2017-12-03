@@ -53,10 +53,12 @@ public:
 		void calcD2Vertices(robot *r);
 		void fencePush(fence *f);
 		void robotColl(int index, robot *r, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f);
+		void mogoColl(int index, robot *r, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f);
 		void collision(element *e);
 		void grabbed(robot *r, int index, int type);
 		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
 		vec3 closestPoint;
+		vec3 closestPointMOGO;
 		bool inPossession = false;//if being held or whatnot
 	};
 	struct cone : public element {
