@@ -50,14 +50,11 @@ public:
 		vec3 pos;
 		float radius;//size of the object;
 		/*const*/ float height;
-		void calcD2Vertices(robot *r);
 		void fencePush(fence *f);
 		void robotColl(int index, robot *r, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f);
-		void mogoColl(int index, robot *r, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f);
 		void collision(element *e);
-		void grabbed(robot *r, int index, int type);
+		void collideWith(robot *robit, vec3 closestPoint, fence *f, int type, int index, std::set<int> &pushCone, std::set<int> &pushMoGo, float *d2V);
 		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
-		vec3 closestPoint;
 		vec3 closestPointMOGO;
 		bool inPossession = false;//if being held or whatnot
 	};
@@ -80,6 +77,8 @@ public:
 	std::vector<MoGo> mg;
 	std::vector<stat> pl;//poles in the field
 	void statGoalPush(stat *pl, robot *r, fence *f);
+
+	void collisionBW(robot *r, element *e);
 	void physics(int index, element *e, robot *r, int type);
 	void fallingOn(cone *fall, robot *r, int index);
 	int calculateScore();
