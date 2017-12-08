@@ -4,6 +4,7 @@
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "vec3.h"
+#include "randomstuff.h"
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -12,7 +13,7 @@
 class robot{
 public:
 	robot();
-
+	void updateFeatures();
 	void forwards(float power);
 	void rotate(float power);
 	float truSpeed(int degree, float value);
@@ -66,7 +67,7 @@ public:
 		bool liftUp, liftDown;
 		float liftSpeed;
 		float liftPos;
-		double maxHeight = 50;//50 inches max height
+		float maxHeight = 50;//50 inches max height
 	};
 		intake c;
 		intake mg;/*mogo intake is not rly a claw tho*/
@@ -84,8 +85,9 @@ public:
 	};
 		physics p;
 	struct details {
+		float motorSpeed = (float)MAXSPEED;
 		float basePower;
-		int size = 18;
+		float size = 18;
 		bool touchingPole = false;
 		bool frontStop = false, backStop = false;
 	};

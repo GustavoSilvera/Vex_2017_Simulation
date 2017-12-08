@@ -184,8 +184,8 @@ void field::element::collideWith(robot *robit, vec3 closestPoint, fence *f, int 
 void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f) {
 	//collisions from robot
 	float d2Robot = pos.distance(robit->p.position);
+	float d2V[4] = {0, 0, 0, 0};
 	if (pos.Z < height && d2Robot < renderRad * robit->d.size) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
-		float d2V[4];
 		for (int v = 0; v < 4; v++) {
 			d2V[v] = pos.distance(robit->db.vertices[v]);//defines all the distance variables
 		}	
@@ -194,34 +194,35 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 		if (d2closestPoint <= radius || inPossession) {//touching
 			collideWith(robit, closestPoint, f, type, index, pushCone, pushMoGo, d2V);
 		}
-		else if (d2closestPoint >= radius * 1.05) {
-			if (index + type * 100 <= numCones) pushCone.erase(index);
-			else pushMoGo.erase(index);
+		else if (d2closestPoint >= radius * 1.05) {//just a little bit further than the edge. 
+			if (index + type * 100 <= numCones) pushCone.erase(index);//removes from set
+			else pushMoGo.erase(index);//removes from set
 		}
 	}
 	float mogoProp = 2.5*(robit->mg.clawSize) / robit->d.size;//proportion of MOGO size to robot
-	float d2MoGo = pos.distance(
-		vec3(
-			robit->p.position.X - robit->mg.protrusion * cos((robit->p.mRot) * PI / 180),
-			robit->p.position.Y - robit->mg.protrusion * sin((robit->p.mRot) * PI / 180)
-		));
-	if (pos.Z < height && d2MoGo < renderRad * robit->d.size / 2) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
-		float d2Vmogo[4];
-		for (int v = 0; v < 4; v++) {
-			d2Vmogo[v] = pos.distance(robit->db.MGVert[v]);
-		}
-		 closestPointMOGO = findClosest(robit, pos, d2Vmogo, mogoProp);//calculates the closest point given the vertices
-		float d2closestPoint = pos.distance(closestPointMOGO);
-		if (d2closestPoint <= radius || inPossession) {//touching
-			collideWith(robit, closestPointMOGO, f, type, index, pushCone, pushMoGo, d2Vmogo);
-		}
-		else if (d2closestPoint >= radius * 1.05) {
-			if (index + type * 100 <= numCones) pushCone.erase(index);
-			else pushMoGo.erase(index);
+	if(!inFront(d2V)){//only do mogo calcs if behind
+		float d2MoGo = pos.distance(
+			vec3(
+				robit->p.position.X - robit->mg.protrusion * cos((robit->p.mRot) * PI / 180),
+				robit->p.position.Y - robit->mg.protrusion * sin((robit->p.mRot) * PI / 180)
+			));
+		if (pos.Z < height && d2MoGo < renderRad * robit->d.size / 2) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
+			float d2Vmogo[4];
+			for (int v = 0; v < 4; v++) {
+				d2Vmogo[v] = pos.distance(robit->db.MGVert[v]);
+			}
+			closestPointMOGO = findClosest(robit, pos, d2Vmogo, mogoProp);//calculates the closest point given the vertices
+			float d2closestPoint = pos.distance(closestPointMOGO);
+			if (d2closestPoint <= radius || inPossession) {//touching
+				collideWith(robit, closestPointMOGO, f, type, index, pushCone, pushMoGo, d2Vmogo);
+			}
+			else if (d2closestPoint >= radius * 1.05) {
+				if (index + type * 100 <= numCones) pushCone.erase(index);
+				else pushMoGo.erase(index);
+			}
 		}
 	}
 }
-
 //functions for collisions between the element and the robot
 void field::element::collision(element *e) {//collisions from element->element
 	//ELEMENT *E IS WHAT IS BEING MOVED, NOT THE OTHER WAY AROUND
@@ -258,14 +259,6 @@ void field::physics(int index, element *e, robot *robit, int type) {
 			}
 		}
 	}
-
-	//LOL poles dont need to move
-	/*if (e->pos.Z <= pl[1].height) {//so long as within touching distance. 
-		for (int p = 0; p < pl.size(); p++) {
-			if (index != p) e->collision(&pl[p]);
-			else if (type != 2) e->collision(&pl[p]);
-		}
-	}*/
 }
 //function for calling all the collision functions together for el->el and el->robot
 float field::fence::poleEquation(float xPoint, float yPoint, float slope, float value) {

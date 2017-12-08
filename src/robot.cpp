@@ -7,31 +7,34 @@
 
 
 robot::robot() {
-	c.clawSize = cRad;
-	c.baseSize = d.size / 18;
-	c.clawPos = c.clawSize;
-	c.clawThick = 0.5;
-	c.clawHeight = 2;
-	c.clawSpeed = 0.5;
-	c.liftSpeed = 0.1;//idk
 	c.liftPos = 0;
 	c.protrusion = 0;//not protruding from baseout
 	c.liftUp = false;
+	c.clawSpeed = 0.5;
 	c.liftDown = false;
-	mg.clawSize = MGRad-0.5;
-	mg.clawThick = d.size/18 ;
-	mg.clawPos = mg.clawSize;
-	mg.clawHeight = 7.5;
 	mg.protrusion = 0;
-	mg.clawSpeed = 0.5;
 	mg.liftPos = 0;
 	db.distance = RESET;
 	db.rotDist = RESET;
 	p.position = vec3(69.6, 69.6, 0);//initial robot position
-
+	updateFeatures();
+	c.clawPos = c.clawSize;
 	//vector stuff
 }//constructor 
-
+void robot::updateFeatures() {
+	//physical features
+	c.clawSize = d.size / 6;//3
+	c.baseSize = d.size / 18;//1
+	c.clawThick = d.size / 36;//0.5
+	c.clawSpeed = d.size / 36;//0.5;
+	c.liftSpeed = d.size / 180;//0.1
+	c.clawHeight = d.size / 9;//2
+	mg.clawSpeed = d.size / 36;//0.5
+	mg.clawSize = d.size / 4;//4
+	mg.clawThick = d.size / 18;//1
+	mg.clawPos = mg.clawSize;//inf
+	mg.clawHeight = (1 / 2.4)*d.size;//7.5
+}
 void robot::forwards(float power) {
 	//konstants that should be changed later
 	if(power != 0) d.basePower = power;
@@ -121,7 +124,6 @@ bool robot::directlyInPath(bool vertical, int range, vec3 pos) {//vertical lines
 	float sinDist = (range / 2) * sin((-p.mRot + 135) * PI / 180) * sqrt(2);
 	float protrusionSin = mg.protrusion * sin((p.mRot + 90) * PI / 180)*0.75;
 	float protrusionCos = mg.protrusion * cos((p.mRot + 90) * PI / 180)*0.75;
-
 	topLeft.X = p.position.X - cosDist;
 	topLeft.Y = p.position.Y + sinDist;
 	topRight.X = p.position.X + sinDist;//flipped sin and cos
@@ -172,7 +174,7 @@ void robot::setVertices() {
 }
 void robot::intake::claw(float robSize) {
 	//janky animations for claw 
-	clawSize = 0.1*liftPos + cRad;
+	//clawSize = 0.1*liftPos + cRad;
 	baseSize = 0.05*liftPos + robSize / 18;
 	clawHeight = 0.07*liftPos + 2;
 	clawThick = 0.01*liftPos + 0.5;
@@ -190,11 +192,11 @@ void robot::intake::mogo(float robSize) {
 	//k whatever ill do it below
 	
 	if (grabbing) { 
-		if (protrusion < clawHeight) protrusion += 0.3; 
+		if (protrusion < clawHeight) protrusion += (robSize/18)*0.3; 
 		holding = -1;
 	}//animation for protrusion mogo
 	else { 
-		if (protrusion > 0) protrusion -= 0.3; 
+		if (protrusion > 0) protrusion -= (robSize/18)*0.3;
 	}//animation for intruding mogo
 	//if (grabbing == false) holding = -1;//reset index (TO -1 (for mogos) )
 }
@@ -215,16 +217,17 @@ void robot::update() {
 	mg.mogo(d.size);
 	if (c.liftUp && c.liftPos < c.maxHeight) { c.liftPos += 4.5*c.liftSpeed; }
 	else if (c.liftDown && c.liftPos > 0) { c.liftPos -= 8.5*c.liftSpeed; }//goes faster coming down
+	updateFeatures();
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {
-	if (ctrl.ArrowKeyUp && !d.frontStop) forwards(MAXSPEED);//checking up key
-	else if (ctrl.ArrowKeyDown && ! d.backStop) forwards(-MAXSPEED);//checking down key
+	if (ctrl.ArrowKeyUp && !d.frontStop) forwards(d.motorSpeed);//checking up key
+	else if (ctrl.ArrowKeyDown && ! d.backStop) forwards(-d.motorSpeed);//checking down key
 	else if (jAnalogY != 0) forwards(truSpeed(3, -jAnalogY));//chacking analog drawing
 	else forwards(0);//welp, no movement
 
-	if (ctrl.RotLeft) rotate(MAXSPEED);//checking left key
-	else if (ctrl.RotRight) rotate(-MAXSPEED);//checking right key
+	if (ctrl.RotLeft) rotate(d.motorSpeed);//checking left key
+	else if (ctrl.RotRight) rotate(-d.motorSpeed);//checking right key
 	else if (abs(jAnalogX) > 10) rotate(-jAnalogX);//checking analog drawing
 	else rotate(0);//welp, no rotation
 }

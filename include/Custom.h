@@ -1,5 +1,5 @@
-#if !defined(NAV_H)
-#define NAV_H
+#if !defined(CUSTOM_H)
+#define CUSTOM_H
 #include "cinder/gl/gl.h"
 #include "cinder/ImageIo.h"
 #include "cinder/gl/Texture.h"
@@ -9,16 +9,17 @@
 #include "robot.h"
 #include "randomstuff.h"
 
+#include <vector>
+#include <string>
 
-class nav {
+class customize {
 public:
-	nav(robot *r);
+	customize(robot *r);
 	bool isInit;	
 	void initialize(robot *r);
-	void textOutput(robot *r);
-	void navUpdate(robot *r);
-	void calculatePos(robot *r);
-
-
+	void controlPanel(robot *r, float scalar);
+	void Text();
+	int size = 18;
+	float scale;
 };
 #endif

@@ -12,7 +12,7 @@
 #include "joystick.h"
 #include "field.h"
 #include "PID.h"
-#include "nav.h"
+#include "Custom.h"
 #include "TruSpeed.h"
 #include "robot.h"
 
@@ -33,11 +33,11 @@ public:
 	robot r[2];
 	tSpeed tS;
 	PID pid;
-	nav n;
+	//customize c;
 	field f;
 	joystick j;
 
-	vex() : tS(&r[0]), pid(&r[0]), n(&r[0]), f(&r[0], &r[1]){}
+	vex() : tS(&r[0]), pid(&r[0]),/* c(&r[0]), */f(&r[0], &r[1]){}
 	bool debugText = true;
 	bool recording = false;
 	int goal = 32;//defaulted first cone
@@ -51,7 +51,7 @@ struct simulation {
 	int hovering = 1;//which button is being hovered over. if any
 	enum SimulationType {
 		PIDCTRL,
-		NAVIGATION,
+		CUSTOMIZE,
 		TRUSPEED,
 		FIELD
 	};
@@ -73,6 +73,17 @@ public:
 	void goGrab(robot *r, field::element *e, int index);
 	void stackOn(robot *r, field::element *e);
 	void reRoute(robot *r, field::element *e, int dir);
+	//for customize panel
+	void controlPanel(robot *r);
+	void callAction(bool increase, int buttonAction);
+	bool buttonHover(int x, int y, int x2, int y2, int index, int buttonAction);
+	void ctrlButton(int x, int y, int x2, int y2, float scalar, int buttonAction);
+	struct customizePanel {
+		float size = 18;
+		float motorPower = MAXSPEED;//power for the base
+	};
+	customizePanel cp;
+	//for drawing stuff
 	Vec2f R2S2(vec3 robot_coord);
 	Vec3f R2S3(float robot_coordX, float robot_coordY, float robot_coordZ);
 	Rectf R2S4(float p1X, float p1Y, float p2X, float p2Y);
@@ -100,7 +111,7 @@ void CimulationApp::setup() {
 }
 //cinder::functions
 void CimulationApp::mouseDown(MouseEvent event) {
-	if (event.isLeft())	s.mouseClicked = true;
+	if (event.isLeft()) s.mouseClicked = true;
 	if (s.SimRunning == s.PIDCTRL) v.pid.pid.requestedValue = event.getX();//gets whats needed for PID to activate
 }
 void CimulationApp::mouseUp(MouseEvent event) {
@@ -153,7 +164,10 @@ void CimulationApp::update() {
 	v.r[0].update();//calls robot update function
 	v.r[1].update();//calls enemy robot update function
 	switch (s.SimRunning) {
-	case simulation::NAVIGATION:
+	case simulation::CUSTOMIZE:
+		v.r[0].d.size = cp.size;
+		v.r[0].d.motorSpeed = cp.motorPower;
+
 		tX = 1200;
 		v.j.drawX = 300 * v.scalar;
 		v.j.drawY = 300 * v.scalar;
@@ -161,7 +175,6 @@ void CimulationApp::update() {
 		v.pid.isInit = false;
 		v.f.isInit = false;
 		v.tS.isInit = false;
-		v.n.isInit = true;
 		v.r[0].moveAround(v.j.analogX, v.j.analogY);
 		v.pid.pid.isRunning = false;
 		break;
@@ -173,7 +186,6 @@ void CimulationApp::update() {
 		v.pid.isInit = true;
 		v.f.isInit = false;
 		v.tS.isInit = false;
-		v.n.isInit = false;
 		v.pid.PIDUpdate(&v.r[0]);
 		break;
 	case simulation::TRUSPEED:
@@ -184,7 +196,6 @@ void CimulationApp::update() {
 		v.pid.isInit = false;
 		v.f.isInit = false;
 		v.tS.isInit = true;
-		v.n.isInit = false;
 		v.tS.TruSpeedUpdate(&v.r[0]);
 		v.pid.pid.isRunning = false;
 		break;
@@ -196,7 +207,6 @@ void CimulationApp::update() {
 		v.pid.isInit = false;
 		v.f.isInit = true;
 		v.tS.isInit = false;
-		v.n.isInit = false;
 		v.f.FieldUpdate(&v.r[0], &v.r[1]);
 		v.pid.pid.isRunning = false;
 		v.r[0].moveAround(v.j.analogX, v.j.analogY);
@@ -474,7 +484,7 @@ void CimulationApp::buttons(int buttonSize) {//function for drawing the buttons
 		gl::drawStrokedRoundedRect(Area(v.scalar *(bX[i] - 50 + dInBtw*i), v.scalar*(bY - 25), v.scalar*(bX[i] + 50 + dInBtw*i), v.scalar*( bY + 25)), 5);//ROUNDED rectangle with corner rad of 7
 		gl::color(1, 1, 1);//resets colour 
 		if (i == 0)gl::drawString("PID", Vec2f(v.scalar*(bX[i] - 20), v.scalar*(bY - 12.5)), Color(1, 1, 1), Font("Arial", v.scalar * 25));
-		else if (i == 1)gl::drawString("NAV", Vec2f(v.scalar*(bX[i] - 18 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar*25));
+		else if (i == 1)gl::drawString("Customize", Vec2f(v.scalar*(bX[i] - 48 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar*25));
 		else if (i == 2)gl::drawString("TRUSpeed", Vec2f(v.scalar*(bX[i] - 49 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar * 25));
 		else if (i == 3)gl::drawString("Auton", Vec2f(v.scalar*(bX[i] - 35 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar * 29));
 		else if (i == 4)gl::drawString("Macro", Vec2f(v.scalar*(bX[i] - 35 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar * 29));
@@ -511,6 +521,69 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 	}
 }
 
+void CimulationApp::callAction(bool increase, int buttonAction) {
+	if (buttonAction == 0) {
+		if (increase) cp.size += 0.1;
+		else cp.size -= 0.1;
+	}
+	else if (buttonAction == 1) {
+		if (increase) cp.motorPower++;
+		else cp.motorPower--;
+	}
+}
+bool CimulationApp::buttonHover(int x, int y, int x2, int y2, int index, int buttonAction) {
+	if (mousePos.X > (x) &&
+		mousePos.X < (x2) &&
+		mousePos.Y > (y) && 
+		mousePos.Y < (y2)) {//within boundaries for each button based off their index
+		//mouse is hovering
+		if (s.mouseClicked == true){
+			if(index == 0) {//left button
+				callAction(false, buttonAction);
+			}
+			else if (index == 1) {//right button
+				callAction(true, buttonAction);
+			}
+		}
+		return true;
+	}
+	return false;
+}
+void CimulationApp::ctrlButton(int x, int y, int x2, int y2, float scalar, int buttonAction) {
+	Color(1, 0, 0);
+	int sizeOf = (x2 - x);
+	x *= scalar; y *= scalar; x2 *= scalar; y2 *= scalar;//gets scaling out of the way
+	float dInBtwn = sizeOf*1.15;
+	for (int i = 0; i < 2; i++) {
+		if (buttonHover(x + i*dInBtwn, y, x2 + i*dInBtwn, y2, i, buttonAction))
+			gl::color(1, 0, 0);//if the button's index is equal to whichever button's index is being hovered over
+		else  gl::color(1, 1, 1); 
+		gl::drawStrokedRoundedRect(Area(x + i*dInBtwn, y, x2 + i*dInBtwn, y2), 5);//ROUNDED rectangle with corner rad of 7
+		if (i == 0) gl::drawString("<--", Vec2f(0.5*(x + x2) - 20 + i*dInBtwn, 0.5*(y + y2) - 10), Color(1, 1, 1), Font("Arial", scalar * 30));
+		else gl::drawString("-->", Vec2f(0.5*(x + x2) - 20 + i*dInBtwn, 0.5*(y + y2) - 10), Color(1, 1, 1), Font("Arial", scalar * 30));
+	}
+}
+void CimulationApp::controlPanel(robot *r) {//function for drawing the buttons 
+	const int dInBtw = 50;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
+	struct text {
+		string s;
+		double f;
+	};
+	text t[] = {
+		{ "Size:", cp.size },
+		{ "Power:", cp.motorPower }
+	};
+	int i = 0;
+	//use str.length() to get number of chars and dynamically push back other things
+	for (text& ti : t) {
+		int tY = (i + 1) * dInBtw;//increment x position for each button based off index
+		gl::drawString(ti.s, Vec2f(v.scalar*(tX - ti.s.length()*17), v.scalar*(tY)), Color(1, 1, 1), Font("Arial", v.scalar * 40));
+		drawText(ti.f, vec3I(v.scalar*(tX), v.scalar*(tY)), vec3I(1, 1, 1), v.scalar * 40);
+		int buttonStart = tX + ti.s.length() * 10;
+		ctrlButton(buttonStart, tY, buttonStart + 60, tY + 30, v.scalar, i);
+		++i;
+	}
+}
 // Map robot coordinates to screen coordinates.
 Vec2f CimulationApp::R2S2(vec3 robot_coord) {
 	return Vec2f(ppi * v.scalar * (v.f.f.inFromEnd + robot_coord.X), ppi * v.scalar * (v.f.f.inFromEnd + v.f.f.fieldSizeIn - robot_coord.Y) );
@@ -624,18 +697,20 @@ void CimulationApp::draw() {
 	glDepthRange(0.0f, 1.0f);
 	glClearDepth(1.0f);*/
 	//joystick analog drawing
-	if (s.SimRunning == s.NAVIGATION || s.SimRunning == s.TRUSPEED || s.SimRunning == s.FIELD) {//only for navigation and truspeed sim
-		drawJoystick(&v.r[0], &v.j);
+	if (s.SimRunning == s.CUSTOMIZE ) {//only for CUSTOMIZE and truspeed sim
+		controlPanel(&v.r[0]);
 	}
 	if (s.SimRunning == s.PIDCTRL) {
 		v.pid.textOutput(&v.r[0]);
 		v.pid.graphPlot();
 	}
 	if (s.SimRunning == s.TRUSPEED) {
+		drawJoystick(&v.r[0], &v.j);
 		v.tS.graphPlot();//draws the graph
 		v.tS.textOutput(&v.r[0], &v.j);//draws the text for the graph
 	}
 	if (s.SimRunning == s.FIELD) {//when field button is pressed
+		drawJoystick(&v.r[0], &v.j);
 		if (v.recording) {
 			int size = 10;//pixels in which to draw the rectangles width
 			gl::color(1, 0, 0);
@@ -730,6 +805,6 @@ void CimulationApp::draw() {
 	//robotDebug();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
-	if(v.debugText) textDraw();//dont run on truspeed sim, unnecessary
+	if(v.debugText && s.SimRunning != s.CUSTOMIZE) textDraw();//dont run on truspeed sim, unnecessary
 }
 CINDER_APP_NATIVE(CimulationApp, RendererGl)
