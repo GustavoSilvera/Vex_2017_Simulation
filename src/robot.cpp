@@ -190,7 +190,7 @@ void robot::intake::claw(float robSize) {
 void robot::intake::mogo(float robSize) {	
 	if (grabbing) { 
 		if (protrusion < clawHeight) protrusion += (robSize/18)*0.3; 
-		holding = -1;
+		//holding = -1;
 	}//animation for protrusion mogo
 	else { 
 		if (protrusion > 0) protrusion -= (robSize/18)*0.3;

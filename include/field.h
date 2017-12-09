@@ -16,7 +16,7 @@
 //LOOKIE HERE: http://vexcompetition.es/wp-content/uploads/2017/04/IntheZone-Field-specifications.pdf
 class field {
 public:
-	field(robot *r, robot *r2);
+	field(std::vector<robot> *r);
 
 
 	typedef int mobileGoalIndex;
@@ -25,8 +25,8 @@ public:
 	//std::set<mobileGoalIndex> pushMoGo;
 	//std::set<coneIndex> pushCones;
 
-	void FieldUpdate(robot *r, robot *r2);
-	void initialize(robot *r, robot *r2);
+	void FieldUpdate(std::vector<robot> *r);
+	void initialize(std::vector<robot> *r);
 	bool isInit; // suggestion: construct instead of initialize
 
 	struct fence {
@@ -55,7 +55,6 @@ public:
 		void collision(element *e);
 		void collideWith(robot *robit, vec3 closestPoint, fence *f, int type, int index, float *d2V);
 		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
-		vec3 closestPointMOGO;
 		bool inPossession = false;//if being held or whatnot
 	};
 	struct cone : public element {

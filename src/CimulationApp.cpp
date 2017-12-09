@@ -7,6 +7,7 @@
 #include "cinder/Font.h"
 #include <ostream>
 #include <fstream>
+#include <vector>
 #include <filesystem>
 //my own headers
 #include "joystick.h"
@@ -30,14 +31,13 @@ vec3 startPos;
 vec3 mousePos;
 class vex {
 public:
-	robot r[2];
+	std::vector<robot> r;
 	tSpeed tS;
 	PID pid;
 	//customize c;
 	field f;
 	joystick j;
-
-	vex() : tS(&r[0]), pid(&r[0]),/* c(&r[0]), */f(&r[0], &r[1]){}
+	vex() : r(2),tS(&r[0]), pid(&r[0]), f(&r){}
 	bool debugText = true;
 	bool recording = false;
 	int goal = 32;//defaulted first cone
@@ -207,7 +207,7 @@ void CimulationApp::update() {
 		v.pid.isInit = false;
 		v.f.isInit = true;
 		v.tS.isInit = false;
-		v.f.FieldUpdate(&v.r[0], &v.r[1]);
+		v.f.FieldUpdate(&v.r);
 		v.pid.pid.isRunning = false;
 		v.r[0].moveAround(v.j.analogX, v.j.analogY);
 		break;
@@ -787,16 +787,16 @@ void CimulationApp::draw() {
 		v.r[0].p.position.X - v.r[0].mg.protrusion * cos((v.r[0].p.mRot) * PI / 180)*2, 
 		v.r[0].p.position.Y - v.r[0].mg.protrusion * sin((v.r[0].p.mRot) * PI / 180)*2)), v.scalar * 5);
 
-	gl::drawSolidCircle(R2S2(vec3(v.f.c[30].closestPointMOGO.X, v.f.c[30].closestPointMOGO.Y)), v.scalar * 5);
+	//gl::drawSolidCircle(R2S2(vec3(v.f.c[30].closestPointMOGO.X, v.f.c[30].closestPointMOGO.Y)), v.scalar * 5);
 
 	if (v.r[0].mg.grabbing) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	drawText(v.r[0].mg.holding, vec3I(1000, 800), vec3I(0, 1, 0), 30);
 
-	//if (v.r[0].directlyInPath(false, v.r[0].d.size, v.f.c[30].pos)) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
+	//if (v.r[0].mg.grabbing) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	//else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 
-	//drawText(v.f.f.twentyPoint[0].size(), vec3I(1010, 660), vec3I(1, 1, 1), 30);
+	drawText(v.r[0].mg.holding, vec3I(1010, 660), vec3I(1, 1, 1), 30);
 //	drawText(v.f.pl[0].height, vec3I(1010, 500), vec3I(1, 1, 1), 30);
 //	drawText(v.r[0].db.rotDist, vec3I(1010, 400), vec3I(1, 1, 1), 30);
 
