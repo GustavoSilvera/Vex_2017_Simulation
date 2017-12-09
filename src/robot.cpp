@@ -23,6 +23,7 @@ robot::robot() {
 }//constructor 
 void robot::updateFeatures() {
 	//physical features
+	
 	c.clawSize = d.size / 6;//3
 	c.baseSize = d.size / 18;//1
 	c.clawThick = d.size / 36;//0.5
@@ -174,7 +175,7 @@ void robot::setVertices() {
 }
 void robot::intake::claw(float robSize) {
 	//janky animations for claw 
-	//clawSize = 0.1*liftPos + cRad;
+	clawSize = 0.1*liftPos + 3;
 	baseSize = 0.05*liftPos + robSize / 18;
 	clawHeight = 0.07*liftPos + 2;
 	clawThick = 0.01*liftPos + 0.5;
@@ -186,11 +187,7 @@ void robot::intake::claw(float robSize) {
 	if (liftDown  && liftPos > 0 && clawPos > clawSize) clawPos -= clawSpeed;
 }
 
-void robot::intake::mogo(float robSize) {
-	//what i can do is change the back vertices of the robot to extend up to where the mogo protrudes to
-	//this would allow me to keep the same physics i have but also have the cones and stuff interact with the mogo thing
-	//k whatever ill do it below
-	
+void robot::intake::mogo(float robSize) {	
 	if (grabbing) { 
 		if (protrusion < clawHeight) protrusion += (robSize/18)*0.3; 
 		holding = -1;
@@ -202,22 +199,21 @@ void robot::intake::mogo(float robSize) {
 }
 
 void robot::update() {
-	p.acceleration.X += getSign(p.acceleration.X) * coneWeight * p.frictionC 
-		+ getSign(p.acceleration.X) * moGoWeight * p.frictionM;//slows down acceleration when encountering friction
-	p.acceleration.Y += getSign(p.acceleration.Y) * coneWeight * p.frictionC
-		+ getSign(p.acceleration.Y) * moGoWeight * p.frictionM;
+	//vec3 pushback = vec3(
+	//	cos((p.mRot)*(PI / 180)) * (getSign(p.velocity.X) * coneWeight * p.frictionC + getSign(p.velocity.X) * moGoWeight * p.frictionM),
+	//	sin((p.mRot)*(PI / 180)) * (getSign(p.velocity.Y) * coneWeight * p.frictionC + getSign(p.velocity.Y) * moGoWeight * p.frictionM));
 	p.velocity = p.velocity + p.acceleration.times(1.0/60.0);
 	p.position.Y += p.velocity.Y * sin((p.mRot)*(PI / 180));//velocity scaled because of rotation
 	p.position.X += p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
+//	p.position = p.position + pushback.times(-1);
 	p.rotVel += 2*p.rotAcceleration*(1.0 / 60.0);//constant is based off realistic tests
 	p.mRot += p.rotVel;
 	p.mRot = ((p.mRot / 360) - (long)(p.mRot / 360)) * 360;//only within 360° and -360° (takes the decimal portion and discards the whole number)
 	robot::setVertices();
 	c.claw(d.size);
 	mg.mogo(d.size);
-	if (c.liftUp && c.liftPos < c.maxHeight) { c.liftPos += 4.5*c.liftSpeed; }
-	else if (c.liftDown && c.liftPos > 0) { c.liftPos -= 8.5*c.liftSpeed; }//goes faster coming down
-	updateFeatures();
+	if (c.liftUp && c.liftPos < c.maxHeight) c.liftPos += 4.5*c.liftSpeed;
+	else if (c.liftDown && c.liftPos > 0) c.liftPos -= 8.5*c.liftSpeed; //goes faster coming down
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {

@@ -8,7 +8,6 @@ vec3 V2R(vec3 vec_coord) {
 	const int fieldSizeIn = 141.05;  // Field size in inches.
 	return vec3(fieldSizeIn - vec_coord.X, vec_coord.Y, vec_coord.Z);
 }
-
 field::cone initConeConfig[] = {//array for each configuration of the cone (in field.h)
 										   //{initial posision (X, Y), color (Y, R, B), radii }
 	{ V2R({ 2.9, 13.0 })},{ V2R({ 2.9, 23.2 })},{ V2R({ 2.9, 34.9 })},{ V2R({ 2.9, 46.7 })},
@@ -92,10 +91,14 @@ bool onRight(float *d2V) {
 void field::element::fencePush(fence *f) {
 	float d2Top = f->fieldSizeIn - pos.Y;
 	float d2Right = f->fieldSizeIn - pos.X;
-	if (pos.X <= (radius + f->depthIn)) pos.X += (radius + f->depthIn) - 1.1*pos.X;////checking left side
-	else if (d2Right <= (radius + f->depthIn)) pos.X -= (radius + f->depthIn) - 1.1*d2Right;//checking right side
-	if (d2Top <= (radius + f->depthIn)) pos.Y -= (radius + f->depthIn) - 1.1*d2Top;//checking top
-	else if (pos.Y <= (radius + f->depthIn)) pos.Y += (radius + f->depthIn) - 1.1*pos.Y;//checking bottom
+	if (pos.X <= (radius + f->depthIn)) //checking left side
+		pos.X += (radius + f->depthIn) - pos.X;
+	else if (d2Right <= (radius + f->depthIn)) //checking right side
+		pos.X -= (radius + f->depthIn) - d2Right;
+	if (d2Top <= (radius + f->depthIn))//checking top
+		pos.Y -= (radius + f->depthIn) - d2Top;
+	else if (pos.Y <= (radius + f->depthIn)) //checking bottom
+		pos.Y += (radius + f->depthIn) - pos.Y;
 }
 //calculates distances to the edges of the field, and acts accordingly
 bool withinAngle(double angle, int lowerBound, int upperBound) {
@@ -126,52 +129,25 @@ vec3 findClosest(robot *robit, vec3 pos, float *d2V, float prop) {
 	}
 	return closestPoint;
 }
-void field::element::collideWith(robot *robit, vec3 closestPoint, fence *f, int type, int index, std::set<int> &pushCone, std::set<int> &pushMoGo, float *d2V) {
+void field::element::collideWith(robot *robit, vec3 closestPoint, fence *f, int type, int index, float *d2V) {
 	if (type == MOGO &&//is mogo?
 		abs(robit->mg.protrusion - 7.5)<0.5 &&//mogo is ar low position
 		!inFront(d2V) &&//behind
 		robit->directlyInPath(true, robit->d.size / 4, pos) && //in front or back
-															   //pos.distance(robit->p.position) <= (robit->d.size*0.5+robit->mg.protrusion+3) && 
 		pos.distance(robit->p.position) > robit->d.size*0.7) {
-		if (!robit->mg.grabbing)inPossession = true;//only locks in when bringing mogo up (grabbing == false)
+		if (!robit->mg.grabbing)
+			inPossession = true;//only locks in when bringing mogo up (grabbing == false)
 	}
 	else {
 		vec3 R = (closestPoint + pos.times(-1)).times(radius / pos.distance(closestPoint)) + pos;
 		pos.X -= R.X - closestPoint.X;
 		pos.Y -= R.Y - closestPoint.Y;
-		bool crushingCone =
-			((pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 225, 315)) ||//checking bottom
-			((f->fieldSizeIn - pos.Y <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 45, 135)) ||//checking top
-			((f->fieldSizeIn - pos.X <= (radius + f->depthIn)) && (withinAngle(robit->p.mRot, 0, 45) ||//checking right P1
-				withinAngle(robit->p.mRot, 315, 360))) || //checking right P2
-				((pos.X <= (radius + f->depthIn)) && withinAngle(robit->p.mRot, 135, 225));//checking Left
-																						   //could change crushingCone to be affected for a smaller angle, so that the reverse push only happens if almost directly crushing against the fence
-		if (crushingCone) {//HAVE only affected when pushing further into fence
-			int thresh = 3;//degrees of freedom
-			float currentVel = sqrt(sqr(robit->p.velocity.X) + sqr(robit->p.velocity.Y));
-			if (inFront(d2V)) {
-				if (abs(d2V[0] - d2V[1]) > thresh) {
-					if (d2V[0] < d2V[1])//checking which way to rotate
-						robit->p.mRot += abs(currentVel * sin(gAngle));//angle is kinda iffy still
-					else if (d2V[0] > d2V[1])
-						robit->p.mRot -= abs(currentVel * sin(gAngle));
-				}
-			}
-			else if (abs(d2V[2] - d2V[3]) > thresh) {
-				if (d2V[2] > d2V[3])
-					robit->p.mRot -= abs(currentVel * sin(gAngle));
-				else if (d2V[2] < d2V[3])
-					robit->p.mRot += abs(currentVel * sin(gAngle));
-			}
-			robit->p.velocity.X = (R.X - closestPoint.X);
-			robit->p.velocity.Y = (R.Y - closestPoint.Y);
-		}
-		if (index + type * 100 <= numCones) {//if the type it's touching is a cone
-			pushCone.insert(index);
-		}
-		else {
-			pushMoGo.insert(index);
-		}
+		//pushback for robot
+		float weight = 0.0;
+		if (type == MOGO) weight = moGoWeight;
+		else weight = coneWeight;
+		robit->p.position.X += weight * (R.X - closestPoint.X);
+		robit->p.position.Y += weight * (R.Y - closestPoint.Y);
 	}
 	if (inPossession) {//when doing the fancy animations (brings mogo into robit)
 		pos.X = robit->p.position.X - robit->mg.protrusion * cos((robit->p.mRot) * PI / 180) * 2;
@@ -181,7 +157,7 @@ void field::element::collideWith(robot *robit, vec3 closestPoint, fence *f, int 
 		inPossession = false;//no longer locked onto mogo
 	}
 }
-void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone, std::set<int> &pushMoGo, int type, fence *f) {
+void field::element::robotColl(int index, robot *robit, int type, fence *f) {
 	//collisions from robot
 	float d2Robot = pos.distance(robit->p.position);
 	float d2V[4] = {0, 0, 0, 0};
@@ -191,12 +167,8 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 		}	
 		vec3 closestPoint = findClosest(robit, pos, d2V, 1);//calculates the closest point given the vertices
 		float d2closestPoint = pos.distance(closestPoint);
-		if (d2closestPoint <= radius || inPossession) {//touching
-			collideWith(robit, closestPoint, f, type, index, pushCone, pushMoGo, d2V);
-		}
-		else if (d2closestPoint >= radius * 1.05) {//just a little bit further than the edge. 
-			if (index + type * 100 <= numCones) pushCone.erase(index);//removes from set
-			else pushMoGo.erase(index);//removes from set
+		if (d2closestPoint < radius || inPossession) {//touching
+			collideWith(robit, closestPoint, f, type, index, d2V);
 		}
 	}
 	float mogoProp = 2.5*(robit->mg.clawSize) / robit->d.size;//proportion of MOGO size to robot
@@ -214,12 +186,9 @@ void field::element::robotColl(int index, robot *robit, std::set<int> &pushCone,
 			closestPointMOGO = findClosest(robit, pos, d2Vmogo, mogoProp);//calculates the closest point given the vertices
 			float d2closestPoint = pos.distance(closestPointMOGO);
 			if (d2closestPoint <= radius || inPossession) {//touching
-				collideWith(robit, closestPointMOGO, f, type, index, pushCone, pushMoGo, d2Vmogo);
+				collideWith(robit, closestPointMOGO, f, type, index, d2Vmogo);
 			}
-			else if (d2closestPoint >= radius * 1.05) {
-				if (index + type * 100 <= numCones) pushCone.erase(index);
-				else pushMoGo.erase(index);
-			}
+			
 		}
 	}
 }
@@ -240,20 +209,20 @@ void field::element::collision(element *e) {//collisions from element->element
 //functions for collisions between the element and another element
 void field::physics(int index, element *e, robot *robit, int type) {
 	if (e->pos.Z <= c[0].height) {//assuming general cone height when on ground (dosent interact with grounded objects)
+		e->robotColl(index, robit, type, &f);
+		e->fencePush(&f);//pushes the cone from the fence if touching
 		for (int k = 0; k < c.size(); k++) {
 			if (c[k].pos.Z < e->height){//had to add the landed, because the gravity would push it down further
-				e->fencePush(&f);//pushes the cone from the fence if touching
-				e->robotColl(index, robit, pushCones, pushMoGo, type, &f);
 				if (k != index) e->collision(&c[k]);
 				else if (type != 0) e->collision(&c[k]);
 			}
 		}
 	}
 	if (e->pos.Z <= mg[1].height) {//assuming general mogo height when on ground (dosent interact with grounded objects)
+		e->robotColl(index, robit, type, &f);
+		e->fencePush(&f);//pushes the mogo from the fence if touching
 		for (int m = 0; m < mg.size(); m++) {
 			if (mg[m].pos.Z < e->height) {//makes sure is within height of physics mattering
-				e->fencePush(&f);//pushes the mogo from the fence if touching
-				e->robotColl(index, robit, pushCones, pushMoGo, type, &f);
 				if (m != index) e->collision(&mg[m]);
 				else if (type != 1) e->collision(&mg[m]);
 			}
@@ -498,7 +467,6 @@ void field::MoGo::zoneScore(fence *f, int index) {
 	}
 }
 //function for having a 'grabbed' element lock in place
-
 void field::FieldUpdate(robot *robit, robot *r2) {
 	if (!isInit) initialize(robit, r2);
 	f.wallPush(robit);
@@ -540,9 +508,9 @@ void field::FieldUpdate(robot *robit, robot *r2) {
 		statGoalPush(&pl[i], r2, &f);
 		physics(i, &pl[i], r2, type);
 	}
-	robit->p.frictionC = pushCones.size();
-	robit->p.frictionM = pushMoGo.size();
-	r2->p.frictionC = pushCones.size();
-	r2->p.frictionM = pushMoGo.size();
+	//robit->p.frictionC = pushCones.size();
+	//robit->p.frictionM = pushMoGo.size();
+	//r2->p.frictionC = pushCones.size();
+	//r2->p.frictionM = pushMoGo.size();
 }
 //update task for the entire field simulation

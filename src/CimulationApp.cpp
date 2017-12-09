@@ -699,6 +699,7 @@ void CimulationApp::draw() {
 	//joystick analog drawing
 	if (s.SimRunning == s.CUSTOMIZE ) {//only for CUSTOMIZE and truspeed sim
 		controlPanel(&v.r[0]);
+		v.r[0].updateFeatures();
 	}
 	if (s.SimRunning == s.PIDCTRL) {
 		v.pid.textOutput(&v.r[0]);

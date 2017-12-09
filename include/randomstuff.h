@@ -25,7 +25,7 @@
 #define mgHeight 9.6
 #define statHeight 24.6
 #define coneWeight 0.3
-#define moGoWeight 0.8
+#define moGoWeight 0.7
 #define coefMag 1.0//e.e
 #define RESET 0
 #define MAXSPEED 127
@@ -46,6 +46,10 @@ inline float sqr(float value) {
 }
 inline float limitTo(float limit, float value) {
 	if (abs(value) < abs(limit)) return value;
+	else return getSign(value) * abs(limit);
+}
+inline float limitFrom(float limit, float value) {
+	if (abs(value) > abs(limit)) return value;
 	else return getSign(value) * abs(limit);
 }
 inline void drawText(float text, vec3I pos, vec3I colour, int size) {//simplified way of printing variables as text to the display
