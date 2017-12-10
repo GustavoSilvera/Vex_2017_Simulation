@@ -69,13 +69,12 @@ public:
 		void mogoGrab(robot *robit, int index);
 		void zoneScore(fence *f, int index);
 	};
-	struct stat : public element {
-		stat(vec3 pos, float initRad, float initHeight) : element(pos, initRad, initHeight) {}
+	struct stago : public element {
+		stago(vec3 pos, float initRad, float initHeight) : element(pos, initRad, initHeight) {}
 	};
 	std::vector<cone> c;
 	std::vector<MoGo> mg;
-	std::vector<stat> pl;//poles in the field
-	void statGoalPush(stat *pl, robot *r, fence *f);
+	std::vector<stago> pl;//poles in the field
 
 	void physics(int index, element *e, robot *r, int type);
 	void fallingOn(cone *fall, robot *r, int index);

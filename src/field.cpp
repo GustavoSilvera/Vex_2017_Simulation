@@ -36,10 +36,10 @@ field::MoGo initMoGoConfig[] = {//array for each configuration of the mobile goa
 };
 int numMoGos = sizeof(initMoGoConfig) / sizeof(field::MoGo);
 
-field::stat initPoleConfig[] = {
+field::stago initPoleConfig[] = {
 	{ V2R({ 93, 47.3 }), 4, 24},{ V2R({ 46.9, 94 }), 4, 24}
 };
-int numPoles = sizeof(initPoleConfig) / sizeof(field::stat);
+int numPoles = sizeof(initPoleConfig) / sizeof(field::stago);
 field::field(std::vector<robot> *r) : isInit(true) {
 	field::initialize(r);
 }
@@ -53,9 +53,14 @@ void field::initialize(std::vector<robot> *r) {
 	(*r)[0].p.position.Y = 35;
 	(*r)[0].p.mRot = 45;
 	(*r)[1].reset();
-	(*r)[1].p.position.X = 117;
-	(*r)[1].p.position.Y = 117;
+	(*r)[1].p.position.X = 97;
+	(*r)[1].p.position.Y = 128;
 	(*r)[1].p.mRot = 225;
+	(*r)[2].reset();
+	(*r)[2].p.position.X = (*r)[1].p.position.Y;//equidistant and symmetric from friend
+	(*r)[2].p.position.Y = (*r)[1].p.position.X;
+	(*r)[2].p.mRot = 225;
+
 	fieldInit = false;
 	isInit = true;//so that this only gets called ONCE when the field tab is running
 }
@@ -134,12 +139,19 @@ void field::element::collideWith(robot *robit, vec3 closestPoint, fence *f, int 
 	pos.X -= R.X - closestPoint.X;
 	pos.Y -= R.Y - closestPoint.Y;
 	//pushback for robot
-	if (!inPossession && !robit->mg.grabbing) {//makes sure not to pushback robot if picking up a mogo
-		float weight = 0.0;
-		if (type == MOGO) weight = moGoWeight;
-		else weight = coneWeight;
+	float weight = 0.0;
+	if (type == MOGO) weight = moGoWeight;
+	else if(type == CONE) weight = coneWeight;
+	else weight = 1;
+	if (!inPossession && !robit->mg.grabbing ) {//makes sure not to pushback robot if picking up a mogo
 		robit->p.position.X += weight * (R.X - closestPoint.X);
 		robit->p.position.Y += weight * (R.Y - closestPoint.Y);
+		if(type == STAGO) robit->p.velocity = vec3(0, 0, 0);
+	}
+	else if (type == STAGO) {//still push on stago
+		robit->p.position.X += weight * (R.X - closestPoint.X);
+		robit->p.position.Y += weight * (R.Y - closestPoint.Y);
+		robit->p.velocity = vec3(0, 0, 0);
 	}
 }
 void field::element::robotColl(int index, robot *robit, int type, fence *f) {
@@ -281,61 +293,6 @@ void field::fence::wallPush(robot *robit) {
 		}
 	}
 }
-void field::statGoalPush(stat *pl, robot *robit, fence *f) {
-	float d2obj = robit->p.position.distance(pl->pos);
-	if (d2obj < renderRad * robit->d.size) {
-		float d2V[4];
-		for (int v = 0; v < 4; v++) {
-			d2V[v] = pl->pos.distance(robit->db.vertices[v]);
-		}
-		vec3 closestPoint;
-		float d2Edge;//different because of protrusion of mogo
-		if (robit->directlyInPath(true, robit->d.size, pl->pos)) {/*in front or behind*/
-			d2Edge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit, 1);//calculates the distance to the edge of the robit
-			if (inFront(d2V)) closestPoint = vec3(pl->pos.X - (d2Edge)*cos(gAngle), pl->pos.Y + (d2Edge)*sin(gAngle));//does work
-			else closestPoint = vec3(pl->pos.X + (d2Edge)*cos(gAngle), pl->pos.Y - (d2Edge)*sin(gAngle));//does work
-		}
-		else if (robit->directlyInPath(false, robit->d.size, pl->pos)) {
-			d2Edge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit, 1);//calculates the distance to the edge of the robit
-			if (onRight(d2V)) closestPoint = vec3(pl->pos.X + (d2Edge)*sin(gAngle), pl->pos.Y + (d2Edge)*cos(gAngle));//does work
-			else closestPoint = vec3(pl->pos.X - (d2Edge)*sin(gAngle), pl->pos.Y - (d2Edge)*cos(gAngle));//does work
-		}
-		else {//not directly in path finds which vertice is the closest to the cone
-			int smallest_vertice = sortSmallVER(d2V[0], d2V[1], d2V[2], d2V[3]);
-			closestPoint = robit->db.vertices[smallest_vertice];//closest point to center will then be the vertice
-		}
-		float d2closestPoint = closestPoint.distance(pl->pos);
-		vec3 R = (closestPoint + pl->pos.times(-1)).times(pl->radius / d2closestPoint) + pl->pos;
-		if (d2closestPoint <= pl->radius) {//touching
-			robit->d.touchingPole = true;
-			robit->p.position.X += (R.X - closestPoint.X);
-			robit->p.position.Y += (R.Y - closestPoint.Y);
-			robit->p.velocity = vec3(0, 0, 0);
-			//rotation when hits the stationary goal
-			int thresh = 3;//degrees of freedom
-			if (robit->directlyInPath(true, robit->d.size, pl->pos)) {
-				float rotScale = 0.065; //constant for rotation scaling when hits pole smaller == smoother but slower
-				if (inFront(d2V)) {
-					if (abs(d2V[0] - d2V[1]) > thresh) {
-						if (d2V[0] < d2V[1])//checking which way to rotate
-							robit->p.mRot += rotScale*largest(d2V[0], d2V[1]);
-						else if (d2V[0] > d2V[1])
-							robit->p.mRot -= rotScale*largest(d2V[0], d2V[1]);
-					}
-				}
-				else {
-					if (abs(d2V[2] - d2V[3]) > thresh) {
-						if (d2V[2] > d2V[3])
-							robit->p.mRot -= rotScale*largest(d2V[2], d2V[3]);
-						else if (d2V[2] < d2V[3])
-							robit->p.mRot += rotScale*largest(d2V[2], d2V[3]);
-					}
-				}
-			}
-		}
-		else robit->d.touchingPole = false;
-	}
-}
 //function for making sure the robot cannot move past the fence
 void field::cone::coneGrab(robot *robit, int index) {
 	vec3 idealSpot = vec3(//perf
@@ -399,7 +356,7 @@ void field::fallingOn(cone *fall, robot *robit, int index) {
 					else {
 						fall->landed = true;//LANDED
 						pl[pol].stacked.insert(index);
-						fall->fellOn = pol + STAT * 100;//cone has fallen on specific pole (added 200s place value)
+						fall->fellOn = pol + STAGO * 100;//cone has fallen on specific pole (added 200s place value)
 					}
 				}
 			}
@@ -413,9 +370,9 @@ void field::fallingOn(cone *fall, robot *robit, int index) {
 			moveX = 0.5*(fall->pos.X - c[fall->fellOn - CONE * 100].pos.X);
 			moveY = 0.5*(fall->pos.Y - c[fall->fellOn - CONE * 100].pos.Y);
 		}
-		else if (fall->fellOn >= STAT*100) {//if it fell on a stationary goal
-			moveX = 0.5*(fall->pos.X - pl[fall->fellOn - STAT * 100].pos.X);
-			moveY = 0.5*(fall->pos.Y - pl[fall->fellOn - STAT * 100].pos.Y);
+		else if (fall->fellOn >= STAGO *100) {//if it fell on a stagoionary goal
+			moveX = 0.5*(fall->pos.X - pl[fall->fellOn - STAGO * 100].pos.X);
+			moveY = 0.5*(fall->pos.Y - pl[fall->fellOn - STAGO * 100].pos.Y);
 		}
 		else {//between the two (MOGOS)
 			moveX = 0.5*(fall->pos.X - mg[fall->fellOn - MOGO * 100].pos.X);
@@ -475,7 +432,7 @@ void field::MoGo::zoneScore(fence *f, int index) {
 //function for having a 'grabbed' element lock in place
 void field::FieldUpdate(std::vector<robot> *r) {
 	if (!isInit) initialize(r);
-	for (int rob = 0; rob < 2; rob++) {
+	for (int rob = 0; rob < (*r).size(); rob++) {
 		f.wallPush(&(*r)[rob]);
 		f.robotPole(&(*r)[rob]);
 		for (int i = 0; i < c.size(); i++) {
@@ -486,7 +443,7 @@ void field::FieldUpdate(std::vector<robot> *r) {
 			if (c[i].pos.Z < c[i].height) {
 				physics(i, &c[i], &(*r)[rob], type);
 			}//only affect objects when on ground (or low enough)
-			if (c[i].pos.Z > 0) {
+			if (c[i].pos.Z > cHeight) {
 				fallingOn(&c[i], &(*r)[rob], i);//noice
 			}
 		}
@@ -499,11 +456,10 @@ void field::FieldUpdate(std::vector<robot> *r) {
 			physics(i, &mg[i], &(*r)[rob], type);//dont affect things if being lifted into the air
 		}
 		for (int i = 0; i < pl.size(); i++) {
-			//type for "stationary goal" is 2
-			int type = STAT;
-			pl[0].pos = initPoleConfig[0].pos; //stationary goal (not moving)
-			pl[1].pos = initPoleConfig[1].pos; //stationary goal (not moving)
-			statGoalPush(&pl[i], &(*r)[rob], &f);
+			//type for "stagoionary goal" is 2
+			int type = STAGO;
+			pl[i].pos = initPoleConfig[i].pos; //stagoionary goal (not moving)
+			//stagoGoalPush(&pl[i], &(*r)[rob], &f);
 			physics(i, &pl[i], &(*r)[rob], type);
 		}
 	}

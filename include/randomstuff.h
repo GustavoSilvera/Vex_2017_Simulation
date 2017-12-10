@@ -24,7 +24,7 @@
 #define cHeight 6.82
 #define mgHeight 9.6
 #define statHeight 24.6
-#define coneWeight 0.3
+#define coneWeight 0.4
 #define moGoWeight 0.7
 #define coefMag 1.0//e.e
 #define RESET 0
@@ -32,7 +32,7 @@
 //TYPES
 #define CONE 0
 #define MOGO 1
-#define STAT 2
+#define STAGO 2
 #define CONENUM 15
 #define gAngle -robit->p.mRot * (PI / 180)
 #define renderRad 1.5//amount of the robot's radii that are used to calculate cone distance, smaller is more optimized (but calculates for less cones)

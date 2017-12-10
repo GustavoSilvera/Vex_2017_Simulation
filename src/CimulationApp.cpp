@@ -37,11 +37,13 @@ public:
 	//customize c;
 	field f;
 	joystick j;
-	vex() : r(2),tS(&r[0]), pid(&r[0]), f(&r){}
+	vex() : 
+		r(3), 
+		tS(&r[0]), 
+		pid(&r[0]), 
+		f(&r){}
 	bool debugText = true;
 	bool recording = false;
-	int goal = 32;//defaulted first cone
-	bool reRouting = false;
 	float scalar;
 };
 //begin
@@ -70,7 +72,8 @@ public:
 	void clicky(int num_buttons, int size);
 	void buttons(int size);
 	void textDraw();
-	void goGrab(robot *r, field::element *e, int index);
+	//for auto robots
+	void goGrab(robot *r, field::element *e, int coneIndex);
 	void stackOn(robot *r, field::element *e);
 	void reRoute(robot *r, field::element *e, int dir);
 	//for customize panel
@@ -96,17 +99,15 @@ public:
 void CimulationApp::setup() {
 	srand(time(NULL));//seeds random number generator
 	//gl::enableVerticalSync();
-	v.r[0].TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
-	v.r[0].CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
-	v.r[0].CChanelVERT = gl::Texture(loadImage(loadAsset("CChanelSmallVERT.png")));
-	v.r[1].TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
-	v.r[1].CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
-	v.r[1].CChanelVERT = gl::Texture(loadImage(loadAsset("CChanelSmallVERT.png")));
+	for (int rob = 0; rob < v.r.size(); rob++) {
+		v.r[rob].TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
+		v.r[rob].CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
+		v.r[rob].CChanelVERT = gl::Texture(loadImage(loadAsset("CChanelSmallVERT.png")));
+	}
 	v.f.fieldBare = gl::Texture(loadImage(loadAsset("InTheZoneFieldBare.jpg")));
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
 	setWindowSize(WindowWidth, WindowHeight);
-	v.r[1].p.position = vec3(117, 117, 0);
 	v.scalar = (float)getWindowWidth() / (float)WindowWidth;
 }
 //cinder::functions
@@ -143,8 +144,11 @@ void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getChar() == 'n' || event.getChar() == 'N') v.r[0].forwards(100);//works as of rn for ~1" 
 	if (event.getChar() == 'B' || event.getChar() == 'b') v.r[0].rotate(-100);//works as of rn as ~1°
 	if (event.getChar() == 'c') v.r[0].readScript();
-	if (event.getChar() == 'q') v.r[1].thinking = true;
-	if (event.getChar() == 'l') v.goal = 0;
+	if (event.getChar() == 'q') { 
+		for (int rob = 0; rob < v.r.size(); rob++) {
+			v.r[rob].thinking = true;
+		}
+	}
 }
 void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_DOWN) v.r[0].ctrl.ArrowKeyDown = false;
@@ -161,8 +165,9 @@ void CimulationApp::update() {
 	float pastTime = ci::app::getElapsedSeconds();
 	int signVX = getSign(v.r[0].p.velocity.X), signVY = getSign(v.r[0].p.velocity.Y), signRot = getSign(v.r[0].p.rotVel);
 	v.j.getAnalog(mousePos);
-	v.r[0].update();//calls robot update function
-	v.r[1].update();//calls enemy robot update function
+	for (int rob = 0; rob < v.r.size(); rob++) {
+		v.r[rob].update();//calls robot update function
+	}
 	switch (s.SimRunning) {
 	case simulation::CUSTOMIZE:
 		v.r[0].d.size = cp.size;
@@ -212,76 +217,79 @@ void CimulationApp::update() {
 		v.r[0].moveAround(v.j.analogX, v.j.analogY);
 		break;
 	}
-	if (v.r[1].c.holding != v.goal) {//dynamically refreshes which cone is best in position to be picked up
-	//if(v.goal == 0)//used to be for waiting for cone, sets definitive target FOREVER, not the best
-		int closest = 0;//assumes cone 0 is closest
-		for (int i = 0; i < v.f.c.size()-1; i++) {
-			if (v.f.c[i].pos.distance(v.f.pl[0].pos) > v.f.c[i].radius * 4 && v.f.c[i].pos.distance(v.f.pl[1].pos) > v.f.c[i].radius * 4) {
-				if (v.r[1].p.position.distance(v.f.c[i].pos) < v.r[1].p.position.distance(v.f.c[closest].pos)) {
-					float d2V[4];//can comment this stuff to get nearest cone. but better to get nearest cone IN FRONT (SLIGHTLY better score wise/time), gets stuck sometimes
-					for (int ver = 0; ver < 4; ver++) {
-						d2V[ver] = v.f.c[i].pos.distance(v.r[1].db.vertices[ver]);
-					}
-					bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal is closer to the front side
-					if (v.f.c[i].pos.Z <= cHeight && inFront)//so long as not already stacked or in the air
-						closest = i;//updates "closest" to whichever cone is closest
-				}
-			}
-		}
-		v.goal = closest;
-	}
-	if (v.r[1].thinking) {
-		if (v.r[1].c.holding != v.goal) {
-			goGrab(&v.r[1], &v.f.c[v.goal], v.goal);
-		}
-		else {
-			int poleNum = 0;//assuming robot is closer to pole0 than pole1
-			if (v.r[1].p.position.distance(v.f.pl[0].pos) > v.r[1].p.position.distance(v.f.pl[1].pos)) {
-				poleNum = 1;//robot is closer to pole1 than pole0
-			}
-			//always stacks on pole 1
-			/*int mogoNum = 0;
-			for (int i = 0; i < v.f.mg.size(); i++) {
-				if (v.f.mg[i].colour == 2) {
-					if (v.r[1].p.position.distance(v.f.mg[mogoNum].pos) > v.r[1].p.position.distance(v.f.mg[i].pos))
-						mogoNum = i;
-				}
-			}*/
-			stackOn(&v.r[1], &v.f.pl[poleNum]);
-		}
-	}
-	v.r[0].db.distance += getSign(v.r[0].d.basePower)*v.r[0].p.position.distance(pastPos);
-	v.r[0].db.rotDist += getSign(v.r[0].p.rotVel)*(v.r[0].p.mRot - pastRot);
-	if (v.r[0].readyToRun) {
-		enum action {
-			ACTION_ROTATE,
-			ACTION_FWDS
-		};
-		if (v.r[0].commands.size() > 0) {//make this more accriate
-			float maxSpeed = 127;
-			if (v.r[0].commands[0].amnt != 0) {//at least 
-				if (v.r[0].commands[0].a == ACTION_ROTATE) {//for rotate
-					if (abs(v.r[0].db.rotDist) <= 0.65*abs(v.r[0].commands[0].amnt)) {
-						v.r[0].p.amountOfFriction = 10;//decreases uncontrolled rotation
-						v.r[0].rotate(getSign(v.r[0].commands[0].amnt) * 127);
-					}
-					else {
-						v.r[0].db.rotDist = RESET;
-						v.r[0].p.amountOfFriction = 5;//resets to normal
-						v.r[0].commands.erase(v.r[0].commands.begin());//removes first element of vector
-					}
-				}
-				else if (v.r[0].commands[0].a == ACTION_FWDS) {//for fwds
-					if (abs(v.r[0].db.distance) <= abs(v.r[0].commands[0].amnt)) {
-						v.r[0].forwards(getSign(v.r[0].commands[0].amnt) * 127);
-					}
-					else {
-						v.r[0].db.distance = RESET;
-						v.r[0].commands.erase(v.r[0].commands.begin());//removes first element of vector
+	for (int rob = 1; rob < v.r.size(); rob++) {
+		if (v.r[rob].c.holding != v.r[rob].goal) {//dynamically refreshes which cone is best in position to be picked up
+		//if(v.r[rob].goal == 0)//used to be for waiting for cone, sets definitive target FOREVER, not the best
+			int closest = 0;//assumes cone 0 is closest
+			for (int i = 0; i < v.f.c.size()-1; i++) {
+				if (v.f.c[i].pos.distance(v.f.pl[0].pos) > v.f.c[i].radius * 4 && v.f.c[i].pos.distance(v.f.pl[1].pos) > v.f.c[i].radius * 4) {
+					if (v.r[rob].p.position.distance(v.f.c[i].pos) < v.r[rob].p.position.distance(v.f.c[closest].pos)) {
+						float d2V[4];//can comment this stuff to get nearest cone. but better to get nearest cone IN FRONT (SLIGHTLY better score wise/time), gets stuck sometimes
+						for (int ver = 0; ver < 4; ver++) {
+							d2V[ver] = v.f.c[i].pos.distance(v.r[rob].db.vertices[ver]);
+						}
+						bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if goal[rob-1] is closer to the front side
+						if (v.f.c[i].pos.Z <= cHeight && inFront)//so long as not already stacked or in the air
+							closest = i;//updates "closest" to whichever cone is closest
 					}
 				}
 			}
-			else v.r[0].commands.erase(v.r[0].commands.begin());
+			v.r[rob].goal = closest;
+		}
+		if (v.r[rob].thinking) {
+			if (v.r[rob].c.holding != v.r[rob].goal) {
+				goGrab(&v.r[rob], &v.f.c[v.r[rob].goal], v.r[rob].goal);
+			}
+			else {
+				int poleNum = 0;//assuming robot is closer to pole0 than pole1
+				if (v.r[rob].p.position.distance(v.f.pl[0].pos) > v.r[rob].p.position.distance(v.f.pl[1].pos)) {
+					poleNum = 1;//robot is closer to pole1 than pole0
+				}
+				//always stacks on pole 1
+				/*int mogoNum = 0;
+				for (int i = 0; i < v.f.mg.size(); i++) {
+					if (v.f.mg[i].colour == 2) {
+						if (v.r[rob].p.position.distance(v.f.mg[mogoNum].pos) > v.r[rob].p.position.distance(v.f.mg[i].pos))
+							mogoNum = i;
+					}
+				}*/
+				stackOn(&v.r[rob], &v.f.pl[poleNum]);
+			}
+		}
+		v.r[0].db.distance += getSign(v.r[0].d.basePower)*v.r[0].p.position.distance(pastPos);
+		v.r[0].db.rotDist += getSign(v.r[0].p.rotVel)*(v.r[0].p.mRot - pastRot);
+		if (v.r[0].readyToRun) {
+			enum action {
+				ACTION_ROTATE,
+				ACTION_FWDS
+			};
+			if (v.r[0].commands.size() > 0) {//make this more accriate
+				float maxSpeed = 127;
+				if (v.r[0].commands[0].amnt != 0) {//at least 
+					if (v.r[0].commands[0].a == ACTION_ROTATE) {//for rotate
+						if (abs(v.r[0].db.rotDist) <= 0.65*abs(v.r[0].commands[0].amnt)) {
+							v.r[0].p.amountOfFriction = 10;//decreases uncontrolled rotation
+							v.r[0].rotate(getSign(v.r[0].commands[0].amnt) * 127);
+						}
+						else {
+							v.r[0].db.rotDist = RESET;
+							v.r[0].p.amountOfFriction = 5;//resets to normal
+							v.r[0].commands.erase(v.r[0].commands.begin());//removes first element of vector
+						}
+					}
+					else if (v.r[0].commands[0].a == ACTION_FWDS) {//for fwds
+						if (abs(v.r[0].db.distance) <= abs(v.r[0].commands[0].amnt)) {
+							v.r[0].forwards(getSign(v.r[0].commands[0].amnt) * 127);
+						}
+						else {
+							v.r[0].db.distance = RESET;
+							v.r[0].commands.erase(v.r[0].commands.begin());//removes first element of vector
+						}
+					}
+				}
+				else v.r[0].commands.erase(v.r[0].commands.begin());
+			}
+
 		}
 	}
 
@@ -320,24 +328,24 @@ void CimulationApp::update() {
 	}
 }
 //for buttons
-void CimulationApp::goGrab(robot *r, field::element *c, int index) {
+void CimulationApp::goGrab(robot *r, field::element *c, int coneIndex) {
 	float d2V[4];
 	for (int ver = 0; ver < 4; ver++) {
 		d2V[ver] = c->pos.distance(r->db.vertices[ver]);
 	}
 	int dir = 1;
-	if (!v.reRouting) {
+	if (!r->reRouting) {
 		float speed = limitTo(MAXSPEED, 3*r->p.position.distance(c->pos));
-		bool inFront = ((d2V[0] + d2V[1]) < (d2V[2] + d2V[3]));//checking if goal is closer to the front side
-		bool onRight = ((d2V[1] + d2V[2]) < (d2V[0] + d2V[3]));//checking if goal is closer to the right side
+		bool inFront = ((d2V[0] + d2V[1]) < (d2V[2] + d2V[3]));//checking if goal[rob-1] is closer to the front side
+		bool onRight = ((d2V[1] + d2V[2]) < (d2V[0] + d2V[3]));//checking if goal[rob-1] is closer to the right side
 		if (onRight) dir = -1;
-		if (!r->directlyInPath(true, r->d.size / 2, c->pos) || !inFront) {//angle is not pointing towards goal
+		if (!r->directlyInPath(true, r->d.size / 2, c->pos) || !inFront) {//angle is not pointing towards goal[rob-1]
 			r->rotate(dir * speed);
 			r->forwards(0);
 		}
 		else r->rotate(0);
 		float offset = 0.5;//dosent update fast enough for small cones, needed little offset heuristic
-		if (r->p.position.distance(c->pos) > (r->d.size / 2 + c->radius) + offset && inFront) {//drive fwds towards goal
+		if (r->p.position.distance(c->pos) > (r->d.size / 2 + c->radius) + offset && inFront) {//drive fwds towards goal[rob-1]
 			r->c.grabbing = false;
 			r->forwards(speed);
 		}
@@ -345,7 +353,7 @@ void CimulationApp::goGrab(robot *r, field::element *c, int index) {
 			if (abs(r->c.liftPos - c->pos.Z) < c->height) r->c.grabbing = true;//only closes claw if on same level (height wise)
 			r->forwards(0);
 		}
-		if (r->c.grabbing && r->c.holding == index) {//holding the cone
+		if (r->c.grabbing && r->c.holding == coneIndex) {//holding the cone
 			if (r->c.liftPos < v.f.pl[1].height + 4) r->c.liftUp = true;
 			else r->c.liftUp = false;
 		}
@@ -360,12 +368,12 @@ void CimulationApp::goGrab(robot *r, field::element *c, int index) {
 		else {
 			r->c.liftDown = false;
 		}
-		if (v.r[1].p.velocity.X == 0 && v.r[1].p.velocity.Y == 0 && v.r[1].d.touchingPole) {//get it to do the same if touching fence
-			v.reRouting = true;
+		if (r->p.velocity.X == 0 && r->p.velocity.Y == 0) {//get it to do the same if touching fence
+			r->reRouting = true;
 		}
 	}
 	else {
-		reRoute(&v.r[1], &v.f.c[v.goal], dir);
+		reRoute(r, &v.f.c[r->goal], dir);
 	}
 }
 void CimulationApp::reRoute(robot *r, field::element *e, int dir) {
@@ -374,20 +382,20 @@ void CimulationApp::reRoute(robot *r, field::element *e, int dir) {
 		d2V[ver] = (int)e->pos.distance(r->db.vertices[ver]);
 	}
 	int direct = 1;
-	bool inFront = ((d2V[0] + d2V[1]) < (d2V[2] + d2V[3]));//checking if goal is closer to the front side
-	bool onRight = ((d2V[1] + d2V[2] < 1.2*d2V[0] + d2V[3]) && !inFront);//checking if goal is closer to the right side
+	bool inFront = ((d2V[0] + d2V[1]) < (d2V[2] + d2V[3]));//checking if goal[rob-1] is closer to the front side
+	bool onRight = ((d2V[1] + d2V[2] < 1.2*d2V[0] + d2V[3]) && !inFront);//checking if goal[rob-1] is closer to the right side
 	if (onRight) direct = -1;*/
 
 	int poleNum = 0;//assuming robot is closer to pole0 than pole1
-	if (v.r[1].p.position.distance(v.f.pl[0].pos) > v.r[1].p.position.distance(v.f.pl[1].pos)) {
+	if (r->p.position.distance(v.f.pl[0].pos) > r->p.position.distance(v.f.pl[1].pos)) {
 		poleNum = 1;//robot is closer to pole1 than pole0
 	}
 	if (r->p.position.distance(v.f.pl[poleNum].pos) < (r->d.size)) {//far enough out of the way
-		r->forwards(-100);
+		r->forwards(-127);
 	}
 	else {//fix this little "heuristic" make it actually detect when theres an obstacle before it and turn around it
-		if (r->directlyInPath(true, r->d.size, v.f.pl[poleNum].pos)) r->rotate(dir * MAXSPEED);//moving to horizontal path (turning like 90°)
-		else v.reRouting = false;
+		if (r->directlyInPath(true, r->d.size/4, v.f.c[rand() % v.f.c.size()].pos)) r->rotate(dir * MAXSPEED);//moving to horizontal path (turning like 90°)
+		else r->reRouting = false;
 		r->forwards(0);
 		//v.reRouting = false;
 	}
@@ -398,12 +406,12 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 		d2V[ver] = e->pos.distance(r->db.vertices[ver]);
 	}
 	int dir = 1;
-	bool inFront = (d2V[0] + d2V[1] < d2V[2] + d2V[3]);//checking if goal is closer to the front side
-	bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal is closer to the right side
+	bool inFront = (d2V[0] + d2V[1] < d2V[2] + d2V[3]);//checking if goal[rob-1] is closer to the front side
+	bool onRight = (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if goal[rob-1] is closer to the right side
 	if (onRight) dir = -1;
-	if (!v.reRouting) {
+	if (!r->reRouting) {
 		float speed = limitTo(MAXSPEED, 3*r->p.position.distance(e->pos));
-		if (!r->directlyInPath(true, r->d.size / 2, e->pos) || !inFront)//angle is not pointing towards goal
+		if (!r->directlyInPath(true, r->d.size / 2, e->pos) || !inFront)//angle is not pointing towards goal[rob-1]
 			r->rotate(dir * speed);
 		else r->rotate(0);
 		if (r->c.grabbing) {//holding the cone
@@ -415,12 +423,12 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 			r->rotate(dir * 50);//just do a simple smaller rotation to try and minimize error, gets it closer to the center 
 		}
 		if (r->c.liftPos >= e->height + 2 /*+ADD STACKED POS CHANGER HERE*/) {//wait until lift is reasonably high
-			if (r->p.position.distance(e->pos) > r->d.size*0.5 + e->radius + 2 && inFront) {//drive fwds towards goal
+			if (r->p.position.distance(e->pos) > r->d.size*0.5 + e->radius + 2 && inFront) {//drive fwds towards goal[rob-1]
 				r->forwards(speed*0.7);//slower since carrying object? eh idk
 			}
 			else {
 				r->forwards(0);
-				if (r->p.position.distance(e->pos) <= r->d.size*0.5 + e->radius + 2) {//reall close to the goal
+				if (r->p.position.distance(e->pos) <= r->d.size*0.5 + e->radius + 2) {//reall close to the goal[rob-1]
 					if (r->c.liftPos >= e->height && r->c.grabbing) {
 						r->rotate(0);
 						r->p.acceleration = vec3(0, 0, 0);
@@ -430,7 +438,7 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 						if (r->directlyInPath(true, r->d.size / 4, e->pos)) {
 							r->c.grabbing = false;//opens claw
 							//r->thinking = false;//basically turns off autonomous thing
-							v.goal = 0;
+							r->goal = 0;
 						}
 						else r->rotate(dir * 127);//just do a simple smaller rotation to try and minimize error, gets it closer to the center 
 					}
@@ -448,8 +456,6 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 		r->rotate(0);
 	}
 }
-
-
 void CimulationApp::clicky(int AMOUNT_BUTTON, int buttonSize) {//function for clicking the buttons
 	for (int i = 0; i < AMOUNT_BUTTON; i++) {//for each button in the array 
 		if (mousePos.X > v.scalar * ( buttonSize* (i + 1) - (50) + (25 * i)) &&
@@ -466,14 +472,12 @@ void CimulationApp::clicky(int AMOUNT_BUTTON, int buttonSize) {//function for cl
 			else if (s.mouseClicked && i == 5) {
 				v.recording = false;//toggles macro recording
 				scriptFile = std::ofstream("script.txt", fstream::app);
-
 			}
 		}
 	}
 }
 void CimulationApp::buttons(int buttonSize) {//function for drawing the buttons
 	#define BUTTON_AMOUNT 6//number of buttons
-
 	int bX[BUTTON_AMOUNT], bY = 50, dInBtw = 25;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
 	for (int i = 0; i < BUTTON_AMOUNT; i++) {
 		bX[0] = 0;//initialize first button
@@ -520,7 +524,6 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 		++i;
 	}
 }
-
 void CimulationApp::callAction(bool increase, int buttonAction) {
 	if (buttonAction == 0) {
 		if (increase) cp.size += 0.1;
@@ -594,7 +597,6 @@ Vec3f CimulationApp::R2S3(float robot_coordX, float robot_coordY, float robot_co
 Rectf CimulationApp::R2S4(float p1X, float p1Y, float p2X, float p2Y) {//for rectangular coords
 	return Rectf(ppi * v.scalar * (v.f.f.inFromEnd + p1X), ppi * v.scalar * (v.f.f.inFromEnd + v.f.f.fieldSizeIn - p1Y), ppi * v.scalar * (v.f.f.inFromEnd + p2X), ppi * v.scalar * (v.f.f.inFromEnd + v.f.f.fieldSizeIn - p2Y));
 }
-
 void CimulationApp::robotDebug() {
 	gl::color(1, 0, 0);
 	for (int i = 0; i < 4; i++) {//simplified version of drawing the vertices
@@ -722,8 +724,9 @@ void CimulationApp::draw() {
 			gl::color(1, 1, 1);//reset to white
 		}
 		ci::gl::draw(v.f.fieldBare, ci::Area(v.f.f.inFromEnd*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar));
-		drawRobot(&v.r[0]);//drawing robot 1
-		drawRobot(&v.r[1]);//drawing oppposing robot
+		for (int rob = 0; rob < v.r.size(); rob++) {
+			drawRobot(&v.r[rob]);//drawing robot 1
+		}
 		gl::drawString("Score:", Vec2f(v.scalar * 850, v.scalar * 50), Color(1, 1, 1), Font("Arial", v.scalar * 50));
 		drawText(v.f.calculateScore(), vec3I(v.scalar * 1000, v.scalar * 50), vec3I(1, 1, 1), v.scalar * 50);
 		gl::drawString("Time(s):", Vec2f(v.scalar * 1350, v.scalar * 100), Color(1, 1, 1), Font("Arial", v.scalar * 40));
@@ -777,11 +780,12 @@ void CimulationApp::draw() {
 	else drawRobot(&v.r[0]);
 	gl::color(1, 0, 0);
 	//indicator for cone goal
-	gl::drawSolidCircle(R2S2(vec3(v.f.c[v.goal].pos.X, v.f.c[v.goal].pos.Y)), v.scalar*4);
-	gl::drawStrokedCircle(R2S2(vec3(v.f.c[v.goal].pos.X, v.f.c[v.goal].pos.Y)), v.scalar*v.f.c[v.goal].radius*ppi, 10);
-	gl::drawStrokedCircle(R2S2(vec3(v.f.c[v.goal].pos.X, v.f.c[v.goal].pos.Y)), v.scalar*v.f.c[v.goal].radius*ppi+1, 10);
-	gl::drawStrokedCircle(R2S2(vec3(v.f.c[v.goal].pos.X, v.f.c[v.goal].pos.Y)), v.scalar*v.f.c[v.goal].radius*ppi+2, 10);
-
+	for (int rob = 1; rob < v.r.size(); rob++) {//not counting goal of first robot (manual one)
+		gl::drawSolidCircle(R2S2(vec3(v.f.c[v.r[rob].goal].pos.X, v.f.c[v.r[rob].goal].pos.Y)), v.scalar * 4);
+		for (int i = 0; i < 3; i++) {
+			gl::drawStrokedCircle(R2S2(vec3(v.f.c[v.r[rob].goal].pos.X, v.f.c[v.r[rob].goal].pos.Y)), v.scalar*v.f.c[v.r[rob].goal].radius*ppi + i, 10);
+		}
+	}
 	//debug text
 	gl::drawSolidCircle(R2S2(vec3(
 		v.r[0].p.position.X - v.r[0].mg.protrusion * cos((v.r[0].p.mRot) * PI / 180)*2, 

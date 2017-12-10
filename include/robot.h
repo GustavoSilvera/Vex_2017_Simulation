@@ -25,6 +25,8 @@ public:
 	bool directlyInPath(bool vertical, int range, vec3 pos);
 	bool readyToRun = false;
 	bool thinking = false;
+	int goal;
+	bool reRouting = false;
 	enum action  {
 		ACTION_ROTATE,
 		ACTION_FWDS
