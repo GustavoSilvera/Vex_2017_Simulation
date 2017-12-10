@@ -36,10 +36,6 @@ public:
 		double amnt;
 	};
 	std::vector<command> commands;
-
-	struct position {
-		double Xpos, Ypos, deg;
-	};
 	struct debug {;
 	//lines
 		float slope;//only need 1 slope, both sides of a square are parallel
@@ -98,11 +94,10 @@ public:
 		volatile bool RotRight = false;//used for whether the keys are supposed to be triggering a rotation
 		volatile bool RotLeft = false;//used for whether the keys are supposed to be triggering a rotation
 	};
-		controls ctrl;
+	controls ctrl;
 	//other stuffs
 	ci::gl::Texture TankBase;
 	ci::gl::Texture CChanel;
 	ci::gl::Texture CChanelVERT;
-	struct position current;
 };
 #endif  // ROBOT_H

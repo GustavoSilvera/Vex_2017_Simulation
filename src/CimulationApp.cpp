@@ -292,7 +292,6 @@ void CimulationApp::update() {
 
 		}
 	}
-
 	if (v.recording) {//macro recording		//less accurate (straight line running)
 		if ((v.r[0].p.velocity.X == 0 && v.r[0].p.velocity.Y == 0) ||
 			(getSign(v.r[0].p.velocity.X) != signVX &&
@@ -477,23 +476,29 @@ void CimulationApp::clicky(int AMOUNT_BUTTON, int buttonSize) {//function for cl
 	}
 }
 void CimulationApp::buttons(int buttonSize) {//function for drawing the buttons
-	#define BUTTON_AMOUNT 6//number of buttons
-	int bX[BUTTON_AMOUNT], bY = 50, dInBtw = 25;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
-	for (int i = 0; i < BUTTON_AMOUNT; i++) {
-		bX[0] = 0;//initialize first button
-		bX[i] = (i + 1) * buttonSize;//increment x position for each button based off index
-		if (i == s.SimRunning) { gl::color(0, 1, 0); }//if the button's index is equal to whichever button's index is being hovered over
-		else if (i == s.hovering) { gl::color(1, 0, 0); }//if the button's index is equal to whichever button's index is being hovered over
+	int bY = 50, dInBtw = 25;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
+	struct text {
+		string s;
+	};
+	text t[] = {
+		{ "PIDctrl:"},
+		{ "CustomR:" },
+		{ "TRUSped:" },
+		{ "AutoSim:" },
+		{ "InitRec:" },
+		{ "StopRec:" }
+	};
+	int i = 1;
+	//use str.length() to get number of chars and dynamically push back other things
+	for (text& ti : t) {
+		if (i-1 == s.SimRunning) { gl::color(0, 1, 0); }//if the button's index is equal to whichever button's index is being hovered over
+		else if (i-1 == s.hovering) { gl::color(1, 0, 0); }//if the button's index is equal to whichever button's index is being hovered over
 		else { gl::color(1, 1, 1); }
-		gl::drawStrokedRoundedRect(Area(v.scalar *(bX[i] - 50 + dInBtw*i), v.scalar*(bY - 25), v.scalar*(bX[i] + 50 + dInBtw*i), v.scalar*( bY + 25)), 5);//ROUNDED rectangle with corner rad of 7
+		gl::drawStrokedRoundedRect(Area(v.scalar *(i* buttonSize - 50 + dInBtw*i), v.scalar*(bY - 25), v.scalar*(i*buttonSize + 50 + dInBtw*i), v.scalar*( bY + 25)), 5);//ROUNDED rectangle with corner rad of 7
 		gl::color(1, 1, 1);//resets colour 
-		if (i == 0)gl::drawString("PID", Vec2f(v.scalar*(bX[i] - 20), v.scalar*(bY - 12.5)), Color(1, 1, 1), Font("Arial", v.scalar * 25));
-		else if (i == 1)gl::drawString("Customize", Vec2f(v.scalar*(bX[i] - 48 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar*25));
-		else if (i == 2)gl::drawString("TRUSpeed", Vec2f(v.scalar*(bX[i] - 49 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar * 25));
-		else if (i == 3)gl::drawString("Auton", Vec2f(v.scalar*(bX[i] - 35 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar * 29));
-		else if (i == 4)gl::drawString("Macro", Vec2f(v.scalar*(bX[i] - 35 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar * 29));
-		else if (i == 5)gl::drawString("noRec", Vec2f(v.scalar*(bX[i] - 35 + dInBtw*i), v.scalar*(bY - 10)), Color(1, 1, 1), Font("Arial", v.scalar * 29));
-		clicky(BUTTON_AMOUNT, buttonSize);//function for if a button is being hovered of pressed
+		gl::drawString(t[i-1].s, Vec2f(v.scalar*(i * buttonSize - t[i-1].s.length()*5 + dInBtw*i), v.scalar*(bY - 12.5)), Color(1, 1, 1), Font("Arial", v.scalar * 25));
+		clicky(6, buttonSize);//function for if a button is being hovered of pressed
+		i++;
 	}
 }
 void CimulationApp::textDraw() {//function for drawing the buttons 
