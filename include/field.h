@@ -46,16 +46,16 @@ public:
 	fence f;
 
 	struct element {
-		element(vec3 initpos, float initradius, float initheight) : pos(initpos), radius(initradius), height(initheight) {}
+		element(vec3 initpos, float initradius, float initheight) : pos(initpos), radius(initradius), height(initheight), inPossession(3) {}
 		vec3 pos;
 		float radius;//size of the object;
 		/*const*/ float height;
 		void fencePush(fence *f);
-		void robotColl(int index, robot *r, int type, fence *f);
+		void robotColl(int index, robot *r, int type, fence *f, int roboIndex);
 		void collision(element *e);
-		void collideWith(robot *robit, vec3 closestPoint, fence *f, int type, int index, float *d2V);
+		void collideWith(robot *robit, vec3 closestPoint, int type, int index, float *d2V, int roboIndex);
 		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
-		bool inPossession = false;//if being held or whatnot
+		std::vector<bool> inPossession;//if being held or whatnot
 	};
 	struct cone : public element {
 		cone(vec3 pos) : element(pos, cRad, cHeight), fellOn(0), landed(false) {}
@@ -76,7 +76,7 @@ public:
 	std::vector<MoGo> mg;
 	std::vector<stago> pl;//poles in the field
 
-	void physics(int index, element *e, robot *r, int type);
+	void physics(int index, element *e, robot *r, int type, int roboIndex);
 	void fallingOn(cone *fall, robot *r, int index);
 	int calculateScore();
 	ci::gl::Texture MobileGoal;

@@ -25,7 +25,9 @@ public:
 	bool directlyInPath(bool vertical, int range, vec3 pos);
 	bool readyToRun = false;
 	bool thinking = false;
-	int goal;
+	bool grabMoGo = true;//ideally want to get mogo first
+	int goalCone = 0;
+	int goalMogo = 0;
 	bool reRouting = false;
 	enum action  {
 		ACTION_ROTATE,

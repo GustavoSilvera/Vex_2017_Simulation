@@ -164,14 +164,14 @@ void robot::setVertices() {
 		float centerCos = cos((p.mRot) * PI / 180) * 2;
 		float centerSin = sin((p.mRot) * PI / 180) * 2;
 
-		db.MGVert[0].X = p.position.X - centerCos - mogoProp*cosDist - protrusionSin;
-		db.MGVert[0].Y = p.position.Y - centerSin + mogoProp*sinDist + protrusionCos;
-		db.MGVert[1].X = p.position.X - centerCos + mogoProp*sinDist - protrusionSin;//flipped sin and cos
-		db.MGVert[1].Y = p.position.Y - centerSin + mogoProp*cosDist + protrusionCos;
-		db.MGVert[2].X = p.position.X - centerCos + mogoProp*cosDist - protrusionSin;
-		db.MGVert[2].Y = p.position.Y - centerSin - mogoProp*sinDist + protrusionCos;
-		db.MGVert[3].X = p.position.X - centerCos - mogoProp*sinDist - protrusionSin;//flipped sin and cos
-		db.MGVert[3].Y = p.position.Y - centerSin - mogoProp*cosDist + protrusionCos;
+		db.MGVert[0].X = p.position.X + centerCos - mogoProp*cosDist + protrusionSin;
+		db.MGVert[0].Y = p.position.Y + centerSin + mogoProp*sinDist - protrusionCos;
+		db.MGVert[1].X = p.position.X + centerCos + mogoProp*sinDist + protrusionSin;//flipped sin and cos
+		db.MGVert[1].Y = p.position.Y + centerSin + mogoProp*cosDist - protrusionCos;
+		db.MGVert[2].X = p.position.X + centerCos + mogoProp*cosDist + protrusionSin;
+		db.MGVert[2].Y = p.position.Y + centerSin - mogoProp*sinDist - protrusionCos;
+		db.MGVert[3].X = p.position.X + centerCos - mogoProp*sinDist + protrusionSin;//flipped sin and cos
+		db.MGVert[3].Y = p.position.Y + centerSin - mogoProp*cosDist - protrusionCos;
 }
 void robot::intake::claw(float robSize) {
 	//janky animations for claw 
