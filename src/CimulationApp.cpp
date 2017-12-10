@@ -102,6 +102,7 @@ void CimulationApp::setup() {
 	//gl::enableVerticalSync();
 	for (int rob = 0; rob < v.r.size(); rob++) {
 		v.r[rob].TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
+		v.r[rob].TankBase2 = gl::Texture(loadImage(loadAsset("Tank Drive WheelSpin.png")));
 		v.r[rob].CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
 		v.r[rob].CChanelVERT = gl::Texture(loadImage(loadAsset("CChanelSmallVERT.png")));
 	}
@@ -146,8 +147,7 @@ void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getChar() == 'B' || event.getChar() == 'b') v.r[0].rotate(-100);//works as of rn as ~1°
 	if (event.getChar() == 'c') v.r[0].readScript();
 	if (event.getChar() == 'q') { 
-		
-		for (int rob = 1; rob < v.r.size()-1; rob++) {
+		for (int rob = 1; rob < v.r.size(); rob++) {
 			v.r[rob].thinking = true;
 		}
 	}
@@ -764,7 +764,14 @@ void CimulationApp::drawRobot(robot *r) {
 	gl::translate(Vec3f(R2S3(r->p.position.X, r->p.position.Y, 0.0)));//origin of rotation
 	gl::rotate(Vec3f(0, 0, -r->p.mRot - 90));//something for like 3D rotation.... ugh
 	gl::color(1, 1, 1);
-	gl::draw(r->TankBase, Area((-(r->d.size / 2))*ppi*v.scalar, (-(r->d.size / 2))*ppi*v.scalar, ((r->d.size / 2))*ppi*v.scalar, ((r->d.size / 2))*ppi*v.scalar));
+	if ((r->p.velocity.X != 0 && r->p.velocity.Y != 0) || r->p.rotVel != 0){//changes with small increments of velocity and rotation
+		if ((int)(10 * (r->p.velocity.X + 2*r->p.rotVel)) % 2 == 0/* || (int)(10 * r->p.rotVel) % 2 == 0*/)
+			gl::draw(r->TankBase, Area((-(r->d.size / 2))*ppi*v.scalar, (-(r->d.size / 2))*ppi*v.scalar, ((r->d.size / 2))*ppi*v.scalar, ((r->d.size / 2))*ppi*v.scalar));
+		else
+			gl::draw(r->TankBase2, Area((-(r->d.size / 2))*ppi*v.scalar, (-(r->d.size / 2))*ppi*v.scalar, ((r->d.size / 2))*ppi*v.scalar, ((r->d.size / 2))*ppi*v.scalar));
+	}
+	else gl::draw(r->TankBase, Area((-(r->d.size / 2))*ppi*v.scalar, (-(r->d.size / 2))*ppi*v.scalar, ((r->d.size / 2))*ppi*v.scalar, ((r->d.size / 2))*ppi*v.scalar));
+
 	//mogo
 	gl::draw(v.r[0].CChanelVERT, Area((-r->mg.clawPos - r->mg.clawThick)*ppi*v.scalar, r->mg.protrusion*ppi*v.scalar, (-r->mg.clawPos + r->mg.clawThick)*ppi*v.scalar, (r->mg.protrusion + r->mg.clawHeight)*ppi*v.scalar));
 	gl::draw(v.r[0].CChanelVERT, Area((r->mg.clawPos + r->mg.clawThick)*ppi*v.scalar, r->mg.protrusion*ppi*v.scalar, (r->mg.clawPos - r->mg.clawThick)*ppi*v.scalar, (r->mg.protrusion + r->mg.clawHeight)*ppi*v.scalar));

@@ -25,7 +25,7 @@ public:
 	bool directlyInPath(bool vertical, int range, vec3 pos);
 	bool readyToRun = false;
 	bool thinking = false;
-	bool grabMoGo = true;//ideally want to get mogo first
+	bool grabMoGo = false;//ideally want to get mogo first
 	int goalCone = 0;
 	int goalMogo = 0;
 	bool reRouting = false;
@@ -99,6 +99,7 @@ public:
 	controls ctrl;
 	//other stuffs
 	ci::gl::Texture TankBase;
+	ci::gl::Texture TankBase2;
 	ci::gl::Texture CChanel;
 	ci::gl::Texture CChanelVERT;
 };
