@@ -10,7 +10,7 @@ robot::robot() {
 	c.liftPos = 0;
 	c.protrusion = 0;//not protruding from baseout
 	c.liftUp = false;
-	c.clawSpeed = 0.5;
+	c.speed = 0.5;
 	c.liftDown = false;
 	mg.protrusion = 0;
 	mg.liftPos = 0;
@@ -18,23 +18,23 @@ robot::robot() {
 	db.rotDist = RESET;
 	p.position = vec3(69.6, 69.6, 0);//initial robot position
 	updateFeatures();
-	c.clawPos = c.clawSize;
+	c.position = c.size;
 	//vector stuff
 }//constructor 
 void robot::updateFeatures() {
 	//physical features
 	
-	c.clawSize = d.size / 6;//3
-	c.baseSize = d.size / 18;//1
-	c.clawThick = d.size / 36;//0.5
-	c.clawSpeed = d.size / 36;//0.5;
-	c.liftSpeed = d.size / 180;//0.1
-	c.clawHeight = d.size / 9;//2
-	mg.clawSpeed = d.size / 36;//0.5
-	mg.clawSize = d.size / 4;//4
-	mg.clawThick = d.size / 18;//1
-	mg.clawPos = mg.clawSize;//inf
-	mg.clawHeight = (1 / 2.4)*d.size;//7.5
+	c.size = size / 6;//3
+	c.baseSize = size / 18;//1
+	c.thickness = size / 36;//0.5
+	c.speed = size / 36;//0.5;
+	c.liftSpeed = size / 180;//0.1
+	c.length = size / 9;//2
+	mg.speed = size / 36;//0.5
+	mg.size = size / 4;//4
+	mg.thickness = size / 18;//1
+	mg.position = mg.size;//inf
+	mg.length = (1 / 2.4)*size;//7.5
 }
 void robot::forwards(float power) {
 	//konstants that should be changed later
@@ -147,11 +147,11 @@ bool robot::directlyInPath(bool vertical, int range, vec3 pos) {//vertical lines
 void robot::setVertices() {
 	//gross i know, but its for calculating each vertice of the robot based off its current angle;
 	//math behind is based off basic trig and 45 45 90° triangle analytic geometry
-	float cosDist = (d.size / 2) * cos((-p.mRot + 135) * PI / 180) * sqrt(2);
-	float sinDist = (d.size / 2) * sin((-p.mRot + 135) * PI / 180) * sqrt(2);
+	float cosDist = (size / 2) * cos((-p.mRot + 135) * PI / 180) * sqrt(2);
+	float sinDist = (size / 2) * sin((-p.mRot + 135) * PI / 180) * sqrt(2);
 	float protrusionSin = mg.protrusion * sin((p.mRot+90) * PI / 180);
 	float protrusionCos = mg.protrusion * cos((p.mRot+90) * PI / 180);
-	float mogoProp = 2.5*(mg.clawSize) / d.size;//proportion of MOGO size to robot
+	float mogoProp = 2.5*(mg.size) / size;//proportion of MOGO size to robot
 		db.vertices[0].X = p.position.X - cosDist;
 		db.vertices[0].Y = p.position.Y + sinDist;
 		db.vertices[1].X = p.position.X + sinDist;//flipped sin and cos
@@ -175,21 +175,21 @@ void robot::setVertices() {
 }
 void robot::intake::claw(float robSize) {
 	//janky animations for claw 
-	clawSize = 0.1*liftPos + 3;
+	size = 0.1*liftPos + 3;
 	baseSize = 0.05*liftPos + robSize / 18;
-	clawHeight = 0.07*liftPos + 2;
-	clawThick = 0.01*liftPos + 0.5;
-	clawSpeed = 0.051*liftPos + 0.5;
+	length = 0.07*liftPos + 2;
+	thickness = 0.01*liftPos + 0.5;
+	speed = 0.051*liftPos + 0.5;
 
-	if (grabbing) { if (clawPos > robSize / 18) clawPos -= clawSpeed; }//animation for claw close
-	else { if (clawPos < clawSize) clawPos += clawSpeed; }//animation for claw open
+	if (grabbing) { if (position > robSize / 18) position -= speed; }//animation for claw close
+	else { if (position < size) position += speed; }//animation for claw open
 	if (grabbing == false) holding = -1;//reset index (TO -1 (for cones) )
-	if (liftDown  && liftPos > 0 && clawPos > clawSize) clawPos -= clawSpeed;
+	if (liftDown  && liftPos > 0 && position > size) position -= speed;
 }
 
 void robot::intake::mogo(float robSize) {	
 	if (grabbing) { 
-		if (protrusion < clawHeight) protrusion += (robSize/18)*0.3; 
+		if (protrusion < length) protrusion += (robSize/18)*0.3; 
 		//holding = -1;
 	}//animation for protrusion mogo
 	else { 
@@ -210,8 +210,8 @@ void robot::update() {
 	p.mRot += p.rotVel;
 	p.mRot = ((p.mRot / 360) - (long)(p.mRot / 360)) * 360;//only within 360° and -360° (takes the decimal portion and discards the whole number)
 	robot::setVertices();
-	c.claw(d.size);
-	mg.mogo(d.size);
+	c.claw(size);
+	mg.mogo(size);
 	if (c.liftUp && c.liftPos < c.maxHeight) c.liftPos += 4.5*c.liftSpeed;
 	else if (c.liftDown && c.liftPos > 0) c.liftPos -= 8.5*c.liftSpeed; //goes faster coming down
 }

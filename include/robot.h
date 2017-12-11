@@ -26,8 +26,10 @@ public:
 	bool readyToRun = false;
 	bool thinking = false;
 	bool grabMoGo = false;//ideally want to get mogo first
-	int goalCone = 0;
-	int goalMogo = 0;
+	void collision(robot *r);
+	vec3 closestPoint;
+	int closestVertice = 0;
+	float size = 18;//important size 
 	bool reRouting = false;
 	enum action  {
 		ACTION_ROTATE,
@@ -53,12 +55,13 @@ public:
 	debug db;
 	//claw
 	struct intake {
-		float clawSize;
+		int goal = 0;
+		float size;
 		float baseSize;//base of the claw
-		float clawPos;
-		float clawThick;
-		float clawHeight;
-		float clawSpeed;
+		float position;
+		float thickness;
+		float length;
+		float speed;
 		float protrusion;//useful for mogo coming out
 		bool grabbing = false;
 		int holding = -1;//index for which element is being grabbed, to draw it above all the rest. 
@@ -85,7 +88,6 @@ public:
 	struct details {
 		float motorSpeed = (float)MAXSPEED;
 		float basePower;
-		float size = 18;
 		bool touchingPole = false;
 		bool frontStop = false, backStop = false;
 	};
