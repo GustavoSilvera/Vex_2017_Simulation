@@ -28,7 +28,6 @@ public:
 	void FieldUpdate(std::vector<robot> *r);
 	void initialize(std::vector<robot> *r);
 	bool isInit; // suggestion: construct instead of initialize
-
 	struct fence {
 		/*const*/ float fieldSizeIn = 141.05;// 140.5 + 2 * (1.27);wall thickness accounted for
 		float depthIn = 1.27;//thickness of the vex fence
@@ -53,7 +52,7 @@ public:
 		void fencePush(fence *f);
 		void robotColl(int index, robot *r, int type, fence *f, int roboIndex);
 		void collision(element *e);
-		void collideWith(robot *robit, vec3 closestPoint, int type, int index, float *d2V, int roboIndex);
+		void collideWith(robot *robit, vec3 closestPoint, int type, int index, int roboIndex);
 		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
 		std::vector<bool> inPossession;//if being held or whatnot
 	};

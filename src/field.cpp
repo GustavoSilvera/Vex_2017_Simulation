@@ -86,12 +86,29 @@ float calcD2Edge(float a, float b, robot *robit, float prop) {/*not taking into 
 	float C1 = ( ( (sqr(a) - sqr(b)) / (prop*robit->size)) + (prop*robit->size)) / 2;
 	return sqrt(abs(sqr(a) - sqr(C1)));
 }
-bool inFront(float *d2V) {
-	return (d2V[0] + d2V[1] < d2V[2] + d2V[3]);//checking if cone is closer to the front side
-}
-bool onRight(float *d2V) {
-	return (d2V[1] + d2V[2] < d2V[0] + d2V[3]);//checking if cone is closer to the right side
-}
+struct dist2Vert {
+	float v[4];
+	float sortedV[4];//created copy of vals to not directly affect anything badly
+	bool inFront() {
+		return (v[0] + v[1] < v[2] + v[3]);//checking if cone is closer to the front side
+	}
+	bool onRight() {
+		return (v[1] + v[2] < v[0] + v[3]);//checking if cone is closer to the right side
+	}
+	inline void SortSmallest() {//finds smallest of the list provided
+		sortedV[0] = v[0];
+		sortedV[1] = v[1];
+		sortedV[2] = v[2];
+		sortedV[3] = v[3];
+		std::sort(sortedV, sortedV + sizeof(v)/sizeof(float));
+	}
+	inline int sortSmallVER() {
+		SortSmallest();
+		for (int i = 0; i < sizeof(v)/sizeof(float); i++) {
+			if (sortedV[0] == v[i]) return i;//if smallest value is equal to val
+		}
+	}
+};
 //calculates distance between the cone's centre and each vertice
 void field::element::fencePush(fence *f) {
 	float d2Top = f->fieldSizeIn - pos.Y;
@@ -112,29 +129,30 @@ bool withinAngle(double angle, int lowerBound, int upperBound) {
 	return (angle < upperBound - thresh && angle > lowerBound + thresh) || (angle + 180 < upperBound - thresh && angle + 180 > lowerBound + thresh || (angle + 360 < upperBound - thresh && angle + 360 > lowerBound + thresh));
 	//checks both the positive and "negative" angle
 }
-vec3 findClosest(robot *robit, vec3 pos, float *d2V, float prop) {
+vec3 findClosest(robot *robit, vec3 pos, dist2Vert *d2V, float prop) {
 	vec3 closestPoint;
 	float mogoSide = 0;
 	if (prop != 1) mogoSide = robit->mg.protrusion * 2;//for mogo collisions, when not dealing with entire robot
-	float d2RobotEdge = calcD2Edge(SortSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), Sort2ndSmallest(d2V[0], d2V[1], d2V[2], d2V[3]), robit, prop);//calculates the distance to the edge of the robit
+	d2V->SortSmallest();
+	float d2RobotEdge = calcD2Edge(d2V->sortedV[0], d2V->sortedV[1], robit, prop);//calculates the distance to the edge of the robit
 	if (robit->directlyInPath(true, prop * robit->size, pos)) {//either directly in front or behing based off center x and y position
-		if (inFront(d2V)) closestPoint = vec3(pos.X - (d2RobotEdge)*cos(gAngle), pos.Y + (d2RobotEdge)*sin(gAngle));//does work
+		if (d2V->inFront()) closestPoint = vec3(pos.X - (d2RobotEdge)*cos(gAngle), pos.Y + (d2RobotEdge)*sin(gAngle));//does work
 		else closestPoint = vec3(pos.X + (d2RobotEdge)*cos(gAngle), pos.Y - (d2RobotEdge)*sin(gAngle));//does work
 	}
 	//had to inverse x and y because horiontal lines
 	else if (robit->directlyInPath(false, robit->size + mogoSide, pos)) {
-		if (onRight(d2V)) closestPoint = vec3(pos.X + (d2RobotEdge)*sin(gAngle), pos.Y + (d2RobotEdge)*cos(gAngle));//does work
+		if (d2V->onRight()) closestPoint = vec3(pos.X + (d2RobotEdge)*sin(gAngle), pos.Y + (d2RobotEdge)*cos(gAngle));//does work
 		else closestPoint = vec3(pos.X - (d2RobotEdge)*sin(gAngle), pos.Y - (d2RobotEdge)*cos(gAngle));//does work
 	}
 	else {//not directly in path finds which vertice is the closest to the cone
-		int smallest_vertice = sortSmallVER(d2V[0], d2V[1], d2V[2], d2V[3]);
+		int smallest_vertice = d2V->sortSmallVER();
 		if(prop == 1)//dealing with entire robot collisions (not just mogo)
 			closestPoint = robit->db.vertices[smallest_vertice];//closest point to center will then be the vertice
 		else closestPoint = robit->db.MGVert[smallest_vertice];//closest point to center will then be the vertice
 	}
 	return closestPoint;
 }
-void field::element::collideWith(robot *robit, vec3 closestPoint, int type, int index, float *d2V, int roboIndex) {
+void field::element::collideWith(robot *robit, vec3 closestPoint, int type, int index, int roboIndex) {
 	vec3 R = (closestPoint + pos.times(-1)).times(radius / pos.distance(closestPoint)) + pos;
 	pos.X -= R.X - closestPoint.X;
 	pos.Y -= R.Y - closestPoint.Y;
@@ -157,17 +175,17 @@ void field::element::collideWith(robot *robit, vec3 closestPoint, int type, int 
 void field::element::robotColl(int index, robot *robit, int type, fence *f, int roboIndex) {
 	//collisions from robot
 	float d2Robot = pos.distance(robit->p.position);
-	float d2V[4] = {0, 0, 0, 0};
+	dist2Vert ver;
 	bool inPositionMoGo = false;
 	if (pos.Z < height && d2Robot < renderRad * robit->size) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
-		for (int v = 0; v < 4; v++) {
-			d2V[v] = pos.distance(robit->db.vertices[v]);//defines all the distance variables
+		for (int i = 0; i < sizeof(ver.v)/sizeof(float); i++) {
+			ver.v[i] = pos.distance(robit->db.vertices[i]);//defines all the distance variables
 		}	
-		vec3 closestPoint = findClosest(robit, pos, d2V, 1);//calculates the closest point given the vertices
+		vec3 closestPoint = findClosest(robit, pos, &ver, 1);//calculates the closest point given the vertices
 		float d2closestPoint = pos.distance(closestPoint);
 		if (type == MOGO &&//is mogo?
 			abs(robit->mg.protrusion - 7.5)<0.5 &&//mogo is ar low position
-			inFront(d2V) &&//behind
+			ver.inFront() &&//behind
 			robit->directlyInPath(true, robit->size / 4, pos) && //in front or back
 			d2closestPoint > radius && //isnt going inside full robit
 			d2closestPoint <= 1.5*radius+robit->mg.protrusion) {
@@ -178,24 +196,24 @@ void field::element::robotColl(int index, robot *robit, int type, fence *f, int 
 			}
 		}
 		else if (!inPositionMoGo && d2closestPoint < radius) {//touching
-			collideWith(robit, closestPoint, type, index, d2V, roboIndex);
+			collideWith(robit, closestPoint, type, index, roboIndex);
 		}
 	}
 	float mogoProp = 2.5*(robit->mg.size) / robit->size;//proportion of MOGO size to robot
-	if (inFront(d2V) && !inPositionMoGo) {//only do mogo calcs if behind
+	if (ver.inFront() && !inPositionMoGo) {//only do mogo calcs if behind
 		float d2MoGo = pos.distance(
 			vec3(
 				robit->p.position.X + robit->mg.protrusion * cos((robit->p.mRot) * PI / 180),
 				robit->p.position.Y + robit->mg.protrusion * sin((robit->p.mRot) * PI / 180)
 			));
 		if (pos.Z < height && d2MoGo < renderRad * robit->size / 2) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
-			float d2Vmogo[4];
-			for (int v = 0; v < 4; v++) {
-				d2Vmogo[v] = pos.distance(robit->db.MGVert[v]);
+			dist2Vert verMoGo;
+			for (int i = 0; i < sizeof(verMoGo.v) / sizeof(float); i++) {
+				verMoGo.v[i] = pos.distance(robit->db.MGVert[i]);
 			}
-			vec3 closestPointMOGO = findClosest(robit, pos, d2Vmogo, mogoProp);//calculates the closest point given the vertices
+			vec3 closestPointMOGO = findClosest(robit, pos, &verMoGo, mogoProp);//calculates the closest point given the vertices
 			if (pos.distance(closestPointMOGO) <= radius || inPossession[roboIndex]) {//touching
-				collideWith(robit, closestPointMOGO, type, index, d2Vmogo, roboIndex);
+				collideWith(robit, closestPointMOGO, type, index, roboIndex);
 			}
 		}
 	}
