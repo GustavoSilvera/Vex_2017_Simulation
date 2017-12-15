@@ -96,6 +96,7 @@ public:
 	void drawRobot(robot *r);
 	void draw();
 	vex v;
+	bool debuggingBotDraw = false;
 };
 void CimulationApp::setup() {
 	srand(time(NULL));//seeds random number generator
@@ -145,10 +146,17 @@ void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getChar() == 'm' || event.getChar() == 'M') v.debugText = !v.debugText;
 	if (event.getChar() == 'n' || event.getChar() == 'N') v.r[0].forwards(100);//works as of rn for ~1" 
 	if (event.getChar() == 'B' || event.getChar() == 'b') v.r[0].rotate(-100);//works as of rn as ~1°
+	if (event.getChar() == 'G' || event.getChar() == 'g') v.f.initialize(&v.r);//reset field
+	if (event.getChar() == 'V' || event.getChar() == 'v') debuggingBotDraw = !debuggingBotDraw;//draw cool lines
+
 	if (event.getChar() == 'c') v.r[0].readScript();
 	if (event.getChar() == 'q') { 
 		for (int rob = 1; rob < v.r.size(); rob++) {
-			v.r[rob].thinking = true;
+			if(v.r[rob].thinking != true) v.r[rob].thinking = true;
+			else {
+				v.r[rob].thinking = false;
+				v.r[rob].reset();
+			}
 		}
 	}
 }
@@ -715,7 +723,8 @@ void CimulationApp::robotDebug() {
 			v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - (v.r[0].db.vertices[2].Y + 300 * cos((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar),
 			cinder::Vec2f(v.f.f.inFromEnd*ppi*v.scalar + (v.r[0].db.vertices[3].X - 300 * sin((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar,
 				v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - (v.r[0].db.vertices[3].Y - 300 * cos((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar));
-		//for mogo
+		//for mogo legs
+		//for (int mog = 0; mog < 1; mog++) {//used for dual mogo side strat LATER
 		for (int i = 0; i < 4; i++) {//simplified version of drawing the MGVert
 			gl::drawSolidCircle(R2S2(v.r[0].db.MGVert[i]), 5 + i);
 			//else gl::drawSolidCircle(Vec2f(ppi*v.scalar * v.r[0].db.MGVert[i].X, ppi*v.scalar * v.r[0].db.MGVert[i].Y), 5 + i);
@@ -741,7 +750,7 @@ void CimulationApp::robotDebug() {
 			v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - (v.r[0].db.MGVert[2].Y + 300 * cos((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar),
 			cinder::Vec2f(v.f.f.inFromEnd*ppi*v.scalar + (v.r[0].db.MGVert[3].X - 300 * sin((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar,
 				v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - (v.r[0].db.MGVert[3].Y - 300 * cos((-v.r[0].p.mRot) * PI / 180))*ppi*v.scalar));
-
+		
 		//draw circle
 		gl::drawStrokedCircle(Vec2f(v.f.f.inFromEnd*ppi*v.scalar + v.r[0].p.position.X*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - v.r[0].p.position.Y*ppi*v.scalar), renderRad * v.r[0].size*ppi*v.scalar);
 		gl::drawStrokedRect(Area(v.f.f.inFromEnd*ppi*v.scalar + v.r[0].db.vertices[0].X*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - v.r[0].db.vertices[0].Y*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.r[0].db.vertices[2].X*ppi*v.scalar, v.f.f.inFromEnd*ppi*v.scalar + v.f.f.fieldSizeIn*ppi*v.scalar - v.r[0].db.vertices[2].Y*ppi*v.scalar));
@@ -889,9 +898,9 @@ void CimulationApp::draw() {
 		v.r[0].p.position.X + v.r[0].mg.protrusion * cos((v.r[0].p.mRot) * PI / 180)*2, 
 		v.r[0].p.position.Y + v.r[0].mg.protrusion * sin((v.r[0].p.mRot) * PI / 180)*2)), v.scalar * 5);
 
-	gl::drawSolidCircle(R2S2(vec3(v.r[0].closestPoint.X, v.r[0].closestPoint.Y)), v.scalar * 5);
-	gl::color(0, 1, 0);
-	gl::drawSolidCircle(R2S2(vec3(v.r[0].db.vertices[v.r[0].closestVertice].X, v.r[0].db.vertices[v.r[0].closestVertice].Y)), v.scalar * 5);
+	//gl::drawSolidCircle(R2S2(vec3(v.f.c[30].closestPoint.X, v.f.c[30].closestPoint.Y)), v.scalar * 5);
+//	gl::color(0, 1, 0);
+//	gl::drawSolidCircle(R2S2(vec3(v.r[0].db.vertices[v.r[0].closestVertice].X, v.r[0].db.vertices[v.r[0].closestVertice].Y)), v.scalar * 5);
 
 	if (v.f.mg[5].inPossession[1]) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
@@ -907,7 +916,7 @@ void CimulationApp::draw() {
 	gl::color(1, 1, 1);
 	//USER INTERFACE
 	buttons(100);//size in px
-	//robotDebug();
+	if(debuggingBotDraw) robotDebug();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
 	drawText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
 	if(v.debugText && s.SimRunning != s.CUSTOMIZE) textDraw();//dont run on truspeed sim, unnecessary

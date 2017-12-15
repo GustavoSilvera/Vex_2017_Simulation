@@ -187,8 +187,8 @@ void field::element::robotColl(int index, robot *robit, int type, fence *f, int 
 			abs(robit->mg.protrusion - 7.5)<0.5 &&//mogo is ar low position
 			ver.inFront() &&//behind
 			robit->directlyInPath(true, robit->size / 4, pos) && //in front or back
-			d2closestPoint > radius && //isnt going inside full robit
-			d2closestPoint <= 1.5*radius+robit->mg.protrusion) {
+			d2closestPoint >=0.95* radius && //isnt going inside full robit
+			d2closestPoint <= 1.5*radius) {
 			inPositionMoGo = true;
 			if (!robit->mg.grabbing) {
 				robit->mg.holding = index+100;
@@ -200,20 +200,23 @@ void field::element::robotColl(int index, robot *robit, int type, fence *f, int 
 		}
 	}
 	float mogoProp = 2.5*(robit->mg.size) / robit->size;//proportion of MOGO size to robot
-	if (ver.inFront() && !inPositionMoGo) {//only do mogo calcs if behind
+	if (ver.inFront()) {//only do mogo calcs if in front
 		float d2MoGo = pos.distance(
 			vec3(
 				robit->p.position.X + robit->mg.protrusion * cos((robit->p.mRot) * PI / 180),
 				robit->p.position.Y + robit->mg.protrusion * sin((robit->p.mRot) * PI / 180)
 			));
-		if (pos.Z < height && d2MoGo < renderRad * robit->size / 2) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
+		if (pos.Z < height && d2MoGo < renderRad * robit->size/2) {//within a radius around the robot of 18 inches around the center point of the bodyvec3 origin = c[i].pos;//calculattes yintercepts for each cone relative to their position
 			dist2Vert verMoGo;
 			for (int i = 0; i < sizeof(verMoGo.v) / sizeof(float); i++) {
 				verMoGo.v[i] = pos.distance(robit->db.MGVert[i]);
 			}
 			vec3 closestPointMOGO = findClosest(robit, pos, &verMoGo, mogoProp);//calculates the closest point given the vertices
-			if (pos.distance(closestPointMOGO) <= radius || inPossession[roboIndex]) {//touching
-				collideWith(robit, closestPointMOGO, type, index, roboIndex);
+			bool mogoInReady = (type == MOGO && robit->directlyInPath(true, robit->mg.size, pos));
+			if (!mogoInReady) {
+				if (pos.distance(closestPointMOGO) <= radius) {//touching
+					collideWith(robit, closestPointMOGO, type, index, roboIndex);
+				}
 			}
 		}
 	}

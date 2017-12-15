@@ -117,6 +117,8 @@ void robot::reset() {
 	p.acceleration.Y = 0;
 	p.velocity.X = 0;
 	p.velocity.Y = 0;
+	p.rotAcceleration = 0;
+	p.rotVel = 0;
 }
 bool robot::directlyInPath(bool vertical, int range, vec3 pos) {//vertical lines
 	vec3 origin = pos, topLeft, topRight, bottomLeft;//calculattes yintercepts for each cone relative to their position
@@ -172,6 +174,28 @@ void robot::setVertices() {
 		db.MGVert[2].Y = p.position.Y + centerSin - mogoProp*sinDist - protrusionCos;
 		db.MGVert[3].X = p.position.X + centerCos - mogoProp*sinDist + protrusionSin;//flipped sin and cos
 		db.MGVert[3].Y = p.position.Y + centerSin - mogoProp*cosDist - protrusionCos;
+		/*
+		//for rightmost "leg"
+		db.MGVert[1][0].X = p.position.X + centerCos + mogoProp*sinDist + protrusionSin;
+		db.MGVert[1][0].Y = p.position.Y + centerSin + mogoProp*cosDist - protrusionCos;
+		db.MGVert[0][0].X = db.MGVert[1][0].X - centerSin;//idk
+		db.MGVert[0][0].Y = db.MGVert[1][0].Y + centerCos;//idk
+		db.MGVert[2][0].X = p.position.X + centerCos + mogoProp*cosDist + protrusionSin;
+		db.MGVert[2][0].Y = p.position.Y + centerSin - mogoProp*sinDist - protrusionCos;
+		db.MGVert[3][0].X = db.MGVert[2][0].X - centerSin;//flipped sin and cos
+		db.MGVert[3][0].Y = db.MGVert[2][0].Y + centerCos;
+		//for leftmost "leg"
+		db.MGVert[0][1].X = p.position.X + centerCos - mogoProp*cosDist + protrusionSin;
+		db.MGVert[0][1].Y = p.position.Y + centerSin + mogoProp*sinDist - protrusionCos;
+		db.MGVert[1][1].X = db.MGVert[0][1].X + centerSin;
+		db.MGVert[1][1].Y = db.MGVert[0][1].Y - centerCos;
+		db.MGVert[3][1].X = p.position.X + centerCos - mogoProp*sinDist + protrusionSin;//flipped sin and cos
+		db.MGVert[3][1].Y = p.position.Y + centerSin - mogoProp*cosDist - protrusionCos;
+		db.MGVert[2][1].X = db.MGVert[3][1].X + centerSin;
+		db.MGVert[2][1].Y = db.MGVert[3][1].Y - centerCos;
+		//for other "leg"
+		//blargh dont work rn. positioning good, but need to rework physics
+		*/
 }
 void robot::intake::claw(float robSize) {
 	//janky animations for claw 
