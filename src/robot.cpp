@@ -36,18 +36,27 @@ void robot::updateFeatures() {
 	mg.position = mg.size;//inf
 	mg.length = (1 / 2.4)*size;//7.5
 }
+float goTo(float current, float req, float it) {
+	int dir = 1;
+	if (req < current) dir = -1;
+	if (abs(current - req) > 2 * it) return current + dir*it;
+	else return req;
+}
+float accelFunc(float x, float power, float rateOfChange, float friction) {
+	return 2 * (power / rateOfChange) - (friction * x);
+}
 void robot::forwards(float power) {
 	//konstants that should be changed later
 	if(power != 0) d.basePower = power;
-	
 	float rateOfChange = 40;//constant changing the amount of initial change the acceleration goes through? maibe
 	//calculate acceleration taking friction into account
-	float Xaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.X);
-	float Yaccel = 2 * (power / rateOfChange) - (p.amountOfFriction * p.velocity.Y);
+	float Xaccel = accelFunc(p.velocity.X, power, rateOfChange, p.amountOfFriction);
+	float Yaccel = accelFunc(p.velocity.Y, power, rateOfChange, p.amountOfFriction);
+	p.maxVel = -2 * (d.basePower / rateOfChange) / (-p.amountOfFriction);
 	//limiting acceleration to 0.01, no need for further acceleration rly
-	if(abs(Xaccel) > 0.01) p.acceleration.X = Xaccel;
+	if(abs(Xaccel) > 0.01) p.acceleration.X = goTo(p.acceleration.X, Xaccel, .5);
 	else p.acceleration.X = 0;
-	if (abs(Yaccel) > 0.01) p.acceleration.Y = Yaccel;
+	if (abs(Yaccel) > 0.01) p.acceleration.Y = goTo(p.acceleration.Y, Yaccel, .5);
 	else p.acceleration.Y = 0;
 	if (abs(p.velocity.X) < 0.01) p.velocity.X = 0;
 	if (abs(p.velocity.Y) < 0.01) p.velocity.Y = 0;
@@ -87,8 +96,6 @@ void robot::rotate(float power) {
 	else p.rotAcceleration = 0;
 	if (abs(p.rotVel) < 0.1) p.rotVel = 0;
 }
-
-
 void robot::physics::speedMult(float base, float rot) {
 	velocity.X = getSign(velocity.X) * abs(velocity.X*base);
 	velocity.Y = getSign(velocity.Y) * abs(velocity.Y*base);
@@ -210,7 +217,6 @@ void robot::intake::claw(float robSize) {
 	if (grabbing == false) holding = -1;//reset index (TO -1 (for cones) )
 	if (liftDown  && liftPos > 0 && position > size) position -= speed;
 }
-
 void robot::intake::mogo(float robSize) {	
 	if (grabbing) { 
 		if (protrusion < length) protrusion += (robSize/18)*0.3; 
@@ -221,7 +227,6 @@ void robot::intake::mogo(float robSize) {
 	}//animation for intruding mogo
 	//if (grabbing == false) holding = -1;//reset index (TO -1 (for mogos) )
 }
-
 void robot::update() {
 	//vec3 pushback = vec3(
 	//	cos((p.mRot)*(PI / 180)) * (getSign(p.velocity.X) * coneWeight * p.frictionC + getSign(p.velocity.X) * moGoWeight * p.frictionM),

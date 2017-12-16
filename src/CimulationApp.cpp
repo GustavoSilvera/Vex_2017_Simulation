@@ -97,6 +97,7 @@ public:
 	void draw();
 	vex v;
 	bool debuggingBotDraw = false;
+	ci::gl::Texture dial;
 };
 void CimulationApp::setup() {
 	srand(time(NULL));//seeds random number generator
@@ -110,6 +111,7 @@ void CimulationApp::setup() {
 	v.f.fieldBare = gl::Texture(loadImage(loadAsset("InTheZoneFieldBare.jpg")));
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
+	dial = gl::Texture(loadImage(loadAsset("dialBkgrnd.png")));
 	setWindowSize(WindowWidth, WindowHeight);
 	v.scalar = (float)getWindowWidth() / (float)WindowWidth;
 }
@@ -595,15 +597,24 @@ void CimulationApp::buttons(int buttonSize) {//function for drawing the buttons
 		i++;
 	}
 }
-void drawDial(vec3 amnt, int x, int y, int width, int height, float scale, float max) {
+void drawDial(vec3 amnt, vec3 pos, float max, float scale, ci::gl::Texture dial) {
+	int width = 2*scale;//px fixed
+	int radius = 80*scale;//px fixed
+	int init = 226;//initial angle
+	gl::draw(dial, Area(
+		scale*( pos.X - radius*1.2),
+		scale*( pos.Y - radius*1.2),
+		scale*( pos.X + radius*1.2),
+		scale*( pos.Y + radius*1.2)));
 	glPushMatrix();//rtation
 	float total = sqrt(sqr(amnt.X) + sqr(amnt.Y));
-	float angle = 180 - total*(180 / max);
-	gl::translate(Vec3f(x*scale, y*scale, 0));//origin of rotation
+	float angle = init - total*((init-35) / max);
+	gl::translate(Vec3f(pos.X*scale, pos.Y*scale, 0));//origin of rotation
 	gl::rotate(Vec3f(0, 0, -angle - 90));//something for like 3D rotation.... ugh
-	gl::color(1, 1, 1);
-	gl::drawSolidRect(Area(Vec2d(-width, 0), Vec2d(width, height)));
+	gl::color(abs(init /limitFrom(0.1, angle)), abs(angle/ init), 0);//cool colour transition (neat maths)
+	gl::drawSolidRect(Area(Vec2d(-width, 0), Vec2d(width, radius)));//draws dial
 	glPopMatrix();//end of rotation code
+	gl::color(1, 1, 1);//resets colour to white
 }
 void CimulationApp::textDraw() {//function for drawing the buttons 
 	//(	WARNING: RESOURCE HOG!!!!!!!!!!!)
@@ -633,8 +644,8 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 		++i;
 	}
 	//drawwing DIALs
-	drawDial(v.r[0].p.velocity, tX + 250, 300, 2, 100, v.scalar, 1.75);
-	drawDial(v.r[0].p.acceleration, tX + 250, 400, 2, 100, v.scalar, 10.3);
+	drawDial(v.r[0].p.velocity, vec3(1450, 300).times(v.scalar), abs(v.r[0].p.maxVel), v.scalar, dial);
+	drawDial(v.r[0].p.acceleration, vec3(1450, 500).times(v.scalar), 5, v.scalar, dial);
 }
 void CimulationApp::callAction(bool increase, int buttonAction) {
 	if (buttonAction == 0) {

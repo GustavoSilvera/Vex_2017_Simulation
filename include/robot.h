@@ -80,6 +80,7 @@ public:
 		vec3 velocity;//diff x, diff y, diff z
 		vec3 acceleration = vec3(0, 0, 0);
 		float rotVel = 0;
+		float maxVel = 0;
 		float rotAcceleration = 0;
 		void speedMult(float base, float rot);
 		float amountOfFriction = 5;	//constant changing the amount of friction for the robot
