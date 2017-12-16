@@ -163,7 +163,9 @@ void field::element::collideWith(robot *robit, vec3 closestPoint, int type, int 
 	else weight = 1;
 	if (!inPossession[roboIndex] && !robit->mg.grabbing ) {//makes sure not to pushback robot if picking up a mogo
 		robit->p.position.X += weight * (R.X - closestPoint.X);
-		robit->p.position.Y += weight * (R.Y - closestPoint.Y);
+		robit->p.position.Y += weight * (R.Y - closestPoint.Y); 
+		//robit->p.velocity.X += goTo(robit->p.velocity.X, limitFrom(0, -getSign(robit->p.velocity.X)*abs(weight * (R.X - closestPoint.X))), 1);
+		//robit->p.velocity.Y += goTo(robit->p.velocity.Y, limitFrom(0, -getSign(robit->p.velocity.Y)*abs(weight * (R.Y - closestPoint.Y))), 1);
 		if(type == STAGO) robit->p.velocity = vec3(0, 0, 0);
 	}
 	else if (type == STAGO) {//still push on stago

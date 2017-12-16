@@ -11,6 +11,8 @@
 #include "cinder/Font.h"
 #include <string>
 #include <sstream>
+#include "cinder/gl/TextureFont.h"
+
 
 
 //random #defines and other things that are used throughout all the files
@@ -43,6 +45,12 @@ inline float getSign(float value) {//returns whether a number is negative or pos
 }
 inline float sqr(float value) {
 	return value*value;
+}
+inline float goTo(float current, float req, float it) {
+	int dir = 1;
+	if (req < current) dir = -1;
+	if (abs(current - req) > 2 * it) return current + dir*it;
+	else return req;
 }
 inline float limitTo(float limit, float value) {
 	if (abs(value) < abs(limit)) return value;

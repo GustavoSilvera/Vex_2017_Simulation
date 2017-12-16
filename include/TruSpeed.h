@@ -37,6 +37,6 @@ public:
 		int midpoint;//midpoint of the graph, if the graph starts 20 points down.tY;
 	};
 	graph gr;
-	
+
 };
 #endif

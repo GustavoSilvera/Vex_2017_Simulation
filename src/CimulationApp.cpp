@@ -5,6 +5,10 @@
 #include "cinder/Vector.h"
 #include "cinder/Text.h"
 #include "cinder/Font.h"
+#include "cinder/gl/TextureFont.h"
+#include "cinder/Utilities.h"
+
+
 #include <ostream>
 #include <fstream>
 #include <vector>
@@ -72,6 +76,8 @@ public:
 	void clicky(int num_buttons, int size);
 	void buttons(int size);
 	void textDraw();
+	void drawDials(vec3I begin);
+	void drawFontText(float text, vec3I pos, vec3I colour, int size);
 	//for auto robots
 	void goGrab(robot *r, field::element *e, int coneIndex, int roboIndex);
 	void stackOn(robot *r, field::element *e);
@@ -98,6 +104,8 @@ public:
 	vex v;
 	bool debuggingBotDraw = false;
 	ci::gl::Texture dial;
+	Font mFont;
+	gl::TextureFontRef	mTextureFont;
 };
 void CimulationApp::setup() {
 	srand(time(NULL));//seeds random number generator
@@ -114,6 +122,8 @@ void CimulationApp::setup() {
 	dial = gl::Texture(loadImage(loadAsset("dialBkgrnd.png")));
 	setWindowSize(WindowWidth, WindowHeight);
 	v.scalar = (float)getWindowWidth() / (float)WindowWidth;
+	mFont = Font("Arial", 35);
+	mTextureFont = gl::TextureFont::create(mFont);
 }
 //cinder::functions
 void CimulationApp::mouseDown(MouseEvent event) {
@@ -134,6 +144,7 @@ void CimulationApp::mouseMove(MouseEvent event) {
 		}
 	}
 }
+
 void CimulationApp::keyDown(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_UP)	v.r[0].ctrl.ArrowKeyUp = true;
 	if (event.getCode() == KeyEvent::KEY_DOWN)	v.r[0].ctrl.ArrowKeyDown = true;
@@ -597,7 +608,7 @@ void CimulationApp::buttons(int buttonSize) {//function for drawing the buttons
 		i++;
 	}
 }
-void drawDial(vec3 amnt, vec3 pos, float max, float scale, ci::gl::Texture dial) {
+void drawDial(float amnt, vec3 pos, float max, float scale, ci::gl::Texture dial) {
 	int width = 2*scale;//px fixed
 	int radius = 80*scale;//px fixed
 	int init = 226;//initial angle
@@ -607,8 +618,7 @@ void drawDial(vec3 amnt, vec3 pos, float max, float scale, ci::gl::Texture dial)
 		scale*( pos.X + radius*1.2),
 		scale*( pos.Y + radius*1.2)));
 	glPushMatrix();//rtation
-	float total = sqrt(sqr(amnt.X) + sqr(amnt.Y));
-	float angle = init - total*((init-35) / max);
+	float angle = init - amnt*((init-35) / max);
 	gl::translate(Vec3f(pos.X*scale, pos.Y*scale, 0));//origin of rotation
 	gl::rotate(Vec3f(0, 0, -angle - 90));//something for like 3D rotation.... ugh
 	gl::color(abs(init /limitFrom(0.1, angle)), abs(angle/ init), 0);//cool colour transition (neat maths)
@@ -627,25 +637,61 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 		{ "Angle:", v.r[0].p.mRot},
 		{ "X Pos:", v.r[0].p.position.X},
 		{ "Y Pos:", v.r[0].p.position.Y},
-		{ "X-Vel:", v.r[0].p.velocity.X},
-		{ "Y-Vel:", v.r[0].p.velocity.X},
-		{ "X-Acc:", v.r[0].p.acceleration.X},//same as y accel
-		{ "Y-Acc:", v.r[0].p.acceleration.Y},//same as X accel
-		{ "R-Vel:", v.r[0].p.rotVel},
-		{ "R-Acc:", v.r[0].p.rotAcceleration},
 		{ "L-Pos:", v.r[0].c.liftPos},
 		{ "L-Acc:", v.r[0].p.rotAcceleration}
+		//velocity and acceleration measured with drawDials
 	};
 	int i = 0;
 	for (text& ti : t) {
 		int tY = (i + 1) * dInBtw;//increment x position for each button based off index
 		gl::drawString(ti.s, Vec2f(v.scalar*(tX - 70), v.scalar*(tY)), Color(1, 1, 1), Font("Arial", v.scalar * 30));
-		drawText(ti.f, vec3I(v.scalar*(tX), v.scalar*(tY)), vec3I(1, 1, 1), v.scalar * 30);
+		drawFontText(ti.f, vec3I(v.scalar*(tX), v.scalar*(tY)), vec3I(1, 1, 1), v.scalar * 30);
 		++i;
 	}
+	gl::color(1, 1, 1);
+
+}
+float getHypo(vec3 val) {
+	return sqrt(sqr(val.X) + sqr(val.Y));
+}
+void CimulationApp::drawDials(vec3I begin) {
 	//drawwing DIALs
-	drawDial(v.r[0].p.velocity, vec3(1450, 300).times(v.scalar), abs(v.r[0].p.maxVel), v.scalar, dial);
-	drawDial(v.r[0].p.acceleration, vec3(1450, 500).times(v.scalar), 5, v.scalar, dial);
+	struct text {
+		vec3 val;
+		string s;
+		float max;
+	};
+	text t[] = {
+		{ v.r[0].p.velocity, "Vel:", abs(v.r[0].p.maxVel) },//even
+		{ v.r[0].p.acceleration, "Acc:", 5 },//odd
+		{ v.r[0].p.rotVel, "rVel:", 3.5 },//even
+		{ v.r[1].p.velocity, "Vel:", abs(v.r[0].p.maxVel) },//even
+		{ v.r[1].p.acceleration, "Acc:", 5 },//odd
+		{ v.r[1].p.rotVel, "rVel:", 3.5 }//even
+
+	};
+	int i = 0;
+	vec3 offset;
+	for (text& ti : t) {//draws in grid like pattern, events on right, odds on left
+		float total = getHypo(ti.val);
+		if (i % 2 == 0) offset = vec3(0, 120 * i).times(v.scalar);
+		else offset = vec3(100*2, 120 * (i-1)).times(v.scalar);
+		drawDial(total, vec3(begin.X + offset.X, begin.Y + offset.Y),	ti.max, v.scalar, dial);//draws the dials
+		vec3I stringBegin = vec3I(begin.X + offset.X - 70 * v.scalar, begin.Y + offset.Y + 120*v.scalar);//innitial sstring position
+		mTextureFont->drawString(ti.s, Vec2f(stringBegin.X, stringBegin.Y));//draws words
+		drawFontText(total, vec3I(stringBegin.X + 50*v.scalar, stringBegin.Y-20 * v.scalar), vec3I(1, 1, 1), 30);//draws values
+		i++;
+	}
+
+}
+void CimulationApp::drawFontText(float text, vec3I pos, vec3I colour, int size) {
+	std::stringstream dummyText;
+	std::string PRINT;
+	dummyText << text;
+	dummyText >> PRINT;
+	gl::color(colour.X, colour.Y, colour.Z);
+	mTextureFont->drawString(PRINT, Vec2f(pos.X, pos.Y + 20 * v.scalar));
+	gl::color(1, 1, 1);
 }
 void CimulationApp::callAction(bool increase, int buttonAction) {
 	if (buttonAction == 0) {
@@ -704,7 +750,7 @@ void CimulationApp::controlPanel(robot *r) {//function for drawing the buttons
 	for (text& ti : t) {
 		int tY = (i + 1) * dInBtw;//increment x position for each button based off index
 		gl::drawString(ti.s, Vec2f(v.scalar*(tX - ti.s.length()*17), v.scalar*(tY)), Color(1, 1, 1), Font("Arial", v.scalar * 40));
-		drawText(ti.f, vec3I(v.scalar*(tX), v.scalar*(tY)), vec3I(1, 1, 1), v.scalar * 40);
+		drawFontText(ti.f, vec3I(v.scalar*(tX), v.scalar*(tY)), vec3I(1, 1, 1), v.scalar * 40);
 		int buttonStart = tX + ti.s.length() * 10;
 		ctrlButton(buttonStart, tY, buttonStart + 60, tY + 30, v.scalar, i);
 		++i;
@@ -812,7 +858,7 @@ void CimulationApp::drawRobot(robot *r) {
 	drawClaw(r);
 	glPopMatrix();//end of rotation code
 }
-void drawJoystick(robot *r, joystick *j) {
+void drawJoystick(robot *r, joystick *j) {//DONT RLY WANT JOYSTICK tho
 	gl::drawStrokedCircle(Vec2f(j->drawX + j->drawSize, j->drawY + j->drawSize), j->drawSize);//circle at (800px, vec3(1, 1, 1), 300px) with radius 127px
 	gl::drawStrokedRect(Area(j->drawX, j->drawY, j->drawX + 2 * j->drawSize, j->drawY + 2 * j->drawSize));
 	if (j->withinAnalogRange(mousePos)) {//defined in joystick.h, basically if within the drawing of the boundaries
@@ -820,16 +866,9 @@ void drawJoystick(robot *r, joystick *j) {
 		drawText(round(r->truSpeed(3, j->analogY)), vec3I(mousePos.X + 30, mousePos.Y + 50), vec3I(1, 1, 1), 30);
 	}
 }
-
 void CimulationApp::draw() {
 	gl::enableAlphaBlending();//good for transparent images
 	gl::clear(Color(0, 0, 0));
-	/*glEnable(GL_DEPTH_TEST);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glDepthMask(GL_TRUE);
-	glDepthFunc(GL_LEQUAL);
-	glDepthRange(0.0f, 1.0f);
-	glClearDepth(1.0f);*/
 	//joystick analog drawing
 	if (s.SimRunning == s.CUSTOMIZE ) {//only for CUSTOMIZE and truspeed sim
 		controlPanel(&v.r[0]);
@@ -845,7 +884,7 @@ void CimulationApp::draw() {
 		v.tS.textOutput(&v.r[0], &v.j);//draws the text for the graph
 	}
 	if (s.SimRunning == s.FIELD) {//when field button is pressed
-		drawJoystick(&v.r[0], &v.j);
+		//drawJoystick(&v.r[0], &v.j);//DONT WANT JOYSTICK ON FIELD
 		if (v.recording) {
 			int size = 10;//pixels in which to draw the rectangles width
 			gl::color(1, 0, 0);
@@ -860,9 +899,9 @@ void CimulationApp::draw() {
 			drawRobot(&v.r[rob]);//drawing robot 1
 		}
 		gl::drawString("Score:", Vec2f(v.scalar * 850, v.scalar * 50), Color(1, 1, 1), Font("Arial", v.scalar * 50));
-		drawText(v.f.calculateScore(), vec3I(v.scalar * 1000, v.scalar * 50), vec3I(1, 1, 1), v.scalar * 50);
+		drawFontText(v.f.calculateScore(), vec3I(v.scalar * 1000, v.scalar * 50), vec3I(1, 1, 1), v.scalar * 50);
 		gl::drawString("Time(s):", Vec2f(v.scalar * 1350, v.scalar * 100), Color(1, 1, 1), Font("Arial", v.scalar * 40));
-		drawText(ci::app::getElapsedSeconds(), vec3I(v.scalar * 1480, v.scalar * 100), vec3I(1, 1, 1), v.scalar*40);
+		drawFontText(ci::app::getElapsedSeconds(), vec3I(v.scalar * 1480, v.scalar * 100), vec3I(1, 1, 1), v.scalar*40);
 
 		for (int i = 0; i < v.f.mg.size(); i++) {
 			vec3 RGB;//true color value because cinder uses values from 0->1 for their colours
@@ -893,7 +932,7 @@ void CimulationApp::draw() {
 		}
 		for (int i = 0; i < v.f.mg.size(); i++) {//drawing how many are stacked
 			if (v.f.mg[i].stacked.size() > 0) {
-				drawText(v.f.mg[i].stacked.size(), vec3I(
+				drawFontText(v.f.mg[i].stacked.size(), vec3I(
 					(70 + (int)((v.f.mg[i].pos.X - cRad) * (int)ppi)*v.scalar),
 					(50 + (int)((v.f.f.fieldSizeIn - v.f.mg[i].pos.Y + cRad) * (int)ppi)*v.scalar)),
 					vec3I(1, 1, 1), v.scalar*50);
@@ -901,7 +940,7 @@ void CimulationApp::draw() {
 		}
 		for (int i = 0; i < v.f.pl.size(); i++) {//drawing how many are stacked
 			if (v.f.pl[i].stacked.size() > 0) {
-				drawText(v.f.pl[i].stacked.size(), vec3I(
+				drawFontText(v.f.pl[i].stacked.size(), vec3I(
 					(70 + (int)((v.f.pl[i].pos.X - cRad) * (int)ppi)*v.scalar),
 					(50 + (int)((v.f.f.fieldSizeIn - v.f.pl[i].pos.Y + cRad) * (int)ppi)*v.scalar)),
 					vec3I(1, 1, 1), v.scalar*50);
@@ -929,21 +968,21 @@ void CimulationApp::draw() {
 
 	if (v.f.mg[5].inPossession[1]) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
-	drawText(v.r[0].mg.holding, vec3I(1000, 800), vec3I(0, 1, 0), 30);
+	drawFontText(v.r[0].mg.holding, vec3I(1000, 800), vec3I(0, 1, 0), 30);
 
 	//if (v.r[0].mg.grabbing) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	//else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 
-	drawText(v.r[0].mg.holding, vec3I(1010, 660), vec3I(1, 1, 1), 30);
-//	drawText(v.f.pl[0].height, vec3I(1010, 500), vec3I(1, 1, 1), 30);
-//	drawText(v.r[0].db.rotDist, vec3I(1010, 400), vec3I(1, 1, 1), 30);
+	drawFontText(v.r[0].d.motorSpeed, vec3I(1010, 660), vec3I(1, 1, 1), 30);
+//	drawFontText(v.f.pl[0].height, vec3I(1010, 500), vec3I(1, 1, 1), 30);
+//	drawFontText(v.r[0].db.rotDist, vec3I(1010, 400), vec3I(1, 1, 1), 30);
 
-	gl::color(1, 1, 1);
-	//USER INTERFACE
+		//USER INTERFACE
+	drawDials(vec3I(1250, 400).times(v.scalar));
 	buttons(100);//size in px
 	if(debuggingBotDraw) robotDebug();
 	gl::drawString("FPS: ", Vec2f(getWindowWidth() - 150, 30), Color(0, 1, 0), Font("Arial", 30));
-	drawText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
+	drawFontText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
 	if(v.debugText && s.SimRunning != s.CUSTOMIZE) textDraw();//dont run on truspeed sim, unnecessary
 }
 CINDER_APP_NATIVE(CimulationApp, RendererGl)

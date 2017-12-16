@@ -26,7 +26,7 @@ public:
 	bool readyToRun = false;
 	bool thinking = false;
 	bool grabMoGo = false;//ideally want to get mogo first
-	void collision(robot *r);
+	////void collision(robot *r);
 	vec3 closestPoint;
 	int closestVertice = 0;
 	float size = 18;//important size 
@@ -81,6 +81,7 @@ public:
 		vec3 acceleration = vec3(0, 0, 0);
 		float rotVel = 0;
 		float maxVel = 0;
+		float maxRotVel = 0;
 		float rotAcceleration = 0;
 		void speedMult(float base, float rot);
 		float amountOfFriction = 5;	//constant changing the amount of friction for the robot
@@ -88,9 +89,7 @@ public:
 		physics p;
 	struct details {
 		float motorSpeed = (float)MAXSPEED;
-		float basePower;
-		bool touchingPole = false;
-		bool frontStop = false, backStop = false;
+		int basePower;
 	};
 		details d;
 	struct controls {

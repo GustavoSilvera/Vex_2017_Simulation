@@ -36,12 +36,6 @@ void robot::updateFeatures() {
 	mg.position = mg.size;//inf
 	mg.length = (1 / 2.4)*size;//7.5
 }
-float goTo(float current, float req, float it) {
-	int dir = 1;
-	if (req < current) dir = -1;
-	if (abs(current - req) > 2 * it) return current + dir*it;
-	else return req;
-}
 float accelFunc(float x, float power, float rateOfChange, float friction) {
 	return 2 * (power / rateOfChange) - (friction * x);
 }
@@ -54,10 +48,10 @@ void robot::forwards(float power) {
 	float Yaccel = accelFunc(p.velocity.Y, power, rateOfChange, p.amountOfFriction);
 	p.maxVel = -2 * (d.basePower / rateOfChange) / (-p.amountOfFriction);
 	//limiting acceleration to 0.01, no need for further acceleration rly
-	if(abs(Xaccel) > 0.01) p.acceleration.X = goTo(p.acceleration.X, Xaccel, .5);
-	else p.acceleration.X = 0;
-	if (abs(Yaccel) > 0.01) p.acceleration.Y = goTo(p.acceleration.Y, Yaccel, .5);
-	else p.acceleration.Y = 0;
+		if (abs(Xaccel) > 0.01) p.acceleration.X = goTo(p.acceleration.X, Xaccel, 0.8);
+		else p.acceleration.X = 0;
+		if (abs(Yaccel) > 0.01) p.acceleration.Y = goTo(p.acceleration.Y, Yaccel, 0.8);
+		else p.acceleration.Y = 0;
 	if (abs(p.velocity.X) < 0.01) p.velocity.X = 0;
 	if (abs(p.velocity.Y) < 0.01) p.velocity.Y = 0;
 	//if (abs(power) > 0.01)
@@ -91,6 +85,8 @@ void robot::rotate(float power) {
 	float rateOfChange = 10;//constant changing the amount of initial change the acceleration goes through? maibe
 							//calculate acceleration taking friction into account
 	float rotAccel = 2 * (power / rateOfChange) - (p.amountOfFriction*p.rotVel);
+	p.maxRotVel = -2 * (power / rateOfChange) / (-p.amountOfFriction);
+
 	//limiting acceleration to 0.01, no need for further acceleration rly
 	if (abs(rotAccel) > 0.3) p.rotAcceleration = rotAccel;
 	else p.rotAcceleration = 0;
@@ -246,8 +242,8 @@ void robot::update() {
 }
 
 void robot::moveAround(float jAnalogX, float jAnalogY) {
-	if (ctrl.ArrowKeyUp && !d.frontStop) forwards(d.motorSpeed);//checking up key
-	else if (ctrl.ArrowKeyDown && ! d.backStop) forwards(-d.motorSpeed);//checking down key
+	if (ctrl.ArrowKeyUp) forwards(d.motorSpeed);//checking up key
+	else if (ctrl.ArrowKeyDown) forwards(-d.motorSpeed);//checking down key
 	else if (jAnalogY != 0) forwards(truSpeed(3, -jAnalogY));//chacking analog drawing
 	else forwards(0);//welp, no movement
 
