@@ -595,6 +595,16 @@ void CimulationApp::buttons(int buttonSize) {//function for drawing the buttons
 		i++;
 	}
 }
+void drawDial(vec3 amnt, int x, int y, int width, int height, float scale, float max) {
+	glPushMatrix();//rtation
+	float total = sqrt(sqr(amnt.X) + sqr(amnt.Y));
+	float angle = 180 - total*(180 / max);
+	gl::translate(Vec3f(x*scale, y*scale, 0));//origin of rotation
+	gl::rotate(Vec3f(0, 0, -angle - 90));//something for like 3D rotation.... ugh
+	gl::color(1, 1, 1);
+	gl::drawSolidRect(Area(Vec2d(-width, 0), Vec2d(width, height)));
+	glPopMatrix();//end of rotation code
+}
 void CimulationApp::textDraw() {//function for drawing the buttons 
 	//(	WARNING: RESOURCE HOG!!!!!!!!!!!)
 	const int dInBtw = 50;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
@@ -622,6 +632,9 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 		drawText(ti.f, vec3I(v.scalar*(tX), v.scalar*(tY)), vec3I(1, 1, 1), v.scalar * 30);
 		++i;
 	}
+	//drawwing DIALs
+	drawDial(v.r[0].p.velocity, tX + 250, 300, 2, 100, v.scalar, 1.75);
+	drawDial(v.r[0].p.acceleration, tX + 250, 400, 2, 100, v.scalar, 10.3);
 }
 void CimulationApp::callAction(bool increase, int buttonAction) {
 	if (buttonAction == 0) {
@@ -796,6 +809,7 @@ void drawJoystick(robot *r, joystick *j) {
 		drawText(round(r->truSpeed(3, j->analogY)), vec3I(mousePos.X + 30, mousePos.Y + 50), vec3I(1, 1, 1), 30);
 	}
 }
+
 void CimulationApp::draw() {
 	gl::enableAlphaBlending();//good for transparent images
 	gl::clear(Color(0, 0, 0));
