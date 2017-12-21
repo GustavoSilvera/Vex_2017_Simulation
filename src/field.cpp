@@ -48,14 +48,18 @@ void field::initialize(std::vector<robot> *r) {
 	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
 	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
 	pl.assign(&initPoleConfig[0], &initPoleConfig[numPoles]);
-	(*r)[0].reset();
-	(*r)[0].p.position.X = 35;
-	(*r)[0].p.position.Y = 35;
-	(*r)[0].p.mRot = 45;
-	(*r)[1].reset();
-	(*r)[1].p.position.X = 97;
-	(*r)[1].p.position.Y = 128;
-	(*r)[1].p.mRot = 225;
+	int initAngle = 45, initX = 35, initY = 35;//default for first robit
+	for (int i = 0; i < (*r).size(); i++) {
+		if (i == 1) { initAngle = 225; initX = 97; initY = 128; }
+		else if (i == 2) { initAngle = 225; initX = 128; initY = 97; }
+		else if (i == 3) { initAngle = 45; initX = 25; initY = 50; }
+
+		(*r)[i].reset();
+		(*r)[i].p.position.X = initX;
+		(*r)[i].p.position.Y = initY;
+		(*r)[i].p.mRot = initAngle;
+	}
+
 	//(*r)[2].reset();
 	//(*r)[2].p.position.X = (*r)[1].p.position.Y;//equidistant and symmetric from friend
 	//(*r)[2].p.position.Y = (*r)[1].p.position.X;

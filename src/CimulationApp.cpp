@@ -8,7 +8,6 @@
 #include "cinder/gl/TextureFont.h"
 #include "cinder/Utilities.h"
 
-
 #include <ostream>
 #include <fstream>
 #include <vector>
@@ -42,7 +41,7 @@ public:
 	field f;
 	joystick j;
 	vex() : 
-		r(2), 
+		r(NUMROBOTS),//how many robots on field?
 		tS(&r[0]), 
 		pid(&r[0]), 
 		f(&r){}
@@ -664,10 +663,10 @@ void CimulationApp::drawDials(vec3I begin) {
 	text t[] = {
 		{ v.r[0].p.velocity, "Vel:", abs(v.r[0].p.maxVel) },//even
 		{ v.r[0].p.acceleration, "Acc:", 5 },//odd
-		{ v.r[0].p.rotVel, "rVel:", 3.5 },//even
-		{ v.r[1].p.velocity, "Vel:", abs(v.r[0].p.maxVel) },//even
-		{ v.r[1].p.acceleration, "Acc:", 5 },//odd
-		{ v.r[1].p.rotVel, "rVel:", 3.5 }//even
+		{ v.r[0].p.rotVel, "rVel:", 3.5 }//even
+		//{ v.r[1].p.velocity, "Vel:", abs(v.r[0].p.maxVel) },//even
+		//{ v.r[1].p.acceleration, "Acc:", 5 },//odd
+		//{ v.r[1].p.rotVel, "rVel:", 3.5 }//even
 
 	};
 	int i = 0;

@@ -45,7 +45,7 @@ public:
 	fence f;
 
 	struct element {
-		element(vec3 initpos, float initradius, float initheight) : pos(initpos), radius(initradius), height(initheight), inPossession(3) {}
+		element(vec3 initpos, float initradius, float initheight) : pos(initpos), radius(initradius), height(initheight), inPossession(NUMROBOTS) {}
 		vec3 pos;
 		float radius;//size of the object;
 		/*const*/ float height;
