@@ -106,6 +106,7 @@ public:
 	Font mFont;
 	gl::TextureFontRef	mTextureFont;
 };
+//initial setup for all the variables and stuff
 void CimulationApp::setup() {
 	srand(time(NULL));//seeds random number generator
 	//gl::enableVerticalSync();
@@ -121,17 +122,19 @@ void CimulationApp::setup() {
 	dial = gl::Texture(loadImage(loadAsset("dialBkgrnd.png")));
 	setWindowSize(WindowWidth, WindowHeight);
 	v.scalar = (float)getWindowWidth() / (float)WindowWidth;
-	mFont = Font("Arial", 35);
+	mFont = Font("Arial", 35);//fixed custom font
 	mTextureFont = gl::TextureFont::create(mFont);
 }
-//cinder::functions
+//when mouse is clicked
 void CimulationApp::mouseDown(MouseEvent event) {
 	if (event.isLeft()) s.mouseClicked = true;
 	if (s.SimRunning == s.PIDCTRL) v.pid.pid.requestedValue = event.getX();//gets whats needed for PID to activate
 }
+//when mouse is released
 void CimulationApp::mouseUp(MouseEvent event) {
 	if (event.isLeft())	s.mouseClicked = false;
 }
+//when mouse is moved (used with joystick)
 void CimulationApp::mouseMove(MouseEvent event) {
 	mousePos.X = event.getX();
 	mousePos.Y = event.getY();
@@ -143,7 +146,7 @@ void CimulationApp::mouseMove(MouseEvent event) {
 		}
 	}
 }
-
+//what to do when keyboard key is pressed
 void CimulationApp::keyDown(KeyEvent event) {
 	//base
 	if (event.getCode() == KeyEvent::KEY_UP || event.getChar() == 'w' || event.getChar() == 'W')	v.r[0].ctrl.ArrowKeyUp = true;
@@ -174,6 +177,7 @@ void CimulationApp::keyDown(KeyEvent event) {
 		}
 	}
 }
+//what to do when keyboard key is released
 void CimulationApp::keyUp(KeyEvent event) {
 	//base
 	if (event.getCode() == KeyEvent::KEY_DOWN|| event.getChar() == 's' || event.getChar() == 'S') v.r[0].ctrl.ArrowKeyDown = false;
@@ -184,6 +188,7 @@ void CimulationApp::keyUp(KeyEvent event) {
 	if (event.getCode() == KeyEvent::KEY_SPACE) v.r[0].c.liftUp = false;
 	if (event.getCode() == KeyEvent::KEY_RSHIFT || event.getCode() == KeyEvent::KEY_LSHIFT) v.r[0].c.liftDown = false;//left Z button
 }
+//overall application update function
 void CimulationApp::update() {
 	v.scalar = ((float)getWindowWidth() + (float)getWindowHeight()) / (float)(WindowWidth+WindowHeight);
 	int pastRot = v.r[0].p.mRot;
@@ -373,7 +378,7 @@ void CimulationApp::update() {
 		}
 	}
 }
-//for buttons
+//for autobot going to grabbing an element
 void CimulationApp::goGrab(robot *r, field::element *e, int index, int roboIndex) {
 	float d2V[4];
 	for (int ver = 0; ver < 4; ver++) {
@@ -444,18 +449,8 @@ void CimulationApp::goGrab(robot *r, field::element *e, int index, int roboIndex
 		reRoute(r, &v.f.c[r->c.goal], dir);
 	}
 }
+//for autobot choosing another route because blocked in some way
 void CimulationApp::reRoute(robot *r, field::element *e, int dir) {
-	/*
-	float d2V[4];
-	for (int ver = 0; ver < 4; ver++) {
-		d2V[ver] = (int)e->pos.distance(r->db.vertices[ver]);
-	}
-	int direct = 1;
-	bool inFront = ((d2V[0] + d2V[1]) < (d2V[2] + d2V[3]));//checking if c.goal[rob-1] is closer to the front side
-	bool onRight = ((d2V[1] + d2V[2] < 1.2*d2V[0] + d2V[3]) && !inFront);//checking if c.goal[rob-1] is closer to the right side
-	if (onRight) direct = -1;
-	*/
-
 	int poleNum = 0;//assuming robot is closer to pole0 than pole1
 	if (r->p.position.distance(v.f.pl[0].pos) > r->p.position.distance(v.f.pl[1].pos)) {
 		poleNum = 1;//robot is closer to pole1 than pole0
@@ -470,6 +465,7 @@ void CimulationApp::reRoute(robot *r, field::element *e, int dir) {
 		//v.reRouting = false;
 	}
 }
+//for autobot, placing element into a specific field zone
 void CimulationApp::placeIn(robot *r, field::fence::zone *z) {
 	/*vec3 zone;
 	if(z[1].twentyPoint.size() < 1) zone = vec3(127, 127);
@@ -509,6 +505,7 @@ void CimulationApp::placeIn(robot *r, field::fence::zone *z) {
 		r->rotate(0);
 	}
 }
+//for autobot stacking cone on certain element
 void CimulationApp::stackOn(robot *r, field::element *e) {
 	float d2V[4];
 	for (int ver = 0; ver < 4; ver++) {
@@ -565,6 +562,7 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 		r->rotate(0);
 	}
 }
+//for on screen buttons, what to do when being pressed
 void CimulationApp::clicky(int AMOUNT_BUTTON, int buttonSize) {//function for clicking the buttons
 	for (int i = 0; i < AMOUNT_BUTTON; i++) {//for each button in the array 
 		if (mousePos.X > v.scalar * ( buttonSize* (i + 1) - (50) + (25 * i)) &&
@@ -585,6 +583,7 @@ void CimulationApp::clicky(int AMOUNT_BUTTON, int buttonSize) {//function for cl
 		}
 	}
 }
+//drawing on screen buttons
 void CimulationApp::buttons(int buttonSize) {//function for drawing the buttons
 	int bY = 50, dInBtw = 25;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
 	struct text {
@@ -611,6 +610,7 @@ void CimulationApp::buttons(int buttonSize) {//function for drawing the buttons
 		i++;
 	}
 }
+//drawing the dials and their needles
 void drawDial(float amnt, vec3 pos, float max, float scale, ci::gl::Texture dial) {
 	int width = 2*scale;//px fixed
 	int radius = 80*scale;//px fixed
@@ -629,6 +629,7 @@ void drawDial(float amnt, vec3 pos, float max, float scale, ci::gl::Texture dial
 	glPopMatrix();//end of rotation code
 	gl::color(1, 1, 1);//resets colour to white
 }
+//drawing the text used for debugging or just other details
 void CimulationApp::textDraw() {//function for drawing the buttons 
 	//(	WARNING: RESOURCE HOG!!!!!!!!!!!)
 	const int dInBtw = 50;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
@@ -654,9 +655,11 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 	gl::color(1, 1, 1);
 
 }
+//returning hypotenuse between x and y values of a triangle
 float getHypo(vec3 val) {
 	return sqrt(sqr(val.X) + sqr(val.Y));
 }
+//drawing the dials used for measuring variables
 void CimulationApp::drawDials(vec3I begin) {
 	//drawwing DIALs
 	struct text {
@@ -687,6 +690,7 @@ void CimulationApp::drawDials(vec3I begin) {
 	}
 
 }
+//drawing text in an optimized way using custom fonts
 void CimulationApp::drawFontText(float text, vec3I pos, vec3I colour, int size) {
 	std::stringstream dummyText;
 	std::string PRINT;
@@ -696,6 +700,7 @@ void CimulationApp::drawFontText(float text, vec3I pos, vec3I colour, int size) 
 	mTextureFont->drawString(PRINT, Vec2f(pos.X, pos.Y + 20 * v.scalar));
 	gl::color(1, 1, 1);
 }
+//like buttonpress for control panel buttons
 void CimulationApp::callAction(bool increase, int buttonAction) {
 	if (buttonAction == 0) {
 		if (increase) cp.size += 0.1;
@@ -706,6 +711,7 @@ void CimulationApp::callAction(bool increase, int buttonAction) {
 		else cp.motorPower--;
 	}
 }
+//for hovering over buttons in control panel
 bool CimulationApp::buttonHover(int x, int y, int x2, int y2, int index, int buttonAction) {
 	if (mousePos.X > (x) &&
 		mousePos.X < (x2) &&
@@ -724,6 +730,7 @@ bool CimulationApp::buttonHover(int x, int y, int x2, int y2, int index, int but
 	}
 	return false;
 }
+//for drawing and defining buttons in control panel
 void CimulationApp::ctrlButton(int x, int y, int x2, int y2, float scalar, int buttonAction) {
 	Color(1, 0, 0);
 	int sizeOf = (x2 - x);
@@ -738,6 +745,7 @@ void CimulationApp::ctrlButton(int x, int y, int x2, int y2, float scalar, int b
 		else gl::drawString("-->", Vec2f(0.5*(x + x2) - 20 + i*dInBtwn, 0.5*(y + y2) - 10), Color(1, 1, 1), Font("Arial", scalar * 30));
 	}
 }
+//for defining control panel and what it does to the robots variables
 void CimulationApp::controlPanel(robot *r) {//function for drawing the buttons 
 	const int dInBtw = 50;//array for #buttons, bY is y position of each btn, dInBtw is distance in bwtween buttons
 	struct text {
@@ -759,16 +767,19 @@ void CimulationApp::controlPanel(robot *r) {//function for drawing the buttons
 		++i;
 	}
 }
-// Map robot coordinates to screen coordinates.
+// Map 2D robot coordinates to screen coordinates.
 Vec2f CimulationApp::R2S2(vec3 robot_coord) {
 	return Vec2f(ppi * v.scalar * (v.f.f.inFromEnd + robot_coord.X), ppi * v.scalar * (v.f.f.inFromEnd + v.f.f.fieldSizeIn - robot_coord.Y) );
 }
+// Map 3D robot coordinates to screen coordinates.
 Vec3f CimulationApp::R2S3(float robot_coordX, float robot_coordY, float robot_coordZ) {//for 3d coords, usually z is 0 coords
 	return Vec3f(ppi * v.scalar * (v.f.f.inFromEnd + robot_coordX), ppi * v.scalar * (v.f.f.inFromEnd + v.f.f.fieldSizeIn - robot_coordY), robot_coordZ);
 }
+// Map 4D robot coordinates to screen coordinates.
 Rectf CimulationApp::R2S4(float p1X, float p1Y, float p2X, float p2Y) {//for rectangular coords
 	return Rectf(ppi * v.scalar * (v.f.f.inFromEnd + p1X), ppi * v.scalar * (v.f.f.inFromEnd + v.f.f.fieldSizeIn - p1Y), ppi * v.scalar * (v.f.f.inFromEnd + p2X), ppi * v.scalar * (v.f.f.inFromEnd + v.f.f.fieldSizeIn - p2Y));
 }
+// Draw lines used for debugging robot vertices. edges, and physical features.
 void CimulationApp::robotDebug() {
 	gl::color(1, 0, 0);
 	for (int i = 0; i < 4; i++) {//simplified version of drawing the vertices
@@ -831,14 +842,18 @@ void CimulationApp::robotDebug() {
 		gl::drawSolidCircle(Vec2f(v.f.f.inFromEnd*ppi*v.scalar+ppi*v.scalar*(v.r[0].p.position.X + (v.r[0].size / 2) * cos((-v.r[0].p.mRot) * PI / 180) * sqrt(2)),
 			v.f.f.inFromEnd*ppi*v.scalar+v.f.f.fieldSizeIn*ppi*v.scalar - ppi*v.scalar*(v.r[0].p.position.Y - (v.r[0].size / 2) * sin((-v.r[0].p.mRot) * PI / 180) * sqrt(2))), 5);
 		gl::color(1, 1, 1);//resets colours to regular
+						   // Draw lines used for debugging robot vertices. edges, and physical features.
 }
+//drawing front robot cone claw
 void CimulationApp::drawClaw(robot *r) {
 	gl::draw(v.r[0].CChanel, Area((r->c.size)*ppi*v.scalar, (r->size*.5 + r->c.baseSize)*ppi*v.scalar, (-r->c.size)*ppi*v.scalar, (r->size*.5)*ppi*v.scalar));
 	gl::color(222.0 / 225, 229.0 / 225, 34.0 / 225);
 	gl::drawSolidRect(Area(Vec2d((r->c.position + r->c.thickness)*ppi*v.scalar, (r->size*.5 + r->c.length + r->c.baseSize)*ppi*v.scalar), Vec2d((r->c.position - r->c.thickness)*ppi*v.scalar, (r->size*.5 + r->c.baseSize)*ppi*v.scalar)));
 	gl::drawSolidRect(Area(Vec2d((-r->c.position - r->c.thickness)*ppi*v.scalar, (r->size*.5 + r->c.length + r->c.baseSize)*ppi*v.scalar), Vec2d((-r->c.position + r->c.thickness)*ppi*v.scalar, (r->size*.5 + r->c.baseSize)*ppi*v.scalar)));
 	gl::color(1, 1, 1);//reset colour
+					   // Draw lines used for debugging robot vertices. edges, and physical features.
 }
+//drawing the robot and mogo intake
 void CimulationApp::drawRobot(robot *r) {
 	glPushMatrix();
 	///robotDebug(&v, true);
@@ -861,6 +876,7 @@ void CimulationApp::drawRobot(robot *r) {
 	drawClaw(r);
 	glPopMatrix();//end of rotation code
 }
+//drawing the joystick bubble and bounds
 void drawJoystick(robot *r, joystick *j) {//DONT RLY WANT/like JOYSTICK tho
 	gl::drawStrokedCircle(Vec2f(j->drawX + j->drawSize, j->drawY + j->drawSize), j->drawSize);//circle at (800px, vec3(1, 1, 1), 300px) with radius 127px
 	gl::drawStrokedRect(Area(j->drawX, j->drawY, j->drawX + 2 * j->drawSize, j->drawY + 2 * j->drawSize));
@@ -869,6 +885,7 @@ void drawJoystick(robot *r, joystick *j) {//DONT RLY WANT/like JOYSTICK tho
 		drawText(round(r->truSpeed(3, j->analogY)), vec3I(mousePos.X + 30, mousePos.Y + 50), vec3I(1, 1, 1), 30);
 	}
 }
+//overall application drawing function
 void CimulationApp::draw() {
 	gl::enableAlphaBlending();//good for transparent images
 	gl::clear(Color(0, 0, 0));
@@ -988,4 +1005,5 @@ void CimulationApp::draw() {
 	drawFontText(getAverageFps(), vec3I(getWindowWidth() - 90, 30), vec3I(0, 1, 0), 30);
 	if(v.debugText && s.SimRunning != s.CUSTOMIZE) textDraw();//dont run on truspeed sim, unnecessary
 }
+//awesomesause
 CINDER_APP_NATIVE(CimulationApp, RendererGl)

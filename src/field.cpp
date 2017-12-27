@@ -8,6 +8,7 @@ vec3 V2R(vec3 vec_coord) {
 	const int fieldSizeIn = 141.05;  // Field size in inches.
 	return vec3(fieldSizeIn - vec_coord.X, vec_coord.Y, vec_coord.Z);
 }
+//initial cone values for position
 field::cone initConeConfig[] = {//array for each configuration of the cone (in field.h)
 										   //{initial posision (X, Y), color (Y, R, B), radii }
 	{ V2R({ 2.9, 13.0 })},{ V2R({ 2.9, 23.2 })},{ V2R({ 2.9, 34.9 })},{ V2R({ 2.9, 46.7 })},
@@ -26,8 +27,7 @@ field::cone initConeConfig[] = {//array for each configuration of the cone (in f
 	{ V2R({ 137.8, 137.8 })}
 };
 int numCones = sizeof(initConeConfig) / sizeof(field::cone);
-
-//initial cone values for position
+//initializing mogos and stuff
 field::MoGo initMoGoConfig[] = {//array for each configuration of the mobile goal (in field.h)
 	{ V2R({ 34.9, 13.0 }), 1  },{ V2R({ 13.0, 34.9 }), 2  },
 	{ V2R({ 70.2, 46.7 }), 2  },{ V2R({ 46.7, 70.2 }), 1  },
@@ -35,15 +35,16 @@ field::MoGo initMoGoConfig[] = {//array for each configuration of the mobile goa
 	{ V2R({ 127.6, 105.8 }), 1  },{ V2R({105.8, 127.6 }), 2  }
 };
 int numMoGos = sizeof(initMoGoConfig) / sizeof(field::MoGo);
-
+//initializing stagos (poles) and stuff
 field::stago initPoleConfig[] = {
 	{ V2R({ 93, 47.3 }), 4, 24},{ V2R({ 46.9, 94 }), 4, 24}
 };
 int numPoles = sizeof(initPoleConfig) / sizeof(field::stago);
+//initialize the entire field
 field::field(std::vector<robot> *r) : isInit(true) {
 	field::initialize(r);
 }
-//initial mogo values for position and colour
+//initialized everything for the field, such as cone and mogo values, and robot posision
 void field::initialize(std::vector<robot> *r) {
 	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
 	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
@@ -68,7 +69,7 @@ void field::initialize(std::vector<robot> *r) {
 	fieldInit = false;
 	isInit = true;//so that this only gets called ONCE when the field tab is running
 }
-//initialized everything for the field, such as cone and mogo values, and robot posision
+//calculate overall score given mogos in zones and cone stacks
 int field::calculateScore() {
 	int score = 0;
 	for (int i = 0; i < mg.size(); i++) {
@@ -84,12 +85,14 @@ int field::calculateScore() {
 	}
 	return score;
 }
+//returns the distance from a point to the robots edge, given the two lengths of vertice distance
 float calcD2Edge(float a, float b, robot *robit, float prop) {/*not taking into account the protrusion of mogo*/
 	//EXPLANATION HERE:
 	//prop is for proportion of size of the square, like mogo (clawsize/size)vs full robot base(1)
 	float C1 = ( ( (sqr(a) - sqr(b)) / (prop*robit->size)) + (prop*robit->size)) / 2;
 	return sqrt(abs(sqr(a) - sqr(C1)));
 }
+//struct for vertice distances and functions about them (inFront) (onRight)
 struct dist2Vert {
 	float v[4];
 	float sortedV[4];//created copy of vals to not directly affect anything badly
@@ -113,7 +116,7 @@ struct dist2Vert {
 		}
 	}
 };
-//calculates distance between the cone's centre and each vertice
+//pushes the elements against the field walls
 void field::element::fencePush(fence *f) {
 	float d2Top = f->fieldSizeIn - pos.Y;
 	float d2Right = f->fieldSizeIn - pos.X;
@@ -126,13 +129,14 @@ void field::element::fencePush(fence *f) {
 	else if (pos.Y <= (radius + f->depthIn)) //checking bottom
 		pos.Y += (radius + f->depthIn) - pos.Y;
 }
-//calculates distances to the edges of the field, and acts accordingly
+//checking if current angle is within a certain range
 bool withinAngle(double angle, int lowerBound, int upperBound) {
 	//checks if angle is within upper and lower
 	int thresh = 2;//degrees of freedom
 	return (angle < upperBound - thresh && angle > lowerBound + thresh) || (angle + 180 < upperBound - thresh && angle + 180 > lowerBound + thresh || (angle + 360 < upperBound - thresh && angle + 360 > lowerBound + thresh));
 	//checks both the positive and "negative" angle
 }
+//finds closest point from a x, y, position and the robot's edge
 vec3 findClosest(robot *robit, vec3 pos, dist2Vert *d2V, float prop) {
 	vec3 closestPoint;
 	float mogoSide = 0;
@@ -156,6 +160,7 @@ vec3 findClosest(robot *robit, vec3 pos, dist2Vert *d2V, float prop) {
 	}
 	return closestPoint;
 }
+//colliding an element with a robot against the closest point
 void field::element::collideWith(robot *robit, vec3 closestPoint, int type, int index, int roboIndex) {
 	vec3 R = (closestPoint + pos.times(-1)).times(radius / pos.distance(closestPoint)) + pos;
 	pos.X -= R.X - closestPoint.X;
@@ -180,6 +185,7 @@ void field::element::collideWith(robot *robit, vec3 closestPoint, int type, int 
 		robit->p.velocity = vec3(0, 0, 0);
 	}
 }
+//colliding an element with a robot
 void field::element::robotColl(int index, robot *robit, int type, fence *f, int roboIndex) {
 	//collisions from robot
 	float d2Robot = pos.distance(robit->p.position);
@@ -239,7 +245,7 @@ void field::element::robotColl(int index, robot *robit, int type, fence *f, int 
 		}
 	}
 }
-//functions for collisions between the element and the robot
+//collisions between element to element
 void field::element::collision(element *e) {//collisions from element->element
 	//ELEMENT *E IS WHAT IS BEING MOVED, NOT THE OTHER WAY AROUND
 	float distance = pos.distance(e->pos);
@@ -253,7 +259,7 @@ void field::element::collision(element *e) {//collisions from element->element
 		*/
 	}
 }
-//functions for collisions between the element and another element
+//overall physics between an dlement and the other elements and robots
 void field::physics(int index, element *e, robot *robit, int type, int roboIndex) {
 	e->robotColl(index, robit, type, &f, roboIndex);//collisions with fence
 	e->fencePush(&f);//pushes the element from the fence if touching
@@ -274,10 +280,11 @@ void field::physics(int index, element *e, robot *robit, int type, int roboIndex
 		}
 	}
 }
-//function for calling all the collision functions together for el->el and el->robot
+//used to check if mogo is within the zones
 float field::fence::poleEquation(float xPoint, float yPoint, float slope, float value) {
 	return slope * (value - xPoint) + yPoint;//y-y1 = m(x-x1), and all slopes are negative (in this case)
 }
+//crossing the robot with the zones over the 10pt and 20pt poles
 void field::fence::robotPole(robot *r) {
 	//basically just slows down the robot if its centre passes the poles
 	if (r->p.position.Y <= poleEquation(0, 23.2, -1, r->p.position.X)) //crossed 20 point pole
@@ -289,6 +296,7 @@ void field::fence::robotPole(robot *r) {
 	else if (r->p.position.Y >= poleEquation(140.05, 93.9, -1, r->p.position.X)) //crossed 10 point pole
 		r->p.speedMult(0.75, 0.9);
 }
+//pushing the robot against the field fence
 void field::fence::wallPush(robot *robit) {
 	//deals with robot's wall boundaries 
 	for (int i = 0; i < 4; i++) {
@@ -331,7 +339,7 @@ void field::fence::wallPush(robot *robit) {
 		}
 	}
 }
-//function for making sure the robot cannot move past the fence
+//checking if cone is being grabbed by the robot
 void field::cone::coneGrab(robot *robit, int index, int robIndex) {
 	vec3 idealSpot = vec3(//perf
 		(robit->p.position.X + (robit->size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2)),
@@ -350,6 +358,7 @@ void field::cone::coneGrab(robot *robit, int index, int robIndex) {
 		}
 	}
 }
+//checking if mogo is being grabbed by the robot
 void field::MoGo::mogoGrab(robot *robit, int index) {
 	vec3 idealSpot = vec3(//perf
 		(robit->p.position.X - (robit->size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2)),
@@ -363,6 +372,7 @@ void field::MoGo::mogoGrab(robot *robit, int index) {
 		}
 	}
 }
+//when cone is in freefall falling onto a mogo, stago, or just pole
 void field::fallingOn(cone *fall, robot *robit, int index) {
 	if (!fall->landed && !robit->c.grabbing) {
 		for (int mog = 0; mog < mg.size(); mog++) {
@@ -406,6 +416,7 @@ void field::fallingOn(cone *fall, robot *robit, int index) {
 		if (!fall->landed) fall->pos.Z -= 32 / 12;
 	}
 }
+//posisioning the cone to fall to the center of its goal and funnel into the center
 void field::positionFall(cone *fall) {
 	float moveX, moveY;//centers cone after landing
 	if (fall->fellOn <= numCones) {//if it fell on a cone
@@ -424,6 +435,7 @@ void field::positionFall(cone *fall) {
 	if (abs(moveX) > min) fall->pos.X -= moveX;
 	if (abs(moveY) > min) fall->pos.Y -= moveY;
 }
+//checking which mogos are within which zone
 void field::MoGo::zoneScore(fence *f, int index) {
 	if (colour == 1) {//red
 		if (pos.Y <= f->poleEquation(0, 23.2, -1, pos.X)) {//20 point
@@ -470,7 +482,7 @@ void field::MoGo::zoneScore(fence *f, int index) {
 		}
 	}
 }
-//function for having a 'grabbed' element lock in place
+//update task for the entire field simulation
 void field::FieldUpdate(std::vector<robot> *r) {
 	if (!isInit) initialize(r);
 	for (int rob = 0; rob < (*r).size(); rob++) {
@@ -518,5 +530,5 @@ void field::FieldUpdate(std::vector<robot> *r) {
 
 
 
+
 }
-//update task for the entire field simulation
