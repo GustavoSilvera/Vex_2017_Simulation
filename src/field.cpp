@@ -332,7 +332,7 @@ void field::fence::wallPush(robot *robit) {
 	}
 }
 //function for making sure the robot cannot move past the fence
-void field::cone::coneGrab(robot *robit, int index) {
+void field::cone::coneGrab(robot *robit, int index, int robIndex) {
 	vec3 idealSpot = vec3(//perf
 		(robit->p.position.X + (robit->size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2)),
 		(robit->p.position.Y - (robit->size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2)));
@@ -340,6 +340,7 @@ void field::cone::coneGrab(robot *robit, int index) {
 	if (robit->c.grabbing && index < numCones && ((robit->c.holding == index) || (robit->c.holding == -1))) {
 		if (inPosition && abs(robit->c.liftPos - pos.Z) < height) {//makes sure lift is within grabbing distance
 			robit->c.holding = index;
+			grabbingRobotIndex = robIndex;
 			pos.X = (robit->p.position.X + (robit->size / 2) * cos((-robit->p.mRot) * PI / 180) * sqrt(2));//works
 			pos.Y = (robit->p.position.Y - (robit->size / 2) * sin((-robit->p.mRot) * PI / 180) * sqrt(2));//works
 			if ((pos.Z < robit->c.maxHeight) || (pos.Z > 0)) {
@@ -375,6 +376,7 @@ void field::fallingOn(cone *fall, robot *robit, int index) {
 					}
 					else {
 						fall->landed = true; //LANDED
+						fall->grabbingRobotIndex = -1;//resets grabber index
 						mg[mog].stacked.insert(index);
 						fall->fellOn = mog + MOGO * 100;//cone has fallen on specific mogo(added 100s place value)
 					}
@@ -393,6 +395,7 @@ void field::fallingOn(cone *fall, robot *robit, int index) {
 					}
 					else {
 						fall->landed = true;//LANDED
+						fall->grabbingRobotIndex = -1;//resets grabber index
 						pl[pol].stacked.insert(index);
 						fall->fellOn = pol + STAGO * 100;//cone has fallen on specific pole (added 200s place value)
 					}
@@ -402,24 +405,24 @@ void field::fallingOn(cone *fall, robot *robit, int index) {
 		}
 		if (!fall->landed) fall->pos.Z -= 32 / 12;
 	}
-	else if (fall->landed && fall->fellOn != -1) {
-		float moveX, moveY;//centers cone after landing
-		if (fall->fellOn <= numCones) {//if it fell on a cone
-			moveX = 0.5*(fall->pos.X - c[fall->fellOn - CONE * 100].pos.X);
-			moveY = 0.5*(fall->pos.Y - c[fall->fellOn - CONE * 100].pos.Y);
-		}
-		else if (fall->fellOn >= STAGO *100) {//if it fell on a stagoionary goal
-			moveX = 0.5*(fall->pos.X - pl[fall->fellOn - STAGO * 100].pos.X);
-			moveY = 0.5*(fall->pos.Y - pl[fall->fellOn - STAGO * 100].pos.Y);
-		}
-		else {//between the two (MOGOS)
-			moveX = 0.5*(fall->pos.X - mg[fall->fellOn - MOGO * 100].pos.X);
-			moveY = 0.5*(fall->pos.Y - mg[fall->fellOn - MOGO * 100].pos.Y);
-		}
-		float min = 0.1;
-		if (abs(moveX) > min) fall->pos.X -= moveX;
-		if (abs(moveY) > min) fall->pos.Y -= moveY;
+}
+void field::positionFall(cone *fall) {
+	float moveX, moveY;//centers cone after landing
+	if (fall->fellOn <= numCones) {//if it fell on a cone
+		moveX = 0.5*(fall->pos.X - c[fall->fellOn - CONE * 100].pos.X);
+		moveY = 0.5*(fall->pos.Y - c[fall->fellOn - CONE * 100].pos.Y);
 	}
+	else if (fall->fellOn >= STAGO * 100) {//if it fell on a stagoionary goal
+		moveX = 0.5*(fall->pos.X - pl[fall->fellOn - STAGO * 100].pos.X);
+		moveY = 0.5*(fall->pos.Y - pl[fall->fellOn - STAGO * 100].pos.Y);
+	}
+	else {//between the two (MOGOS)
+		moveX = 0.5*(fall->pos.X - mg[fall->fellOn - MOGO * 100].pos.X);
+		moveY = 0.5*(fall->pos.Y - mg[fall->fellOn - MOGO * 100].pos.Y);
+	}
+	float min = 0.1;
+	if (abs(moveX) > min) fall->pos.X -= moveX;
+	if (abs(moveY) > min) fall->pos.Y -= moveY;
 }
 void field::MoGo::zoneScore(fence *f, int index) {
 	if (colour == 1) {//red
@@ -480,12 +483,15 @@ void field::FieldUpdate(std::vector<robot> *r) {
 			//type for "cone" is 0
 			int type = CONE;
 			c[i].radius = 0.1*c[i].pos.Z + cRad;//changes radius to enlargen when gets taller
-			c[i].coneGrab(&(*r)[rob], i);
+			c[i].coneGrab(&(*r)[rob], i, rob);
 			if (c[i].pos.Z < c[i].height) {
 				physics(i, &c[i], &(*r)[rob], type, rob);
 			}//only affect objects when on ground (or low enough)
-			if (c[i].pos.Z > cHeight) {
-				fallingOn(&c[i], &(*r)[rob], i);//noice
+			if (c[i].pos.Z > cHeight && c[i].grabbingRobotIndex != -1) {
+				fallingOn(&c[i], &(*r)[c[i].grabbingRobotIndex], i);//noice
+			}
+			if (c[i].grabbingRobotIndex == -1 && c[i].fellOn != -1 && c[i].landed) {
+				positionFall(&c[i]);
 			}
 		}
 		for (int i = 0; i < mg.size(); i++) {

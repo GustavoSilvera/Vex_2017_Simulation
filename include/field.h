@@ -60,7 +60,8 @@ public:
 		cone(vec3 pos) : element(pos, cRad, cHeight), fellOn(0), landed(false) {}
 		int fellOn;
 		bool landed;
-		void coneGrab(robot *robit, int index);
+		int grabbingRobotIndex = -1;//-1 if no robot grabbing
+		void coneGrab(robot *robit, int index, int robIndex);
 	};
 	struct MoGo : public element {
 		MoGo(vec3 pos, int initColour) : element(pos, MGRad, mgHeight), colour(initColour) {}
@@ -77,6 +78,7 @@ public:
 
 	void physics(int index, element *e, robot *r, int type, int roboIndex);
 	void fallingOn(cone *fall, robot *r, int index);
+	void positionFall(cone *fall);
 	int calculateScore();
 	ci::gl::Texture MobileGoal;
 	ci::gl::Texture coneTexture;
