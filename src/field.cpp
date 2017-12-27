@@ -168,9 +168,11 @@ void field::element::collideWith(robot *robit, vec3 closestPoint, int type, int 
 	if (!inPossession[roboIndex] && !robit->mg.grabbing ) {//makes sure not to pushback robot if picking up a mogo
 		robit->p.position.X += weight * (R.X - closestPoint.X);
 		robit->p.position.Y += weight * (R.Y - closestPoint.Y); 
-		//robit->p.velocity.X += goTo(robit->p.velocity.X, limitFrom(0, -getSign(robit->p.velocity.X)*abs(weight * (R.X - closestPoint.X))), 1);
-		//robit->p.velocity.Y += goTo(robit->p.velocity.Y, limitFrom(0, -getSign(robit->p.velocity.Y)*abs(weight * (R.Y - closestPoint.Y))), 1);
 		if(type == STAGO) robit->p.velocity = vec3(0, 0, 0);
+	}
+	else if (type == CONE) {
+		robit->p.position.X += weight * (R.X - closestPoint.X);
+		robit->p.position.Y += weight * (R.Y - closestPoint.Y);
 	}
 	else if (type == STAGO) {//still push on stago
 		robit->p.position.X += weight * (R.X - closestPoint.X);
@@ -190,9 +192,9 @@ void field::element::robotColl(int index, robot *robit, int type, fence *f, int 
 		vec3 closestPoint = findClosest(robit, pos, &ver, 1);//calculates the closest point given the vertices
 		float d2closestPoint = pos.distance(closestPoint);
 		if (type == MOGO &&//is mogo?
-			abs(robit->mg.protrusion - 7.5)<0.5 &&//mogo is ar low position
-			ver.inFront() &&//behind
-			robit->directlyInPath(true, robit->size / 4, pos) && //in front or back
+			abs(robit->mg.protrusion - 7.5)<0.5 &&//mogo is at low position
+			ver.inFront() &&//in front
+			robit->directlyInPath(true, robit->size / 4, pos) && //directly in front or back
 			d2closestPoint >=0.95* radius && //isnt going inside full robit
 			d2closestPoint <= 1.5*radius) {
 			inPositionMoGo = true;
@@ -206,7 +208,7 @@ void field::element::robotColl(int index, robot *robit, int type, fence *f, int 
 		}
 	}
 	float mogoProp = 2.5*(robit->mg.size) / robit->size;//proportion of MOGO size to robot
-	if (ver.inFront()) {//only do mogo calcs if in front
+	if (ver.inFront()) {//only do mogo(mech) calcs if in front
 		float d2MoGo = pos.distance(
 			vec3(
 				robit->p.position.X + robit->mg.protrusion * cos((robit->p.mRot) * PI / 180),
@@ -244,7 +246,7 @@ void field::element::collision(element *e) {//collisions from element->element
 	if (distance <= coefMag * (radius + e->radius)) {//touching
 		vec3 normal = vec3(e->pos.X - pos.X, e->pos.Y - pos.Y);
 		e->pos = e->pos + normal.times(((radius + e->radius) - distance) / distance);//push of the cones
-		/*maths
+		/*maths:
 		distance*? = overlap;
 		overlap = 2*cradius - distance
 		therefore: ? = (2*cradius - distance)/distance;
@@ -256,7 +258,7 @@ void field::physics(int index, element *e, robot *robit, int type, int roboIndex
 	e->robotColl(index, robit, type, &f, roboIndex);//collisions with fence
 	e->fencePush(&f);//pushes the element from the fence if touching
 	if (e->pos.Z <= c[0].height) {//assuming general cone height when on ground (dosent interact with grounded objects)
-		for (int k = 0; k < c.size(); k++) {
+		for (int k = 0; k < c.size(); k++) {//collisions with other cones
 			if (c[k].pos.Z < e->height){//had to add the landed, because the gravity would push it down further
 				if (k != index) e->collision(&c[k]);
 				else if (type != 0) e->collision(&c[k]);
@@ -264,9 +266,7 @@ void field::physics(int index, element *e, robot *robit, int type, int roboIndex
 		}
 	}
 	if (e->pos.Z <= mg[1].height) {//assuming general mogo height when on ground (dosent interact with grounded objects)
-		//e->robotColl(index, robit, type, &f);
-		//e->fencePush(&f);//pushes the mogo from the fence if touching
-		for (int m = 0; m < mg.size(); m++) {
+		for (int m = 0; m < mg.size(); m++) {//collisions with other mogos
 			if (mg[m].pos.Z < e->height) {//makes sure is within height of physics mattering
 				if (m != index) e->collision(&mg[m]);
 				else if (type != 1) e->collision(&mg[m]);
@@ -366,12 +366,12 @@ void field::MoGo::mogoGrab(robot *robit, int index) {
 void field::fallingOn(cone *fall, robot *robit, int index) {
 	if (!fall->landed && !robit->c.grabbing) {
 		for (int mog = 0; mog < mg.size(); mog++) {
+			mg[mog].stacked.erase(index);
 			if (!fall->landed) {
 				if (fall->pos.distance(mg[mog].pos) <= cRad) {//added constant to widen range where can drop and stack
 					if (fall->pos.Z > mg[mog].height + 4 + (mg[mog].stacked.size()* fall->height)) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
 						fall->pos.Z += -32 / 12;//gravity?
 						fall->landed = false;//still in air
-						mg[mog].stacked.erase(index);
 						fall->fellOn = -1;//cone hasent fallen on anything yet (or ground)
 					}
 					else {
@@ -385,12 +385,12 @@ void field::fallingOn(cone *fall, robot *robit, int index) {
 			else break;
 		}
 		for (int pol = 0; pol < pl.size(); pol++) {
+			pl[pol].stacked.erase(index);
 			if (!fall->landed) {
 				if (fall->pos.distance(pl[pol].pos) <= cRad) {//added constant to widen range where can drop and stack
 					if (fall->pos.Z > pl[pol].height + 4 + (pl[pol].stacked.size()* fall->height)) {//had to increase very high, because updates the grabvity effect before sets hadlanded to true
 						fall->pos.Z += -32 / 12;//gravity?
 						fall->landed = false;//still in air
-						pl[pol].stacked.erase(index);
 						fall->fellOn = -1;//cone hasent fallen on anything yet (or ground)
 					}
 					else {
@@ -474,20 +474,19 @@ void field::MoGo::zoneScore(fence *f, int index) {
 void field::FieldUpdate(std::vector<robot> *r) {
 	if (!isInit) initialize(r);
 	for (int rob = 0; rob < (*r).size(); rob++) {
-		f.wallPush(&(*r)[rob]);
-		f.robotPole(&(*r)[rob]);
+		f.wallPush(&(*r)[rob]);//pushed each robot against the wall
+		f.robotPole(&(*r)[rob]);//[ushes each robot against the stagos
 		/*for (int otherRob = 0; otherRob < (*r).size(); otherRob++) {//DO THIS LATER 
 			if(rob != otherRob) (*r)[rob].collision(&(*r)[otherRob]);//robot collides with other robits
 		}*/
 		for (int i = 0; i < c.size(); i++) {
 			//type for "cone" is 0
 			int type = CONE;
-			c[i].radius = 0.1*c[i].pos.Z + cRad;//changes radius to enlargen when gets taller
 			c[i].coneGrab(&(*r)[rob], i, rob);
 			if (c[i].pos.Z < c[i].height) {
 				physics(i, &c[i], &(*r)[rob], type, rob);
 			}//only affect objects when on ground (or low enough)
-			if (c[i].pos.Z > cHeight && c[i].grabbingRobotIndex != -1) {
+			if (c[i].pos.Z > 32/12 && c[i].grabbingRobotIndex != -1) {
 				fallingOn(&c[i], &(*r)[c[i].grabbingRobotIndex], i);//noice
 			}
 			if (c[i].grabbingRobotIndex == -1 && c[i].fellOn != -1 && c[i].landed) {
@@ -497,18 +496,27 @@ void field::FieldUpdate(std::vector<robot> *r) {
 		for (int i = 0; i < mg.size(); i++) {
 			//type for "mogo" is 1
 			int type = MOGO;
-			//mg[i].radius = 0.1*mg[i].pos.Z + MGRad;//use better scalar than 0.1, but eventually remove this (because dont rly want to pick up mogos
 			mg[i].mogoGrab(&(*r)[rob], i);
-			mg[i].zoneScore(&f, i);
 			physics(i, &mg[i], &(*r)[rob], type, rob);//dont affect things if being lifted into the air
 		}
 		for (int i = 0; i < pl.size(); i++) {
 			//type for "stagoionary goal" is 2
 			int type = STAGO;
-			pl[i].pos = initPoleConfig[i].pos; //stagoionary goal (not moving)
 			//stagoGoalPush(&pl[i], &(*r)[rob], &f);
 			physics(i, &pl[i], &(*r)[rob], type, rob);
 		}
 	}
+	for (int i = 0; i < mg.size(); i++) {
+		mg[i].zoneScore(&f, i);
+	}
+	for (int i = 0; i < pl.size(); i++) {
+		pl[i].pos = initPoleConfig[i].pos; //stagoionary goal (not moving)
+	}
+	for (int i = 0; i < c.size(); i++) {
+		c[i].radius = 0.1*c[i].pos.Z + cRad;//changes radius to enlargen when gets taller
+	}
+
+
+
 }
 //update task for the entire field simulation

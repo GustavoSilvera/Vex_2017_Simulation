@@ -145,22 +145,24 @@ void CimulationApp::mouseMove(MouseEvent event) {
 }
 
 void CimulationApp::keyDown(KeyEvent event) {
-	if (event.getCode() == KeyEvent::KEY_UP)	v.r[0].ctrl.ArrowKeyUp = true;
-	if (event.getCode() == KeyEvent::KEY_DOWN)	v.r[0].ctrl.ArrowKeyDown = true;
-	if (event.getCode() == KeyEvent::KEY_LEFT)	v.r[0].ctrl.RotLeft = true;
-	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r[0].ctrl.RotRight = true;
-	if (event.getChar() == 'e' || event.getChar() == 'E') v.r[0].c.grabbing = !v.r[0].c.grabbing;//if want toggling, else look at a while ago
-	if (event.getChar() == 'r' || event.getChar() == 'R') v.r[0].mg.grabbing = !v.r[0].mg.grabbing;//if want toggling, else look at a while ago
+	//base
+	if (event.getCode() == KeyEvent::KEY_UP || event.getChar() == 'w' || event.getChar() == 'W')	v.r[0].ctrl.ArrowKeyUp = true;
+	if (event.getCode() == KeyEvent::KEY_DOWN || event.getChar() == 's' || event.getChar() == 'S')	v.r[0].ctrl.ArrowKeyDown = true;
+	if (event.getCode() == KeyEvent::KEY_LEFT || event.getChar() == 'a' || event.getChar() == 'A')	v.r[0].ctrl.RotLeft = true;
+	if (event.getCode() == KeyEvent::KEY_RIGHT || event.getChar() == 'd' || event.getChar() == 'D') v.r[0].ctrl.RotRight = true;
+	//intakes
+	if (event.getChar() == 'p' || event.getChar() == 'P' || event.getChar() == 'e' || event.getChar() == 'E') v.r[0].c.grabbing = !v.r[0].c.grabbing;//if want toggling, else look at a while ago
+	if (event.getChar() == 'o' || event.getChar() == 'O' || event.getChar() == 'r' || event.getChar() == 'R') v.r[0].mg.grabbing = !v.r[0].mg.grabbing;//if want toggling, else look at a while ago
+	//lift
 	if (event.getCode() == KeyEvent::KEY_SPACE) v.r[0].c.liftUp = true;
-	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r[0].c.liftDown = true;//left Z button
-	if (event.getChar() == 'p' || event.getChar() == 'P') v.pid.pidVel = !v.pid.pidVel;//right P button
-	if (event.getChar() == 'o' || event.getChar() == 'O') v.pid.reset(&v.r[0]);
+	if (event.getCode() == KeyEvent::KEY_RSHIFT || event.getCode() == KeyEvent::KEY_LSHIFT) v.r[0].c.liftDown = true;//left Z button
+	//debug
+	if (event.getChar() == 'l' || event.getChar() == 'L') v.pid.pidVel = !v.pid.pidVel;//right P button
+	if (event.getChar() == 'k' || event.getChar() == 'K') v.pid.reset(&v.r[0]);
 	if (event.getChar() == 'm' || event.getChar() == 'M') v.debugText = !v.debugText;
-	if (event.getChar() == 'n' || event.getChar() == 'N') v.r[0].forwards(100);//works as of rn for ~1" 
-	if (event.getChar() == 'B' || event.getChar() == 'b') v.r[0].rotate(-100);//works as of rn as ~1°
-	if (event.getChar() == 'G' || event.getChar() == 'g') v.f.initialize(&v.r);//reset field
-	if (event.getChar() == 'V' || event.getChar() == 'v') debuggingBotDraw = !debuggingBotDraw;//draw cool lines
-
+	if (event.getChar() == 'n' || event.getChar() == 'N') v.f.initialize(&v.r);//reset field
+	if (event.getChar() == 'b' || event.getChar() == 'B') debuggingBotDraw = !debuggingBotDraw;//draw cool lines
+	//other
 	if (event.getChar() == 'c') v.r[0].readScript();
 	if (event.getChar() == 'q') { 
 		for (int rob = 1; rob < v.r.size(); rob++) {
@@ -173,12 +175,14 @@ void CimulationApp::keyDown(KeyEvent event) {
 	}
 }
 void CimulationApp::keyUp(KeyEvent event) {
-	if (event.getCode() == KeyEvent::KEY_DOWN) v.r[0].ctrl.ArrowKeyDown = false;
-	if (event.getCode() == KeyEvent::KEY_UP) v.r[0].ctrl.ArrowKeyUp = false;
-	if (event.getCode() == KeyEvent::KEY_RIGHT) v.r[0].ctrl.RotRight = false;
-	if (event.getCode() == KeyEvent::KEY_LEFT) v.r[0].ctrl.RotLeft = false;
+	//base
+	if (event.getCode() == KeyEvent::KEY_DOWN|| event.getChar() == 's' || event.getChar() == 'S') v.r[0].ctrl.ArrowKeyDown = false;
+	if (event.getCode() == KeyEvent::KEY_UP || event.getChar() == 'w' || event.getChar() == 'W') v.r[0].ctrl.ArrowKeyUp = false;
+	if (event.getCode() == KeyEvent::KEY_RIGHT || event.getChar() == 'd' || event.getChar() == 'D') v.r[0].ctrl.RotRight = false;
+	if (event.getCode() == KeyEvent::KEY_LEFT || event.getChar() == 'a' || event.getChar() == 'A') v.r[0].ctrl.RotLeft = false;
+	//lift
 	if (event.getCode() == KeyEvent::KEY_SPACE) v.r[0].c.liftUp = false;
-	if (event.getChar() == 'z' || event.getChar() == 'Z') v.r[0].c.liftDown = false;//left Z button
+	if (event.getCode() == KeyEvent::KEY_RSHIFT || event.getCode() == KeyEvent::KEY_LSHIFT) v.r[0].c.liftDown = false;//left Z button
 }
 void CimulationApp::update() {
 	v.scalar = ((float)getWindowWidth() + (float)getWindowHeight()) / (float)(WindowWidth+WindowHeight);
@@ -612,13 +616,13 @@ void drawDial(float amnt, vec3 pos, float max, float scale, ci::gl::Texture dial
 	int radius = 80*scale;//px fixed
 	int init = 226;//initial angle
 	gl::draw(dial, Area(
-		scale*( pos.X - radius*1.2),
-		scale*( pos.Y - radius*1.2),
-		scale*( pos.X + radius*1.2),
-		scale*( pos.Y + radius*1.2)));
+		( pos.X - radius*1.2),
+		( pos.Y - radius*1.2),
+		( pos.X + radius*1.2),
+		( pos.Y + radius*1.2)));
 	glPushMatrix();//rtation
 	float angle = init - amnt*((init-35) / max);
-	gl::translate(Vec3f(pos.X*scale, pos.Y*scale, 0));//origin of rotation
+	gl::translate(Vec3f(pos.X, pos.Y, 0));//origin of rotation
 	gl::rotate(Vec3f(0, 0, -angle - 90));//something for like 3D rotation.... ugh
 	gl::color(abs(init /limitFrom(0.1, angle)), abs(angle/ init), 0);//cool colour transition (neat maths)
 	gl::drawSolidRect(Area(Vec2d(-width, 0), Vec2d(width, radius)));//draws dial
@@ -675,7 +679,7 @@ void CimulationApp::drawDials(vec3I begin) {
 		float total = getHypo(ti.val);
 		if (i % 2 == 0) offset = vec3(0, 120 * i).times(v.scalar);
 		else offset = vec3(100*2, 120 * (i-1)).times(v.scalar);
-		drawDial(total, vec3(begin.X + offset.X, begin.Y + offset.Y),	ti.max, v.scalar, dial);//draws the dials
+		drawDial(total, vec3(begin.X + offset.X, begin.Y + offset.Y), ti.max, v.scalar, dial);//draws the dials
 		vec3I stringBegin = vec3I(begin.X + offset.X - 70 * v.scalar, begin.Y + offset.Y + 120*v.scalar);//innitial sstring position
 		mTextureFont->drawString(ti.s, Vec2f(stringBegin.X, stringBegin.Y));//draws words
 		drawFontText(total, vec3I(stringBegin.X + 50*v.scalar, stringBegin.Y-20 * v.scalar), vec3I(1, 1, 1), 30);//draws values
@@ -857,7 +861,7 @@ void CimulationApp::drawRobot(robot *r) {
 	drawClaw(r);
 	glPopMatrix();//end of rotation code
 }
-void drawJoystick(robot *r, joystick *j) {//DONT RLY WANT JOYSTICK tho
+void drawJoystick(robot *r, joystick *j) {//DONT RLY WANT/like JOYSTICK tho
 	gl::drawStrokedCircle(Vec2f(j->drawX + j->drawSize, j->drawY + j->drawSize), j->drawSize);//circle at (800px, vec3(1, 1, 1), 300px) with radius 127px
 	gl::drawStrokedRect(Area(j->drawX, j->drawY, j->drawX + 2 * j->drawSize, j->drawY + 2 * j->drawSize));
 	if (j->withinAnalogRange(mousePos)) {//defined in joystick.h, basically if within the drawing of the boundaries
@@ -967,16 +971,16 @@ void CimulationApp::draw() {
 
 	if (v.f.mg[5].inPossession[1]) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
-	drawFontText(v.r[0].mg.holding, vec3I(1000, 800), vec3I(0, 1, 0), 30);
+	//drawFontText(v.r[0].mg.holding, vec3I(1000, 800), vec3I(0, 1, 0), 30);
 
 	//if (v.r[0].mg.grabbing) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	//else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
-
-	drawFontText(v.r[0].d.motorSpeed, vec3I(1010, 660), vec3I(1, 1, 1), 30);
+	//drawFontText(v.r[0].d.motorSpeed, vec3I(1010, 660), vec3I(1, 1, 1), 30);
 //	drawFontText(v.f.pl[0].height, vec3I(1010, 500), vec3I(1, 1, 1), 30);
 //	drawFontText(v.r[0].db.rotDist, vec3I(1010, 400), vec3I(1, 1, 1), 30);
 
 		//USER INTERFACE
+	gl::color(1, 1, 1);
 	drawDials(vec3I(1250, 400).times(v.scalar));
 	buttons(100);//size in px
 	if(debuggingBotDraw) robotDebug();
