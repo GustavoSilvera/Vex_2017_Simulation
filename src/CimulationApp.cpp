@@ -65,7 +65,7 @@ struct simulation {
 simulation s;
 class CimulationApp : public AppNative {
 public:
-	CimulationApp():v(3) {}//how to modify in real time????
+	CimulationApp():v(10) {}//how to modify in real time????
 	void setup();
 	void mouseDown(MouseEvent event);
 	void mouseUp(MouseEvent event);
@@ -255,19 +255,19 @@ void CimulationApp::update() {
 													  //if(v.r[rob].c.goal == 0)//used to be for waiting for cone, sets definitive target FOREVER, not the best
 			int closest = 0;//assumes cone 0 is closest
 			for (int i = 0; i < v.f.c.size() - 1; i++) {
-				if (v.f.c[i].pos.distance(v.f.pl[0].pos) > v.f.c[i].radius * 4 && v.f.c[i].pos.distance(v.f.pl[1].pos) > v.f.c[i].radius * 4) {
-					if (v.r[rob].p.position.distance(v.f.c[i].pos) < v.r[rob].p.position.distance(v.f.c[closest].pos)) {
-						/*float d2V[4];//can comment this stuff to get nearest cone. but better to get nearest cone IN FRONT (SLIGHTLY better score wise/time), gets stuck sometimes
-						for (int ver = 0; ver < 4; ver++) {
-							d2V[ver] = v.f.c[i].pos.distance(v.r[rob].db.vertices[ver]);
+				if (v.f.c[i].targetted == false || (v.f.c[i].targetted == true && v.r[rob].c.goal == i)) {
+					if (v.f.c[i].pos.distance(v.f.pl[0].pos) > v.f.c[i].radius * 4 && v.f.c[i].pos.distance(v.f.pl[1].pos) > v.f.c[i].radius * 4) {
+						if (v.r[rob].p.position.distance(v.f.c[i].pos) < v.r[rob].p.position.distance(v.f.c[closest].pos)) {
+							if (v.f.c[i].pos.Z <= cHeight) {//so long as not already stacked or in the air
+								closest = i;//updates "closest" to whichever cone is closest
+							}
 						}
-						bool inFront = (d2V[0] + d2V[1] < d2V[3] + d2V[3]);//checking if c.goal[rob-1] is closer to the front side
-						*/if (v.f.c[i].pos.Z <= cHeight /*&& inFront*/)//so long as not already stacked or in the air
-							closest = i;//updates "closest" to whichever cone is closest
+						else v.f.c[i].targetted = false;
 					}
 				}
 			}
 			v.r[rob].c.goal = closest;
+			v.f.c[closest].targetted = true;//considers cone as targetted
 		}
 		if (v.r[rob].mg.holding != v.r[rob].mg.goal) {//dynamically refreshes which mogo is best in position to be picked up
 			int closest = 0;//assumes cone 0 is closest
@@ -277,7 +277,6 @@ void CimulationApp::update() {
 						closest = i;//updates "closest" to whichever cone is closest
 				}
 			}
-			
 			v.r[rob].mg.goal = closest;
 		}
 		if (v.r[rob].thinking) {
@@ -546,7 +545,7 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 						if (r->directlyInPath(true, r->size / 4, e->pos)) {
 							r->c.grabbing = false;//opens claw
 							//r->thinking = false;//basically turns off autonomous thing
-							r->c.goal = 0;
+							r->c.goal = 0;//resets goal
 						}
 						else r->rotate(dir * 127);//just do a simple smaller rotation to try and minimize error, gets it closer to the center 
 					}
@@ -981,6 +980,7 @@ void CimulationApp::draw() {
 		for (int i = 0; i < 3; i++) {
 			gl::drawStrokedCircle(R2S2(vec3(v.f.c[v.r[rob].c.goal].pos.X, v.f.c[v.r[rob].c.goal].pos.Y)), v.scalar*v.f.c[v.r[rob].c.goal].radius*ppi + i, 10);
 		}
+		v.f.c[v.r[rob].c.goal].targetted = true;
 	}
 	//debug text
 	gl::drawSolidCircle(R2S2(vec3(

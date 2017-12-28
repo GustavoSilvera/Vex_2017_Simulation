@@ -61,6 +61,7 @@ public:
 		cone(vec3 pos) : element(pos, cRad, cHeight), fellOn(0), landed(false) {}
 		int fellOn;
 		bool landed;
+		bool targetted = false;//if being targetted by an autobot
 		int grabbingRobotIndex = -1;//-1 if no robot grabbing
 		void coneGrab(robot *robit, int index, int robIndex);
 	};
