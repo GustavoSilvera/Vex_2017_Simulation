@@ -40,8 +40,8 @@ public:
 	//customize c;
 	field f;
 	joystick j;
-	vex() : 
-		r(NUMROBOTS),//how many robots on field?
+	vex(int numRob) : 
+		r(numRob),//how many robots on field?
 		tS(&r[0]), 
 		pid(&r[0]), 
 		f(&r){}
@@ -65,6 +65,7 @@ struct simulation {
 simulation s;
 class CimulationApp : public AppNative {
 public:
+	CimulationApp():v(3) {}//how to modify in real time????
 	void setup();
 	void mouseDown(MouseEvent event);
 	void mouseUp(MouseEvent event);
@@ -90,6 +91,7 @@ public:
 	struct customizePanel {
 		float size = 18;
 		float motorPower = MAXSPEED;//power for the base
+		int numRobots = 1;
 	};
 	customizePanel cp;
 	//for drawing stuff
@@ -391,7 +393,7 @@ void CimulationApp::goGrab(robot *r, field::element *e, int index, int roboIndex
 		bool onRight = ((d2V[1] + d2V[2]) < (d2V[0] + d2V[3]));//checking if c.goal[rob-1] is closer to the right side
 		if (onRight) dir = -1;
 		if (r->grabMoGo) {
-			if (!e->inPossession[roboIndex] && r->p.position.distance(e->pos) >= (r->size / 2 +1 + e->radius)) {
+			if (e->inPossession.find(roboIndex) == e->inPossession.end() && r->p.position.distance(e->pos) >= (r->size / 2 +1 + e->radius)) {
 				if(r->mg.holding == -1) r->mg.grabbing = true;//pulls out mogo-inator
 				r->rotate(0);
 				if (!r->directlyInPath(true, r->size / 4, e->pos)) {
@@ -710,6 +712,10 @@ void CimulationApp::callAction(bool increase, int buttonAction) {
 		if (increase) cp.motorPower++;
 		else cp.motorPower--;
 	}
+	else if (buttonAction == 2) {//how to get to increase by 1 per click, not while clicked
+		if (increase) cp.numRobots++;
+		else cp.numRobots--;
+	}
 }
 //for hovering over buttons in control panel
 bool CimulationApp::buttonHover(int x, int y, int x2, int y2, int index, int buttonAction) {
@@ -719,12 +725,10 @@ bool CimulationApp::buttonHover(int x, int y, int x2, int y2, int index, int but
 		mousePos.Y < (y2)) {//within boundaries for each button based off their index
 		//mouse is hovering
 		if (s.mouseClicked == true){
-			if(index == 0) {//left button
+			if(index == 0)//left button
 				callAction(false, buttonAction);
-			}
-			else if (index == 1) {//right button
+			else if (index == 1)//right button
 				callAction(true, buttonAction);
-			}
 		}
 		return true;
 	}
@@ -754,7 +758,8 @@ void CimulationApp::controlPanel(robot *r) {//function for drawing the buttons
 	};
 	text t[] = {
 		{ "Size:", cp.size },
-		{ "Power:", cp.motorPower }
+		{ "Power:", cp.motorPower },
+		{ "robots:", cp.numRobots }
 	};
 	int i = 0;
 	//use str.length() to get number of chars and dynamically push back other things
@@ -986,8 +991,8 @@ void CimulationApp::draw() {
 //	gl::color(0, 1, 0);
 //	gl::drawSolidCircle(R2S2(vec3(v.r[0].db.vertices[v.r[0].closestVertice].X, v.r[0].db.vertices[v.r[0].closestVertice].Y)), v.scalar * 5);
 
-	if (v.f.mg[5].inPossession[1]) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
-	else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
+	//if (v.f.mg[5].inPossession[1]) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
+	//else gl::drawString("NO", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));
 	//drawFontText(v.r[0].mg.holding, vec3I(1000, 800), vec3I(0, 1, 0), 30);
 
 	//if (v.r[0].mg.grabbing) gl::drawString("YES", Vec2f(1010, 600), Color(1, 1, 1), Font("Arial", 30));

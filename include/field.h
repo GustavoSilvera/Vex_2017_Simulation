@@ -21,6 +21,7 @@ public:
 
 	typedef int mobileGoalIndex;
 	typedef int coneIndex;
+	typedef int robotIndex;
 
 	//std::set<mobileGoalIndex> pushMoGo;
 	//std::set<coneIndex> pushCones;
@@ -45,7 +46,7 @@ public:
 	fence f;
 
 	struct element {
-		element(vec3 initpos, float initradius, float initheight) : pos(initpos), radius(initradius), height(initheight), inPossession(NUMROBOTS) {}
+		element(vec3 initpos, float initradius, float initheight) : pos(initpos), radius(initradius), height(initheight) {}
 		vec3 pos;
 		float radius;//size of the object;
 		/*const*/ float height;
@@ -54,7 +55,7 @@ public:
 		void collision(element *e);
 		void collideWith(robot *robit, vec3 closestPoint, int type, int index, int roboIndex);
 		std::set<coneIndex> stacked; // for goals only, cones stacked on it.
-		std::vector<bool> inPossession;//if being held or whatnot
+		std::set<robotIndex> inPossession;//if being held or whatnot
 	};
 	struct cone : public element {
 		cone(vec3 pos) : element(pos, cRad, cHeight), fellOn(0), landed(false) {}

@@ -31,7 +31,6 @@
 #define coefMag 1.0//e.e
 #define RESET 0
 #define MAXSPEED 127
-#define NUMROBOTS 3
 //TYPES
 #define CONE 0
 #define MOGO 1

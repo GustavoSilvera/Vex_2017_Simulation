@@ -49,16 +49,16 @@ void field::initialize(std::vector<robot> *r) {
 	c.assign(&initConeConfig[0], &initConeConfig[numCones]);//assigns valeus to the vector of cones, from first parameter (0) to last one (53)
 	mg.assign(&initMoGoConfig[0], &initMoGoConfig[numMoGos]);
 	pl.assign(&initPoleConfig[0], &initPoleConfig[numPoles]);
-	int initAngle = 45, initX = 35, initY = 35;//default for first robit
-	for (int i = 0; i < (*r).size(); i++) {
-		if (i == 1) { initAngle = 225; initX = 97; initY = 128; }
-		else if (i == 2) { initAngle = 225; initX = 128; initY = 97; }
-		else if (i == 3) { initAngle = 45; initX = 25; initY = 50; }
+	const int num_robots = 4;
+	const int initAngle[num_robots] = { 45, 225, 225, 45 };
+	const int initX[num_robots] = { 15, 97, 128, 45 };
+	const int initY[num_robots] = { 45, 128, 97, 15 };
 
+	for (int i = 0; i < (*r).size(); i++) {
 		(*r)[i].reset();
-		(*r)[i].p.position.X = initX;
-		(*r)[i].p.position.Y = initY;
-		(*r)[i].p.mRot = initAngle;
+		(*r)[i].p.position.X = initX[i % num_robots];
+		(*r)[i].p.position.Y = initY[i % num_robots];
+		(*r)[i].p.mRot = initAngle[i % num_robots];
 	}
 
 	//(*r)[2].reset();
@@ -170,7 +170,7 @@ void field::element::collideWith(robot *robit, vec3 closestPoint, int type, int 
 	if (type == MOGO) weight = moGoWeight;
 	else if(type == CONE) weight = coneWeight;
 	else weight = 1;
-	if (!inPossession[roboIndex] && !robit->mg.grabbing ) {//makes sure not to pushback robot if picking up a mogo
+	if (inPossession.find(roboIndex) == inPossession.end() && !robit->mg.grabbing ) {//makes sure not to pushback robot if picking up a mogo
 		robit->p.position.X += weight * (R.X - closestPoint.X);
 		robit->p.position.Y += weight * (R.Y - closestPoint.Y); 
 		if(type == STAGO) robit->p.velocity = vec3(0, 0, 0);
@@ -206,7 +206,7 @@ void field::element::robotColl(int index, robot *robit, int type, fence *f, int 
 			inPositionMoGo = true;
 			if (!robit->mg.grabbing) {
 				robit->mg.holding = index+100;
-				inPossession[roboIndex] = true;//only locks in when bringing mogo up (grabbing == false)
+				inPossession.insert(roboIndex);//only locks in when bringing mogo up (grabbing == false)
 			}
 		}
 		else if (!inPositionMoGo && d2closestPoint < radius) {//touching
@@ -235,12 +235,12 @@ void field::element::robotColl(int index, robot *robit, int type, fence *f, int 
 		}
 	}
 	if (type == MOGO && robit->mg.holding == index+100) {//specific robot that is HOLDING the mogo (else randomly switches)
-		if (inPossession[roboIndex]) {//when doing the fancy animations (brings mogo into robit)
+		if (inPossession.find(roboIndex) != inPossession.end()) {//when doing the fancy animations (brings mogo into robit)
 			pos.X = robit->p.position.X + robit->mg.protrusion * cos((robit->p.mRot) * PI / 180) * 2;
 			pos.Y = robit->p.position.Y + robit->mg.protrusion * sin((robit->p.mRot) * PI / 180) * 2;
 		}
 		if (abs(robit->mg.protrusion - 7.5) < 0.5 && robit->mg.grabbing) {//when bringing the mogo down
-			inPossession[roboIndex] = false;//no longer locked onto mogo
+			inPossession.erase(roboIndex);//no longer locked onto mogo
 			robit->mg.holding = -1;//not holding anything (AFTER PUTS MOGO ON GROUND)
 		}
 	}
