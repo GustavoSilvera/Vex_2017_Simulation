@@ -17,11 +17,11 @@ robot::robot() {
 	db.distance = RESET;
 	db.rotDist = RESET;
 	p.position = vec3(69.6, 69.6, 0);//initial robot position
-	updateFeatures();
+	updatePhysicalFeatures();
 	c.position = c.size;
 	//vector stuff
 }//constructor 
-void robot::updateFeatures() {
+void robot::updatePhysicalFeatures() {
 	//physical features
 	
 	c.size = size / 6;//3
@@ -39,7 +39,7 @@ void robot::updateFeatures() {
 float accelFunc(float x, float power, float rateOfChange, float friction) {
 	return 2 * (power / rateOfChange) - (friction * x);
 }
-void robot::forwards(float power) {
+void robot::driveFwds(float power) {
 	//konstants that should be changed later
 	if(power != 0) d.basePower = power;
 	float rateOfChange = 40;//constant changing the amount of initial change the acceleration goes through? maibe
@@ -59,7 +59,7 @@ void robot::forwards(float power) {
 }
 void robot::readScript() {//script parser
 	#define MAX_LINE 100
-	readyToRun = false;
+	readyToReRun = false;
 	std::ifstream file("script.txt");
 	while (!file.eof()) {
 		char line[MAX_LINE];
@@ -78,7 +78,7 @@ void robot::readScript() {//script parser
 		}
 		commands.push_back({a, atof(num)});
 	}
-	readyToRun = true;
+	readyToReRun = true;
 }
 void robot::rotate(float power) {
 	//konstants that should be changed later
@@ -115,7 +115,7 @@ float robot::truSpeed(int degree, float value) {//see here for reference https:/
 		return (exponented) / (divisor);
 	}
 }
-void robot::reset() {
+void robot::stopAll() {
 	p.acceleration.X = 0;
 	p.acceleration.Y = 0;
 	p.velocity.X = 0;
@@ -149,7 +149,7 @@ bool robot::directlyInPath(bool vertical, int range, vec3 pos) {//vertical lines
 	//with the y intrcepts, checks if the y intercepts are not the same sign, thus the cone (origin) is between them
 	return(getSign(db.Yint[0]) != getSign(db.Yint[1]));//works for telling me if between the two lines
 }
-void robot::setVertices() {
+void robot::updateVertices() {
 	//gross i know, but its for calculating each vertice of the robot based off its current angle;
 	//math behind is based off basic trig and 45 45 90° triangle analytic geometry
 	float cosDist = (size / 2) * cos((-p.mRot + 135) * PI / 180) * sqrt(2);
@@ -224,31 +224,34 @@ void robot::intake::mogo(float robSize) {
 	//if (grabbing == false) holding = -1;//reset index (TO -1 (for mogos) )
 }
 void robot::update() {
-	//vec3 pushback = vec3(
-	//	cos((p.mRot)*(PI / 180)) * (getSign(p.velocity.X) * coneWeight * p.frictionC + getSign(p.velocity.X) * moGoWeight * p.frictionM),
-	//	sin((p.mRot)*(PI / 180)) * (getSign(p.velocity.Y) * coneWeight * p.frictionC + getSign(p.velocity.Y) * moGoWeight * p.frictionM));
+	robot::updateVertices();
 	p.velocity = p.velocity + p.acceleration.times(1.0/60.0);
 	p.position.Y += p.velocity.Y * sin((p.mRot)*(PI / 180));//velocity scaled because of rotation
 	p.position.X += p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
-//	p.position = p.position + pushback.times(-1);
 	p.rotVel += 2*p.rotAcceleration*(1.0 / 60.0);//constant is based off realistic tests
 	p.mRot += p.rotVel;
 	p.mRot = ((p.mRot / 360) - (long)(p.mRot / 360)) * 360;//only within 360° and -360° (takes the decimal portion and discards the whole number)
-	robot::setVertices();
 	c.claw(size);
 	mg.mogo(size);
 	if (c.liftUp && c.liftPos < c.maxHeight) c.liftPos += 4.5*c.liftSpeed;
 	else if (c.liftDown && c.liftPos > 0) c.liftPos -= 8.5*c.liftSpeed; //goes faster coming down
 }
+void robot::moveAround(vec3 joystick) {
+	if (ctrl.KeyUp) driveFwds(d.motorSpeed);//checking up key
+	else if (ctrl.KeyDown) driveFwds(-d.motorSpeed);//checking down key
+	else if (joystick.X != 0) driveFwds(truSpeed(3, -joystick.Y));//chacking analog drawing
+	else driveFwds(0);//welp, no movement
 
-void robot::moveAround(float jAnalogX, float jAnalogY) {
-	if (ctrl.ArrowKeyUp) forwards(d.motorSpeed);//checking up key
-	else if (ctrl.ArrowKeyDown) forwards(-d.motorSpeed);//checking down key
-	else if (jAnalogY != 0) forwards(truSpeed(3, -jAnalogY));//chacking analog drawing
-	else forwards(0);//welp, no movement
-
-	if (ctrl.RotLeft) rotate(d.motorSpeed);//checking left key
-	else if (ctrl.RotRight) rotate(-d.motorSpeed);//checking right key
-	else if (abs(jAnalogX) > 10) rotate(-jAnalogX);//checking analog drawing
+	if (ctrl.KeyLeft) rotate(d.motorSpeed);//checking left key
+	else if (ctrl.KeyRight) rotate(-d.motorSpeed);//checking right key
+	else if (abs(joystick.X) > 10) rotate(-joystick.X);//checking analog drawing
 	else rotate(0);//welp, no rotation
+}
+void robot::setPos(vec3 pos) {
+	p.position.X = pos.X;
+	p.position.Y = pos.Y;
+	p.mRot = pos.Z;
+}
+float robot::getSize() {
+	return size;
 }

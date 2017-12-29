@@ -114,7 +114,7 @@ void tSpeed::textOutput(robot *r, joystick *j) {
 
 void tSpeed::TruSpeedUpdate(robot *robit) {
 	if(!isInit) initialize(robit);
-	robit->reset();
+	robit->stopAll();
 	robit->p.position.X = 69.6;
 	robit->p.position.Y = 69.9;
 	robit->p.mRot += 1;

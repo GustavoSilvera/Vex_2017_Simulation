@@ -27,9 +27,8 @@ PID::PID(robot *r) {
 }
 void PID::initialize(robot *r) {
 	pid.isRunning = true;
-	r->reset();
-	r->p.mRot = 0;
-	r->p.position.Y = 69.6;
+	r->stopAll();
+	r->setPos(vec3(69.9, 69.6, 0));
 	pid.requestedValue = 69.6;
 	isInit = true;
 	pidVel = true;

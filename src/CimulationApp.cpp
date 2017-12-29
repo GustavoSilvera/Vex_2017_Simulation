@@ -65,7 +65,7 @@ struct simulation {
 simulation s;
 class CimulationApp : public AppNative {
 public:
-	CimulationApp():v(10) {}//how to modify in real time????
+	CimulationApp():v(3) {}//how to modify in real time????
 	void setup();
 	void mouseDown(MouseEvent event);
 	void mouseUp(MouseEvent event);
@@ -91,7 +91,6 @@ public:
 	struct customizePanel {
 		float size = 18;
 		float motorPower = MAXSPEED;//power for the base
-		int numRobots = 1;
 	};
 	customizePanel cp;
 	//for drawing stuff
@@ -151,10 +150,10 @@ void CimulationApp::mouseMove(MouseEvent event) {
 //what to do when keyboard key is pressed
 void CimulationApp::keyDown(KeyEvent event) {
 	//base
-	if (event.getCode() == KeyEvent::KEY_UP || event.getChar() == 'w' || event.getChar() == 'W')	v.r[0].ctrl.ArrowKeyUp = true;
-	if (event.getCode() == KeyEvent::KEY_DOWN || event.getChar() == 's' || event.getChar() == 'S')	v.r[0].ctrl.ArrowKeyDown = true;
-	if (event.getCode() == KeyEvent::KEY_LEFT || event.getChar() == 'a' || event.getChar() == 'A')	v.r[0].ctrl.RotLeft = true;
-	if (event.getCode() == KeyEvent::KEY_RIGHT || event.getChar() == 'd' || event.getChar() == 'D') v.r[0].ctrl.RotRight = true;
+	if (event.getCode() == KeyEvent::KEY_UP || event.getChar() == 'w' || event.getChar() == 'W')	v.r[0].ctrl.KeyUp = true;
+	if (event.getCode() == KeyEvent::KEY_DOWN || event.getChar() == 's' || event.getChar() == 'S')	v.r[0].ctrl.KeyDown = true;
+	if (event.getCode() == KeyEvent::KEY_LEFT || event.getChar() == 'a' || event.getChar() == 'A')	v.r[0].ctrl.KeyLeft = true;
+	if (event.getCode() == KeyEvent::KEY_RIGHT || event.getChar() == 'd' || event.getChar() == 'D') v.r[0].ctrl.KeyRight = true;
 	//intakes
 	if (event.getChar() == 'p' || event.getChar() == 'P' || event.getChar() == 'e' || event.getChar() == 'E') v.r[0].c.grabbing = !v.r[0].c.grabbing;//if want toggling, else look at a while ago
 	if (event.getChar() == 'o' || event.getChar() == 'O' || event.getChar() == 'r' || event.getChar() == 'R') v.r[0].mg.grabbing = !v.r[0].mg.grabbing;//if want toggling, else look at a while ago
@@ -174,7 +173,7 @@ void CimulationApp::keyDown(KeyEvent event) {
 			if(v.r[rob].thinking != true) v.r[rob].thinking = true;
 			else {
 				v.r[rob].thinking = false;
-				v.r[rob].reset();
+				v.r[rob].stopAll();
 			}
 		}
 	}
@@ -182,10 +181,10 @@ void CimulationApp::keyDown(KeyEvent event) {
 //what to do when keyboard key is released
 void CimulationApp::keyUp(KeyEvent event) {
 	//base
-	if (event.getCode() == KeyEvent::KEY_DOWN|| event.getChar() == 's' || event.getChar() == 'S') v.r[0].ctrl.ArrowKeyDown = false;
-	if (event.getCode() == KeyEvent::KEY_UP || event.getChar() == 'w' || event.getChar() == 'W') v.r[0].ctrl.ArrowKeyUp = false;
-	if (event.getCode() == KeyEvent::KEY_RIGHT || event.getChar() == 'd' || event.getChar() == 'D') v.r[0].ctrl.RotRight = false;
-	if (event.getCode() == KeyEvent::KEY_LEFT || event.getChar() == 'a' || event.getChar() == 'A') v.r[0].ctrl.RotLeft = false;
+	if (event.getCode() == KeyEvent::KEY_DOWN|| event.getChar() == 's' || event.getChar() == 'S') v.r[0].ctrl.KeyDown = false;
+	if (event.getCode() == KeyEvent::KEY_UP || event.getChar() == 'w' || event.getChar() == 'W') v.r[0].ctrl.KeyUp = false;
+	if (event.getCode() == KeyEvent::KEY_RIGHT || event.getChar() == 'd' || event.getChar() == 'D') v.r[0].ctrl.KeyRight = false;
+	if (event.getCode() == KeyEvent::KEY_LEFT || event.getChar() == 'a' || event.getChar() == 'A') v.r[0].ctrl.KeyLeft = false;
 	//lift
 	if (event.getCode() == KeyEvent::KEY_SPACE) v.r[0].c.liftUp = false;
 	if (event.getCode() == KeyEvent::KEY_RSHIFT || event.getCode() == KeyEvent::KEY_LSHIFT) v.r[0].c.liftDown = false;//left Z button
@@ -213,7 +212,7 @@ void CimulationApp::update() {
 		v.pid.isInit = false;
 		v.f.isInit = false;
 		v.tS.isInit = false;
-		v.r[0].moveAround(v.j.analogX, v.j.analogY);
+		v.r[0].moveAround(vec3(v.j.analogX, v.j.analogY));
 		v.pid.pid.isRunning = false;
 		break;
 	case simulation::PIDCTRL:
@@ -247,7 +246,7 @@ void CimulationApp::update() {
 		v.tS.isInit = false;
 		v.f.FieldUpdate(&v.r);
 		v.pid.pid.isRunning = false;
-		v.r[0].moveAround(v.j.analogX, v.j.analogY);
+		v.r[0].moveAround(vec3(v.j.analogX, v.j.analogY));
 		break;
 	}
 	for (int rob = 0; rob < v.r.size(); rob++) {//starts at robot 1
@@ -311,7 +310,7 @@ void CimulationApp::update() {
 		}
 		v.r[0].db.distance += getSign(v.r[0].d.basePower)*v.r[0].p.position.distance(pastPos);
 		v.r[0].db.rotDist += getSign(v.r[0].p.rotVel)*(v.r[0].p.mRot - pastRot);
-		if (v.r[0].readyToRun) {
+		if (v.r[0].readyToReRun) {
 			enum action {
 				ACTION_ROTATE,
 				ACTION_FWDS
@@ -332,7 +331,7 @@ void CimulationApp::update() {
 					}
 					else if (v.r[0].commands[0].a == ACTION_FWDS) {//for fwds
 						if (abs(v.r[0].db.distance) <= abs(v.r[0].commands[0].amnt)) {
-							v.r[0].forwards(getSign(v.r[0].commands[0].amnt) * 127);
+							v.r[0].driveFwds(getSign(v.r[0].commands[0].amnt) * 127);
 						}
 						else {
 							v.r[0].db.distance = RESET;
@@ -397,14 +396,14 @@ void CimulationApp::goGrab(robot *r, field::element *e, int index, int roboIndex
 				r->rotate(0);
 				if (!r->directlyInPath(true, r->size / 4, e->pos)) {
 					r->rotate(dir * speed);
-					r->forwards(0);
+					r->driveFwds(0);
 				}
-				else r->forwards(speed);
+				else r->driveFwds(speed);
 			}
 			else {
 				r->mg.holding = index + 100;
 				r->mg.grabbing = false;//only closes claw if on same level (height wise)
-				r->forwards(0);
+				r->driveFwds(0);
 				r->rotate(0);
 			}
 			if (r->p.velocity.X == 0 && r->p.velocity.Y == 0) {//get it to do the same if touching fence
@@ -414,17 +413,17 @@ void CimulationApp::goGrab(robot *r, field::element *e, int index, int roboIndex
 		else {
 			if (!r->directlyInPath(true, r->size / 2, e->pos) || !inFront) {//angle is not pointing towards goal
 				r->rotate(dir * speed);
-				r->forwards(0);
+				r->driveFwds(0);
 			}
 			else r->rotate(0);
 			float offset = 0.5;//dosent update fast enough for small cones, needed little offset heuristic
 			if (r->p.position.distance(e->pos) > (r->size / 2 + e->radius) + offset && inFront) {//drive fwds towards c.goal[rob-1]
 				r->c.grabbing = false;
-				r->forwards(speed);
+				r->driveFwds(speed);
 			}
 			else {
 				if (abs(r->c.liftPos - e->pos.Z) < e->height) r->c.grabbing = true;//only closes claw if on same level (height wise)
-				r->forwards(0);
+				r->driveFwds(0);
 			}
 			if (r->c.grabbing && r->c.holding == index) {//holding the cone
 				if (r->c.liftPos < v.f.pl[1].height + 4) r->c.liftUp = true;
@@ -457,12 +456,12 @@ void CimulationApp::reRoute(robot *r, field::element *e, int dir) {
 		poleNum = 1;//robot is closer to pole1 than pole0
 	}
 	if (r->p.position.distance(v.f.pl[poleNum].pos) < (r->size)) {//far enough out of the way
-		r->forwards(-127);
+		r->driveFwds(-127);
 	}
 	else {//fix this little "heuristic" make it actually detect when theres an obstacle before it and turn around it
 		if (r->directlyInPath(true, r->size/4, v.f.c[rand() % v.f.c.size()].pos)) r->rotate(dir * MAXSPEED);//moving to horizontal path (turning like 90°)
 		else r->reRouting = false;
-		r->forwards(0);
+		r->driveFwds(0);
 		//v.reRouting = false;
 	}
 }
@@ -485,24 +484,24 @@ void CimulationApp::placeIn(robot *r, field::fence::zone *z) {
 		if (abs(r->p.position.Y - v.f.f.poleEquation(140.05, 117.5, -1, r->p.position.X))>15) {
 			if (!r->directlyInPath(true, r->size / 2, vec3(140, 140)) || !inFront) {//angle is not pointing towards c.goal[rob-1]
 				r->rotate(dir * speed);
-				r->forwards(0);
+				r->driveFwds(0);
 			}
 			else {
 				r->rotate(0);
-				r->forwards(dir * speed);
+				r->driveFwds(dir * speed);
 			}
 		}
 		else {
-			//r->forwards(0);
+			//r->driveFwds(0);
 			r->mg.grabbing = true;//lets go of mogo
 			if (r->mg.protrusion > 7) {//not quite at the ground yet
-				r->forwards(-MAXSPEED);//get outta there
+				r->driveFwds(-MAXSPEED);//get outta there
 			}
 		}
 
 	}
 	else {//stop moving
-		r->forwards(0);
+		r->driveFwds(0);
 		r->rotate(0);
 	}
 }
@@ -531,10 +530,10 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 		}
 		if (r->c.liftPos >= e->height + 2 /*+ADD STACKED POS CHANGER HERE*/) {//wait until lift is reasonably high
 			if (r->p.position.distance(e->pos) > r->size*0.5 + e->radius + 2 && inFront) {//drive fwds towards c.goal[rob-1]
-				r->forwards(speed*0.7);//slower since carrying object? eh idk
+				r->driveFwds(speed*0.7);//slower since carrying object? eh idk
 			}
 			else {
-				r->forwards(0);
+				r->driveFwds(0);
 				if (r->p.position.distance(e->pos) <= r->size*0.5 + e->radius + 2) {//reall close to the c.goal[rob-1]
 					if (r->c.liftPos >= e->height && r->c.grabbing) {
 						r->rotate(0);
@@ -554,12 +553,12 @@ void CimulationApp::stackOn(robot *r, field::element *e) {
 			}
 		}
 		else {//stop moving
-			r->forwards(0);
+			r->driveFwds(0);
 			r->rotate(0);
 		}
 	}
 	else {//stop moving
-		r->forwards(0);
+		r->driveFwds(0);
 		r->rotate(0);
 	}
 }
@@ -712,8 +711,13 @@ void CimulationApp::callAction(bool increase, int buttonAction) {
 		else cp.motorPower--;
 	}
 	else if (buttonAction == 2) {//how to get to increase by 1 per click, not while clicked
-		if (increase) cp.numRobots++;
-		else cp.numRobots--;
+		if (increase) {
+			robot r = robot();//creates new robit;
+			v.r.push_back(r);
+		}
+		else {
+			if(v.r.size() > 1) v.r.pop_back();
+		}
 	}
 }
 //for hovering over buttons in control panel
@@ -758,7 +762,7 @@ void CimulationApp::controlPanel(robot *r) {//function for drawing the buttons
 	text t[] = {
 		{ "Size:", cp.size },
 		{ "Power:", cp.motorPower },
-		{ "robots:", cp.numRobots }
+		{ "robots:", v.r.size()}//number of robots ERROR WHEN INCREASING
 	};
 	int i = 0;
 	//use str.length() to get number of chars and dynamically push back other things
@@ -896,7 +900,7 @@ void CimulationApp::draw() {
 	//joystick analog drawing
 	if (s.SimRunning == s.CUSTOMIZE ) {//only for CUSTOMIZE and truspeed sim
 		controlPanel(&v.r[0]);
-		v.r[0].updateFeatures();
+		v.r[0].updatePhysicalFeatures();
 	}
 	if (s.SimRunning == s.PIDCTRL) {
 		v.pid.textOutput(&v.r[0]);
