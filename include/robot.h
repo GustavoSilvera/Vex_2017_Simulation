@@ -50,6 +50,7 @@ public://was gonna make these private but eh...
 	struct details {
 		float motorSpeed = (float)MAXSPEED;
 		int basePower;
+		int rotPower;
 	};
 	details d;
 

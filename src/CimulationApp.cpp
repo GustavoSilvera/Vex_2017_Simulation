@@ -322,26 +322,25 @@ void CimulationApp::update() {
 				if (v.r[0].commands[0].amnt != 0 || v.r[0].commands[0].a == ACTION_MOGO) {//at least 
 					if (v.r[0].commands[0].a == ACTION_ROTATE) {//for rotate
 						if (abs(v.r[0].db.rotDist) <= abs(v.r[0].commands[0].amnt)) {
-							v.r[0].rotate(getSign(v.r[0].commands[0].amnt) * 127);
+							v.r[0].rotate(getSign(v.r[0].commands[0].amnt) * v.r[0].d.motorSpeed);
 							v.r[0].driveFwds(0);
 						}
 						else {
+							v.r[0].stopAll();
 							v.r[0].db.rotDist = RESET;
 							v.r[0].rotate(0);
-							v.r[0].stopAll();
 							v.r[0].commands.erase(v.r[0].commands.begin());//removes first element of vector
 						}
 					}
 					else if (v.r[0].commands[0].a == ACTION_FWDS) {//for fwds
 						if (abs(v.r[0].db.distance) <= abs(v.r[0].commands[0].amnt)) {
-							v.r[0].driveFwds(getSign(v.r[0].commands[0].amnt) * 127);
+							v.r[0].driveFwds(getSign(v.r[0].commands[0].amnt) * v.r[0].d.motorSpeed);
 							v.r[0].rotate(0);
 						}
 						else {
+							v.r[0].stopAll();
 							v.r[0].db.distance = RESET;
 							v.r[0].driveFwds(0);
-							v.r[0].stopAll();
-
 							v.r[0].commands.erase(v.r[0].commands.begin());//removes first element of vector
 						}
 					}

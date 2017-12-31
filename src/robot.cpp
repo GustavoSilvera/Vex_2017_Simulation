@@ -84,6 +84,7 @@ void robot::readScript() {//script parser
 	readyToReRun = true;
 }
 void robot::rotate(float power) {
+	if (power != 0) d.rotPower = power;
 	//konstants that should be changed later
 	float rateOfChange = 10;//constant changing the amount of initial change the acceleration goes through? maibe
 							//calculate acceleration taking friction into account

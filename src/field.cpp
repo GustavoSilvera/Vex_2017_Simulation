@@ -439,7 +439,7 @@ void field::positionFall(cone *fall) {
 }
 //checking which mogos are within which zone
 void field::MoGo::zoneScore(fence *f, int index) {
-	if (colour == 1) {//red
+	//if (colour == 1) {//red
 		if (pos.Y <= f->poleEquation(0, 23.2, -1, pos.X)) {//20 point
 			f->z[0].twentyPoint.insert(index);
 			f->z[0].fivePoint.erase(index);
@@ -460,8 +460,8 @@ void field::MoGo::zoneScore(fence *f, int index) {
 			f->z[0].fivePoint.erase(index);
 			f->z[0].tenPoint.erase(index);
 		}
-	}
-	else if (colour == 2) {//blue 
+	//}
+	//else if (colour == 2) {//blue 
 		if (pos.Y >= f->poleEquation(140.05, 117.5, -1, pos.X)) {
 			f->z[1].twentyPoint.insert(index);
 			f->z[1].fivePoint.erase(index);
@@ -482,7 +482,7 @@ void field::MoGo::zoneScore(fence *f, int index) {
 			f->z[1].fivePoint.erase(index);
 			f->z[1].tenPoint.erase(index);
 		}
-	}
+	//}
 }
 //update task for the entire field simulation
 void field::FieldUpdate(std::vector<robot> *r) {
