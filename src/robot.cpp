@@ -73,8 +73,11 @@ void robot::readScript() {//script parser
 		if (std::string(command) == "driveFor(") {
 			a = ACTION_FWDS;
 		}
-		else {
+		else if (std::string(command) == "rotFor("){
 			a = ACTION_ROTATE;
+		}
+		else {
+			a = ACTION_MOGO;
 		}
 		commands.push_back({a, atof(num)});
 	}
@@ -237,15 +240,17 @@ void robot::update() {
 	else if (c.liftDown && c.liftPos > 0) c.liftPos -= 8.5*c.liftSpeed; //goes faster coming down
 }
 void robot::moveAround(vec3 joystick) {
-	if (ctrl.KeyUp) driveFwds(d.motorSpeed);//checking up key
-	else if (ctrl.KeyDown) driveFwds(-d.motorSpeed);//checking down key
-	else if (joystick.X != 0) driveFwds(truSpeed(3, -joystick.Y));//chacking analog drawing
-	else driveFwds(0);//welp, no movement
+	if (!readyToReRun) {//not rerunning
+		if (ctrl.KeyUp) driveFwds(d.motorSpeed);//checking up key
+		else if (ctrl.KeyDown) driveFwds(-d.motorSpeed);//checking down key
+		else if (joystick.X != 0) driveFwds(truSpeed(3, -joystick.Y));//chacking analog drawing
+		else driveFwds(0);//welp, no movement
 
-	if (ctrl.KeyLeft) rotate(d.motorSpeed);//checking left key
-	else if (ctrl.KeyRight) rotate(-d.motorSpeed);//checking right key
-	else if (abs(joystick.X) > 10) rotate(-joystick.X);//checking analog drawing
-	else rotate(0);//welp, no rotation
+		if (ctrl.KeyLeft) rotate(d.motorSpeed);//checking left key
+		else if (ctrl.KeyRight) rotate(-d.motorSpeed);//checking right key
+		else if (abs(joystick.X) > 10) rotate(-joystick.X);//checking analog drawing
+		else rotate(0);//welp, no rotation
+	}
 }
 void robot::setPos(vec3 pos) {
 	p.position.X = pos.X;

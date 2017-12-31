@@ -65,7 +65,7 @@ struct simulation {
 simulation s;
 class CimulationApp : public AppNative {
 public:
-	CimulationApp():v(3) {}//how to modify in real time????
+	CimulationApp():v(1) {}//how to modify in real time????
 	void setup();
 	void mouseDown(MouseEvent event);
 	void mouseUp(MouseEvent event);
@@ -280,7 +280,7 @@ void CimulationApp::update() {
 		}
 		if (v.r[rob].thinking) {
 			if (v.r[rob].grabMoGo) {//aiming for mogo
-				if (v.r[rob].mg.holding != v.r[rob].mg.goal + 100 ) {
+				if (v.r[rob].mg.holding != v.r[rob].mg.goal + 100) {
 					goGrab(&v.r[rob], &v.f.mg[v.r[rob].mg.goal], v.r[rob].mg.goal, rob);
 				}
 				else {
@@ -308,42 +308,61 @@ void CimulationApp::update() {
 				}
 			}
 		}
+	}
 		v.r[0].db.distance += getSign(v.r[0].d.basePower)*v.r[0].p.position.distance(pastPos);
 		v.r[0].db.rotDist += getSign(v.r[0].p.rotVel)*(v.r[0].p.mRot - pastRot);
 		if (v.r[0].readyToReRun) {
 			enum action {
 				ACTION_ROTATE,
-				ACTION_FWDS
+				ACTION_FWDS,
+				ACTION_MOGO
 			};
 			if (v.r[0].commands.size() > 0) {//make this more accriate
 				float maxSpeed = 127;
-				if (v.r[0].commands[0].amnt != 0) {//at least 
+				if (v.r[0].commands[0].amnt != 0 || v.r[0].commands[0].a == ACTION_MOGO) {//at least 
 					if (v.r[0].commands[0].a == ACTION_ROTATE) {//for rotate
-						if (abs(v.r[0].db.rotDist) <= 0.65*abs(v.r[0].commands[0].amnt)) {
-							v.r[0].p.amountOfFriction = 10;//decreases uncontrolled rotation
+						if (abs(v.r[0].db.rotDist) <= abs(v.r[0].commands[0].amnt)) {
 							v.r[0].rotate(getSign(v.r[0].commands[0].amnt) * 127);
+							v.r[0].driveFwds(0);
 						}
 						else {
 							v.r[0].db.rotDist = RESET;
-							v.r[0].p.amountOfFriction = 5;//resets to normal
+							v.r[0].rotate(0);
+							v.r[0].stopAll();
 							v.r[0].commands.erase(v.r[0].commands.begin());//removes first element of vector
 						}
 					}
 					else if (v.r[0].commands[0].a == ACTION_FWDS) {//for fwds
 						if (abs(v.r[0].db.distance) <= abs(v.r[0].commands[0].amnt)) {
 							v.r[0].driveFwds(getSign(v.r[0].commands[0].amnt) * 127);
+							v.r[0].rotate(0);
 						}
 						else {
 							v.r[0].db.distance = RESET;
+							v.r[0].driveFwds(0);
+							v.r[0].stopAll();
+
 							v.r[0].commands.erase(v.r[0].commands.begin());//removes first element of vector
 						}
 					}
+					else if (v.r[0].commands[0].a == ACTION_MOGO) {//for fwds
+						v.r[0].mg.grabbing = !v.r[0].mg.grabbing;
+						v.r[0].commands.erase(v.r[0].commands.begin());//removes first element of vector
+					}
 				}
-				else v.r[0].commands.erase(v.r[0].commands.begin());
+				else {
+					v.r[0].commands.erase(v.r[0].commands.begin());
+				}
 			}
-
+			else {
+				v.r[0].db.distance = RESET;
+				v.r[0].db.rotDist = RESET;
+				v.r[0].driveFwds(0);
+				v.r[0].rotate(0);
+				v.r[0].stopAll();
+				v.r[0].readyToReRun = false;
+			}
 		}
-	}
 	if (v.recording) {//macro recording		//less accurate (straight line running)
 		if ((v.r[0].p.velocity.X == 0 && v.r[0].p.velocity.Y == 0) ||
 			(getSign(v.r[0].p.velocity.X) != signVX &&
@@ -390,7 +409,7 @@ void CimulationApp::goGrab(robot *r, field::element *e, int index, int roboIndex
 		bool inFront = ((d2V[0] + d2V[1]) < (d2V[2] + d2V[3]));//checking if c.goal[rob-1] is closer to the front side
 		bool onRight = ((d2V[1] + d2V[2]) < (d2V[0] + d2V[3]));//checking if c.goal[rob-1] is closer to the right side
 		if (onRight) dir = -1;
-		if (r->grabMoGo) {
+		if (r->grabMoGo) {/*WORK ON THIS*/
 			if (e->inPossession.find(roboIndex) == e->inPossession.end() && r->p.position.distance(e->pos) >= (r->size / 2 +1 + e->radius)) {
 				if(r->mg.holding == -1) r->mg.grabbing = true;//pulls out mogo-inator
 				r->rotate(0);

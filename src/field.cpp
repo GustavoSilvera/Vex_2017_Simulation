@@ -54,12 +54,14 @@ void field::initialize(std::vector<robot> *r) {
 	const int initAngle[num_robots] = { 45, 225, 225, 45 };
 	const int initX[num_robots] = { 15, 97, 128, 45 };
 	const int initY[num_robots] = { 45, 128, 97, 15 };
-
+	const vec3 initAuton = vec3(12, 51, 90);//pointing towards mogo thing
 	for (int i = 0; i < (*r).size(); i++) {
 		(*r)[i].stopAll();
 		vec3 initPos(initX[i % num_robots], initY[i % num_robots], initAngle[i % num_robots]);//sets x, y, and angle
 		(*r)[i].setPos(initPos);
 	}
+	(*r)[0].setPos(initAuton);//initial for only first robot (rerunning one)
+
 
 	//(*r)[2].reset();
 	//(*r)[2].p.position.X = (*r)[1].p.position.Y;//equidistant and symmetric from friend

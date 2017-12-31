@@ -75,7 +75,8 @@ public://was gonna make these private but eh...
 	///int closestVertice = 0;
 	enum action  {
 		ACTION_ROTATE,
-		ACTION_FWDS
+		ACTION_FWDS,
+		ACTION_MOGO
 	};
 	struct command {
 		enum action a;
@@ -111,7 +112,7 @@ public://was gonna make these private but eh...
 //class autobot : public robot {//self driving robots
 //public:
 	bool thinking = false;
-	bool grabMoGo = true;//ideally want to get mogo first
+	bool grabMoGo = false;//ideally want to get mogo first
 	bool reRouting = false;
 	int elementGoalIndex = 0;//which element to grab
 };
