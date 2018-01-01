@@ -59,6 +59,9 @@ void field::initialize(std::vector<robot> *r) {
 		(*r)[i].stopAll();
 		vec3 initPos(initX[i % num_robots], initY[i % num_robots], initAngle[i % num_robots]);//sets x, y, and angle
 		(*r)[i].setPos(initPos);
+		(*r)[i].mg.grabbing = false;//brings mogoInator in
+		(*r)[i].c.liftPos = 0;//brings mogoInator in
+
 	}
 	(*r)[0].setPos(initAuton);//initial for only first robot (rerunning one)
 

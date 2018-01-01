@@ -61,6 +61,7 @@ void robot::readScript() {//script parser
 	#define MAX_LINE 100
 	readyToReRun = false;
 	std::ifstream file("script.txt");
+	pathPoints.clear();
 	while (!file.eof()) {
 		char line[MAX_LINE];
 		file.getline(line, MAX_LINE);
@@ -81,6 +82,7 @@ void robot::readScript() {//script parser
 		}
 		commands.push_back({a, atof(num)});
 	}
+	d.initCommandsSize = commands.size();
 	readyToReRun = true;
 }
 void robot::rotate(float power) {
@@ -234,6 +236,8 @@ void robot::update() {
 	p.position.X += p.velocity.X * cos((p.mRot)*(PI / 180));//velocity scaled because of rotation
 	p.rotVel += 2*p.rotAcceleration*(1.0 / 60.0);//constant is based off realistic tests
 	p.mRot += p.rotVel;
+	//simulating gyroscope rotations (rolloff at +-360 deg)
+	//COMMENT OUT THE LINE BELOW WHEN DOING PROG SKILLS #2 RN
 	p.mRot = ((p.mRot / 360) - (long)(p.mRot / 360)) * 360;//only within 360° and -360° (takes the decimal portion and discards the whole number)
 	c.claw(size);
 	mg.mogo(size);

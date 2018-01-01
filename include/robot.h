@@ -51,6 +51,7 @@ public://was gonna make these private but eh...
 		float motorSpeed = (float)MAXSPEED;
 		int basePower;
 		int rotPower;
+		int initCommandsSize = 1;
 	};
 	details d;
 
@@ -84,6 +85,7 @@ public://was gonna make these private but eh...
 		double amnt;
 	};
 	std::vector<command> commands;
+	std::vector<vec3> pathPoints;
 	struct debug {;
 		//lines
 		float slope;//only need 1 slope, both sides of a square are parallel
@@ -95,6 +97,7 @@ public://was gonna make these private but eh...
 		//mogo square
 		float MGYint[2];
 		vec3 MGVert[4];
+		//angle simulation
 	};
 	debug db;
 	struct controls {
