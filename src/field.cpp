@@ -304,6 +304,7 @@ void field::fence::robotPole(robot *r) {
 //pushing the robot against the field fence
 void field::fence::wallPush(robot *r) {
 	//deals with robot's wall boundaries 
+	float rangedAngle = ((r->p.mRot / 360) - (long)(r->p.mRot / 360)) * 360;//from -360 to 360 only
 	for (int i = 0; i < 4; i++) {
 		int dir = 1;
 		float d2Top = fieldSizeIn - r->db.vertices[i].Y;
@@ -313,34 +314,34 @@ void field::fence::wallPush(robot *r) {
 		if (d2Right <= (depthIn)) {//checking RIGHT side
 			r->p.position.X -= (depthIn) - d2Right;
 			r->p.velocity.X = 0;
-			if (withinAngle(r->p.mRot, 0, 90) || 
-				withinAngle(r->p.mRot, 180, 270))  r->p.mRot -= dir*angleMult*cos(gAngle);
-			else if (withinAngle(r->p.mRot, 90, 180) || 
-				withinAngle(r->p.mRot, 270, 360)) r->p.mRot += dir*angleMult*cos(gAngle);
+			if (withinAngle(rangedAngle, 0, 90) || 
+				withinAngle(rangedAngle, 180, 270))  r->p.mRot -= dir*angleMult*cos(gAngle);
+			else if (withinAngle(rangedAngle, 90, 180) || 
+				withinAngle(rangedAngle, 270, 360)) r->p.mRot += dir*angleMult*cos(gAngle);
 		}
 		else if (r->db.vertices[i].X <= (depthIn)) {//checking LEFT side
 			r->p.position.X += (depthIn)-r->db.vertices[i].X;
 			r->p.velocity.X = 0;
-			if (withinAngle(r->p.mRot, 90, 180) || 
-				withinAngle(r->p.mRot, 270, 360))  r->p.mRot -= dir*angleMult*cos(gAngle);
-			else if (withinAngle(r->p.mRot, 180, 270) || 
-				withinAngle(r->p.mRot, 0, 90)) r->p.mRot += dir*angleMult*cos(gAngle);
+			if (withinAngle(rangedAngle, 90, 180) || 
+				withinAngle(rangedAngle, 270, 360))  r->p.mRot -= dir*angleMult*cos(gAngle);
+			else if (withinAngle(rangedAngle, 180, 270) || 
+				withinAngle(rangedAngle, 0, 90)) r->p.mRot += dir*angleMult*cos(gAngle);
 		}
 		if (d2Top <= (depthIn)) {//checking top
 			r->p.position.Y -= (depthIn)-d2Top;
 			r->p.velocity.Y = 0;
-			if (withinAngle(r->p.mRot, 90, 180) || 
-				withinAngle(r->p.mRot, 270, 360))  r->p.mRot += dir*angleMult*sin(gAngle);
-			else if (withinAngle(r->p.mRot, 0, 90) || 
-				withinAngle(r->p.mRot, 180, 270)) r->p.mRot -= dir*angleMult*sin(gAngle);
+			if (withinAngle(rangedAngle, 90, 180) || 
+				withinAngle(rangedAngle, 270, 360))  r->p.mRot += dir*angleMult*sin(gAngle);
+			else if (withinAngle(rangedAngle, 0, 90) || 
+				withinAngle(rangedAngle, 180, 270)) r->p.mRot -= dir*angleMult*sin(gAngle);
 		}
 		else if (r->db.vertices[i].Y <= (depthIn)) {//checking bottom side
 			r->p.position.Y += (depthIn)-r->db.vertices[i].Y;
 			r->p.velocity.Y = 0;
-			if (withinAngle(r->p.mRot, 270, 360) || 
-				withinAngle(r->p.mRot, 90, 180))  r->p.mRot -= dir*angleMult*sin(gAngle);
-			else if (withinAngle(r->p.mRot, 180, 270) || 
-				withinAngle(r->p.mRot, 0, 90)) r->p.mRot += dir*angleMult*sin(gAngle);
+			if (withinAngle(rangedAngle, 270, 360) || 
+				withinAngle(rangedAngle, 90, 180))  r->p.mRot -= dir*angleMult*sin(gAngle);
+			else if (withinAngle(rangedAngle, 180, 270) || 
+				withinAngle(rangedAngle, 0, 90)) r->p.mRot += dir*angleMult*sin(gAngle);
 		}
 	}
 }

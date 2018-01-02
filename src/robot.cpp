@@ -238,7 +238,7 @@ void robot::update() {
 	p.mRot += p.rotVel;
 	//simulating gyroscope rotations (rolloff at +-360 deg)
 	//COMMENT OUT THE LINE BELOW WHEN DOING PROG SKILLS #2 RN
-	p.mRot = ((p.mRot / 360) - (long)(p.mRot / 360)) * 360;//only within 360° and -360° (takes the decimal portion and discards the whole number)
+	//p.mRot = ((p.mRot / 360) - (long)(p.mRot / 360)) * 360;//only within 360° and -360° (takes the decimal portion and discards the whole number)
 	c.claw(size);
 	mg.mogo(size);
 	if (c.liftUp && c.liftPos < c.maxHeight) c.liftPos += 4.5*c.liftSpeed;

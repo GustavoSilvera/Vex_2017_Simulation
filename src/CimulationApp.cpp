@@ -81,9 +81,10 @@ public:
 	void drawDials(vec3I begin);
 	static void drawFontText(float text, vec3I pos, vec3I colour, int size);
 	//for auto robots
+
 	void goGrab(robot *r, field::element *e, int coneIndex, int roboIndex);
 	void stackOn(robot *r, field::element *e);
-	void placeIn(robot *r, field::fence::zone *z);
+	void placeIn(robot *r, field::fence::zone *z);//weird rn
 	void reRoute(robot *r, field::element *e, int dir);
 	//for customize panel
 	struct customizePanel {
@@ -616,6 +617,7 @@ void CimulationApp::buttonClick(int x, int y, int numButtons, int size) {
 		}
 	}
 }
+//for on screen upper buttons, which get outlined red when being hovered over
 void CimulationApp::buttonHover(int x, int y, int numButtons, int size) {
 	for (int i = 0; i < numButtons; i++) {//for each button in the array 
 		if (x > winScale * (size * (i + 1) - (size / 2) + (25 * (i+1))) &&
@@ -676,7 +678,7 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 		double f;
 	};
 	text t[] = { 
-		{ "Angle:", v.r[0].p.mRot},
+		{ "Angle:", ((v.r[0].p.mRot / 360) - (long)(v.r[0].p.mRot / 360)) * 360},//only within 360° and -360° (takes the decimal portion and discards the whole number)
 		{ "X Pos:", v.r[0].p.position.X},
 		{ "Y Pos:", v.r[0].p.position.Y},
 		{ "L-Pos:", v.r[0].c.liftPos},
