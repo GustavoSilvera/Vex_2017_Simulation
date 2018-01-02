@@ -150,6 +150,7 @@ void CimulationApp::mouseDown(MouseEvent event) {
 					event.getX() < (cp.buttonX2Pos[1])) {
 				robot rob;//creates new robit;
 				v.r.push_back(rob);
+				v.f.initialize(&v.r);
 			}
 		}
 	}
