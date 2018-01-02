@@ -339,7 +339,7 @@ void CimulationApp::update() {
 		}
 	}
 		v.r[0].db.distance += getSign(v.r[0].d.basePower)*v.r[0].p.position.distance(pastPos);
-		v.r[0].db.rotDist += getSign(v.r[0].p.rotVel)*(v.r[0].p.mRot - pastRot);
+		v.r[0].db.rotDist += (v.r[0].p.mRot - pastRot);
 		if (v.r[0].readyToReRun) {
 			enum action {
 				ACTION_ROTATE,
@@ -394,32 +394,24 @@ void CimulationApp::update() {
 			}
 		}
 	if (v.recording) {//macro recording		//less accurate (straight line running)
-		if ((v.r[0].p.velocity.X == 0 && v.r[0].p.velocity.Y == 0) ||
+		if ((abs(v.r[0].p.velocity.X) > 0.1 && abs(v.r[0].p.velocity.Y == 0)>0.1) ||
 			(getSign(v.r[0].p.velocity.X) != signVX &&
 				getSign(v.r[0].p.velocity.Y) != signVY)) {//stopped or changed direction
-			if (abs(((int)(v.r[0].db.distance * 100)) / 100) >= 0.01) {//but still moved 
+			if (abs(((int)(v.r[0].db.distance * 10)) / 10) >= 0.01) {//but still moved 
 				std::stringstream dummyText2;
 				std::string distance;
-				dummyText2 << (((int)(v.r[0].db.distance * 100)) / 100);
+				dummyText2 << (((int)(v.r[0].db.distance * 10)) / 10);
 				dummyText2 >> distance;
 				scriptFile << "driveFor( " + distance + ");\n";//used for scripting
 
 				v.r[0].db.distance = RESET;//resets change in position after a while
 			}
 		}
-		if ((int)pastRot != (int)v.r[0].p.mRot || getSign(v.r[0].p.rotVel) != signRot) {//rotation changed
-			if (((int)(v.r[0].db.distance * 100)) / 100 != 0) {//difference in distance trav
-				std::stringstream dummyText2;
-				std::string distance;
-				dummyText2 << (((int)(v.r[0].db.distance * 100)) / 100);
-				dummyText2 >> distance;
-				scriptFile << "driveFor( " + distance + ");\n";//used for scripting
-				v.r[0].db.distance = RESET;//resets change in position after a while
-			}
-			if (((int)(v.r[0].db.rotDist * 100)) / 100 != 0) {//difference in rotation
+		if (v.r[0].p.rotVel == 0) {//rotation changed
+			if (abs(v.r[0].db.rotDist) > 2) {//difference in rotation
 				std::stringstream dummyText;
 				std::string newAngle;
-				dummyText << getSign(v.r[0].p.rotVel)*((int)(v.r[0].db.rotDist * 100)) / 100;//difference in angle
+				dummyText << (v.r[0].db.rotDist);//angle change
 				dummyText >> newAngle;
 				scriptFile << "rotFor( " + newAngle + ");\n";//used for scripting
 				v.r[0].db.rotDist = RESET;//resets change in position after a while
@@ -627,6 +619,7 @@ void CimulationApp::buttonClick(int x, int y, int numButtons, int size) {
 			}
 			else if (i == 5) {//sixth button
 				v.recording = false;//toggles macro recording
+				scriptFile << "driveFor( 0.015);\n";//used for final script(no repeats basically)
 				scriptFile = std::ofstream("script.txt", fstream::app);
 			}
 		}
@@ -697,7 +690,8 @@ void CimulationApp::textDraw() {//function for drawing the buttons
 		{ "X Pos:", v.r[0].p.position.X},
 		{ "Y Pos:", v.r[0].p.position.Y},
 		{ "L-Pos:", v.r[0].c.liftPos},
-		{ "L-Acc:", v.r[0].p.rotAcceleration},
+		{ "R-Acc:", v.r[0].p.rotAcceleration },
+		{ "RDist:", v.r[0].db.rotDist},
 		{ "Auto%", ((float)v.r[0].commands.size() / (float)v.r[0].d.initCommandsSize) }
 		//velocity and acceleration measured with drawDials
 	};
