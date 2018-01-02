@@ -4,7 +4,10 @@
 
 
 //declares and defines the robot class and functions
-
+ci::gl::Texture robot::TankBase;
+ci::gl::Texture robot::TankBase2;
+ci::gl::Texture robot::CChanel;
+ci::gl::Texture robot::CChanelVERT;
 
 robot::robot() {
 	c.liftPos = 0;

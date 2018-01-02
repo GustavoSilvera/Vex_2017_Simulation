@@ -8,8 +8,8 @@ class joystick {
 public:
 	void getAnalog(vec3 mousePos);
 	bool withinAnalogRange(vec3 mousePos);
-	int analogY;
-	int analogX;
+	int analogY = 0;
+	int analogX = 0;
 	int drawX = 600;//distance from where to draw the top left vertice of the drawing in PIXELS
 	int drawY = 500;
 	int drawSize = 127;

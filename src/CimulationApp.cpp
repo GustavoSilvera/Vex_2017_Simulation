@@ -66,7 +66,7 @@ struct simulation {
 simulation s;
 class CimulationApp : public AppNative {
 public:
-	CimulationApp():v(1) {}//how to modify in real time????
+	CimulationApp():v(3) {}//how to modify in real time????
 	void setup();
 	void mouseDown(MouseEvent event);
 	void mouseUp(MouseEvent event);
@@ -81,7 +81,6 @@ public:
 	void drawDials(vec3I begin);
 	static void drawFontText(float text, vec3I pos, vec3I colour, int size);
 	//for auto robots
-
 	void goGrab(robot *r, field::element *e, int coneIndex, int roboIndex);
 	void stackOn(robot *r, field::element *e);
 	void placeIn(robot *r, field::fence::zone *z);//weird rn
@@ -96,6 +95,9 @@ public:
 		float motorPower = MAXSPEED;//power for the base
 		int numberOfRobots = 1;
 		bool mouseClicked = false;
+		float buttonXPos[2];//only used for numRobots
+		float buttonX2Pos[2];//only used for numRobots
+		float buttonYPos[2];//only used for numRobots
 	};
 	customizePanel cp;
 	//for buttons and stuff
@@ -118,12 +120,10 @@ public:
 void CimulationApp::setup() {
 	srand(time(NULL));//seeds random number generator
 	//gl::enableVerticalSync();
-	for (int rob = 0; rob < v.r.size(); rob++) {
-		v.r[rob].TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
-		v.r[rob].TankBase2 = gl::Texture(loadImage(loadAsset("Tank Drive WheelSpin.png")));
-		v.r[rob].CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
-		v.r[rob].CChanelVERT = gl::Texture(loadImage(loadAsset("CChanelSmallVERT.png")));
-	}
+		robot::TankBase = gl::Texture(loadImage(loadAsset("Tank Drive.png")));
+		robot::TankBase2 = gl::Texture(loadImage(loadAsset("Tank Drive WheelSpin.png")));
+		robot::CChanel = gl::Texture(loadImage(loadAsset("CChanelSmall.png")));
+		robot::CChanelVERT = gl::Texture(loadImage(loadAsset("CChanelSmallVERT.png")));
 	v.f.fieldBare = gl::Texture(loadImage(loadAsset("InTheZoneFieldBare.jpg")));
 	v.f.coneTexture = gl::Texture(loadImage(loadAsset("InTheZoneCone.png")));
 	v.f.MobileGoal = gl::Texture(loadImage(loadAsset("MoGoWhite.png")));
@@ -138,7 +138,21 @@ void CimulationApp::mouseDown(MouseEvent event) {
 	//if (event.isLeft()) s.mouseClicked = true;
 	if (s.SimRunning == s.PIDCTRL) v.pid.pid.requestedValue = event.getX();//gets whats needed for PID to activate
 	buttonClick(event.getX(), event.getY(), 6, 100);
-	if (s.SimRunning == s.CUSTOMIZE) cp.mouseClicked = true;
+	if (s.SimRunning == s.CUSTOMIZE) {
+		cp.mouseClicked = true;
+		if (event.getY() > (cp.buttonYPos[0]) &&
+			event.getY() < (cp.buttonYPos[1])) {//within y bounds
+			if (event.getX() > (cp.buttonXPos[0]) &&//within the DECREASE bounds
+				event.getX() < (cp.buttonX2Pos[0])) {
+				if (!v.r.empty()) v.r.pop_back();
+			}
+			else if (event.getX() > (cp.buttonXPos[1]) &&//within the INCREASE bounds
+					event.getX() < (cp.buttonX2Pos[1])) {
+				robot rob;//creates new robit;
+				v.r.push_back(rob);
+			}
+		}
+	}
 }
 //when mouse is released
 void CimulationApp::mouseUp(MouseEvent event) {
@@ -751,15 +765,6 @@ void CimulationApp::customizePanel::callAction(bool increase, int buttonAction) 
 		if (increase) motorPower++;
 		else motorPower--;
 	}
-	/*else if (buttonAction == 2) {//how to get to increase by 1 per click, not while clicked
-		if (increase) {
-			robot r = robot();//creates new robit;
-			v.r.push_back(r);
-		}
-		else {
-			if(v.r.size() > 1) v.r.pop_back();
-		}
-	}*/
 }
 //for hovering over buttons in control panel
 bool CimulationApp::customizePanel::buttonHover(vec3 mouse, int x, int y, int x2, int y2, int index, int buttonAction) {
@@ -784,6 +789,13 @@ void CimulationApp::customizePanel::ctrlButton(vec3 mouse, int x, int y, int x2,
 	int sizeOf = (x2 - x);
 	x *= winScale; y *= winScale; x2 *= winScale; y2 *= winScale;//gets scaling out of the way
 	float dInBtwn = sizeOf*1.15;
+	buttonXPos[0] = x + 0*dInBtwn;
+	buttonX2Pos[0] = x2 + 0*dInBtwn;
+	buttonXPos[1] = x + 1 * dInBtwn;
+	buttonX2Pos[1] = x2 + 1 * dInBtwn;
+	buttonYPos[0] = y;
+	buttonYPos[1] = y2;
+
 	for (int i = 0; i < 2; i++) {
 		if (buttonHover(mouse, x + i*dInBtwn, y, x2 + i*dInBtwn, y2, i, buttonAction))
 			gl::color(1, 0, 0);//if the button's index is equal to whichever button's index is being hovered over
@@ -915,11 +927,11 @@ void CimulationApp::drawRobot(robot *r) {
 	gl::color(1, 1, 1);
 	if ((r->p.velocity.X != 0 && r->p.velocity.Y != 0) || r->p.rotVel != 0){//changes with small increments of velocity and rotation
 		if ((int)(10 * (r->p.velocity.X + 2*r->p.rotVel)) % 2 == 0/* || (int)(10 * r->p.rotVel) % 2 == 0*/)
-			gl::draw(r->TankBase, Area((-(r->size / 2))*ppi*winScale, (-(r->size / 2))*ppi*winScale, ((r->size / 2))*ppi*winScale, ((r->size / 2))*ppi*winScale));
+			gl::draw(robot::TankBase, Area((-(r->size / 2))*ppi*winScale, (-(r->size / 2))*ppi*winScale, ((r->size / 2))*ppi*winScale, ((r->size / 2))*ppi*winScale));
 		else
-			gl::draw(r->TankBase2, Area((-(r->size / 2))*ppi*winScale, (-(r->size / 2))*ppi*winScale, ((r->size / 2))*ppi*winScale, ((r->size / 2))*ppi*winScale));
+			gl::draw(robot::TankBase2, Area((-(r->size / 2))*ppi*winScale, (-(r->size / 2))*ppi*winScale, ((r->size / 2))*ppi*winScale, ((r->size / 2))*ppi*winScale));
 	}
-	else gl::draw(r->TankBase, Area((-(r->size / 2))*ppi*winScale, (-(r->size / 2))*ppi*winScale, ((r->size / 2))*ppi*winScale, ((r->size / 2))*ppi*winScale));
+	else gl::draw(robot::TankBase, Area((-(r->size / 2))*ppi*winScale, (-(r->size / 2))*ppi*winScale, ((r->size / 2))*ppi*winScale, ((r->size / 2))*ppi*winScale));
 
 	//mogo
 	gl::draw(v.r[0].CChanelVERT, Area((-r->mg.position - r->mg.thickness)*ppi*winScale, r->mg.protrusion*ppi*winScale, (-r->mg.position + r->mg.thickness)*ppi*winScale, (r->mg.protrusion + r->mg.length)*ppi*winScale));
@@ -956,6 +968,7 @@ void CimulationApp::draw() {
 		v.tS.textOutput(&v.r[0], &v.j);//draws the text for the graph
 	}
 	if (s.SimRunning == s.FIELD) {//when field button is pressed
+
 		//drawJoystick(&v.r[0], &v.j);//DONT WANT JOYSTICK ON FIELD
 		if (v.recording) {
 			int size = 10;//pixels in which to draw the rectangles width

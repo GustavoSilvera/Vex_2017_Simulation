@@ -105,10 +105,10 @@ public:
 	};
 	controls ctrl;
 	//other stuffs
-	ci::gl::Texture TankBase;
-	ci::gl::Texture TankBase2;
-	ci::gl::Texture CChanel;
-	ci::gl::Texture CChanelVERT;
+	static ci::gl::Texture TankBase;
+	static ci::gl::Texture TankBase2;
+	static ci::gl::Texture CChanel;
+	static ci::gl::Texture CChanelVERT;
 //};
 //class autobot : public robot {//self driving robots
 //public:
