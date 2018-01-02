@@ -11,52 +11,7 @@
 
 //declares the class for the robot and all the data that goes with it. 
 class robot{
-public://was gonna make these private but eh...
-	float size = 18;//important size 
-					//claw
-	struct intake {
-		int goal = 0;
-		float size;
-		float baseSize;//base of the claw
-		float position;
-		float thickness;
-		float length;
-		float speed;
-		float protrusion;//useful for mogo coming out
-		bool grabbing = false;
-		int holding = -1;//index for which element is being grabbed, to draw it above all the rest. 
-		void claw(float robSize);
-		void mogo(float robSize);
-		bool liftUp, liftDown;
-		float liftSpeed;
-		float liftPos;
-		float maxHeight = 50;//50 inches max height
-	};
-	intake c;
-	intake mg;/*mogo intake is not rly a claw tho*/
-	struct physics {
-		float mRot = 0;//drawing rotation
-		vec3 position;//X, Y, and Z
-		vec3 velocity;//diff x, diff y, diff z
-		vec3 acceleration = vec3(0, 0, 0);
-		float rotVel = 0;
-		float maxVel = 0;
-		float maxRotVel = 0;
-		float rotAcceleration = 0;
-		void speedMult(float base, float rot);
-		float amountOfFriction = 5;	//constant changing the amount of friction for the robot
-	};
-	physics p;
-	struct details {
-		float motorSpeed = (float)MAXSPEED;
-		int basePower;
-		int rotPower;
-		int initCommandsSize = 1;
-	};
-	details d;
-
-
-//public:
+public:
 	robot();
 	static float truSpeed(int degree, float value);
 	void driveFwds(float power);//driving only fwds (+) and bkwds(-)
@@ -100,6 +55,48 @@ public://was gonna make these private but eh...
 		//angle simulation
 	};
 	debug db;
+	float size = 18;//important size 
+					//claw
+	struct intake {
+		int goal = 0;
+		float size;
+		float baseSize;//base of the claw
+		float position;
+		float thickness;
+		float length;
+		float speed;
+		float protrusion;//useful for mogo coming out
+		bool grabbing = false;
+		int holding = -1;//index for which element is being grabbed, to draw it above all the rest. 
+		void claw(float robSize);
+		void mogo(float robSize);
+		bool liftUp, liftDown;
+		float liftSpeed;
+		float liftPos;
+		float maxHeight = 50;//50 inches max height
+	};
+	intake c;
+	intake mg;/*mogo intake is not rly a claw tho*/
+	struct physics {
+		float mRot = 0;//drawing rotation
+		vec3 position;//X, Y, and Z
+		vec3 velocity;//diff x, diff y, diff z
+		vec3 acceleration = vec3(0, 0, 0);
+		float rotVel = 0;
+		float maxVel = 0;
+		float maxRotVel = 0;
+		float rotAcceleration = 0;
+		void speedMult(float base, float rot);
+		float amountOfFriction = 5;	//constant changing the amount of friction for the robot
+	};
+	physics p;
+	struct details {
+		float motorSpeed = (float)MAXSPEED;
+		int basePower;
+		int rotPower;
+		int initCommandsSize = 1;
+	};
+	details d;
 	struct controls {
 		bool KeyUp = false;//if the arrow keys are triggering a forwards/backwards motion
 		bool KeyDown = false;//if the arrow keys are triggering a forwards/backwards motion
