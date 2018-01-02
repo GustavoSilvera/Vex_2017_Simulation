@@ -94,6 +94,7 @@ public:
 		float size = 18;
 		float motorPower = MAXSPEED;//power for the base
 		int numberOfRobots = 1;
+		bool mouseClicked = false;
 	};
 	customizePanel cp;
 	//for buttons and stuff
@@ -136,10 +137,12 @@ void CimulationApp::mouseDown(MouseEvent event) {
 	//if (event.isLeft()) s.mouseClicked = true;
 	if (s.SimRunning == s.PIDCTRL) v.pid.pid.requestedValue = event.getX();//gets whats needed for PID to activate
 	buttonClick(event.getX(), event.getY(), 6, 100);
+	if (s.SimRunning == s.CUSTOMIZE) cp.mouseClicked = true;
 }
 //when mouse is released
 void CimulationApp::mouseUp(MouseEvent event) {
 	///if (event.isLeft())	s.mouseClicked = false;
+	cp.mouseClicked = false;
 }
 //when mouse is moved (used with joystick)
 void CimulationApp::mouseMove(MouseEvent event) {
@@ -763,7 +766,7 @@ bool CimulationApp::customizePanel::buttonHover(vec3 mouse, int x, int y, int x2
 		mouse.Y > (y) && 
 		mouse.Y < (y2) ) {//within boundaries for each button based off their index
 		//mouse is hovering
-		if (false == true){///bad
+		if (mouseClicked ){///bad still (should be implemented in the mouse event)
 			if(index == 0)//left button
 				callAction(false, buttonAction);
 			else if (index == 1)//right button
